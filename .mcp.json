@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "flutter-ui-mcp": {
+      "command": "node",
+      "args": ["C:\\Users\\Desarrollo\\flutter-ui-mcp\\dist\\index.js"]
+    }
+  }
+}
