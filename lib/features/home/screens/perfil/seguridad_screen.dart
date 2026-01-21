@@ -177,7 +177,10 @@ class SeguridadScreen extends StatelessWidget {
         icon: const Icon(Icons.security_rounded, color: Colors.white),
         label: Text(
           'Contactar al equipo de seguridad',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
         onPressed: () => _mostrarModalContacto(context),
       ),

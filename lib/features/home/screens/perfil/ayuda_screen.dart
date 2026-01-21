@@ -148,6 +148,14 @@ class AyudaScreen extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const seg.SeguridadScreen()),
         ),
       ),
+      _HelpOption(
+        icon: Icons.support_agent_outlined,
+        title: 'Contactar a soporte técnico',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const seg.SeguridadScreen()),
+        ),
+      ),
     ];
 
     return Scaffold(
@@ -196,15 +204,6 @@ class AyudaScreen extends StatelessWidget {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF3CA2A2),
-        icon: const Icon(Icons.support_agent_rounded),
-        label: Text(
-          'Contactar soporte',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        onPressed: () => _showContactModal(context),
       ),
     );
   }
