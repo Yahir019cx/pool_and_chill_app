@@ -121,8 +121,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: ElevatedButton(
                         onPressed: _isFormValid
                             ? () {
-                                /// 👉 EVENTO UI
-                                /// Aquí luego conectas tu ViewModel / Bloc
                                 debugPrint("Submit register form");
                               }
                             : null,
