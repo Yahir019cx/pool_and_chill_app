@@ -1,11 +1,12 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__flutter-ui-mcp__refactor_flutter_ui_code",
+      "Bash(flutter analyze:*)"
+    ]
+  },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "flutter-ui-mcp"
-  ],
-  "permissions": {
-    "allow": [
-      "mcp__flutter-ui-mcp__refactor_flutter_ui_code"
-    ]
-  }
+  ]
 }
