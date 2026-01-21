@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/nav_bottom.dart';
-import 'inicio_screen.dart';
-import 'rentas_screen.dart';
-import 'favoritos_screen.dart';
-import 'perfil_screen.dart';
+import 'widgets/nav_bottom.dart';
+import 'screens/inicio_screen.dart';
+import 'screens/rentas_screen.dart';
+import 'screens/favoritos_screen.dart';
+import 'screens/perfil_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});

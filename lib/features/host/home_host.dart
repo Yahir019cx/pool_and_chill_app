@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'inicio_host_screen.dart';
-import 'mis_espacios_host_screen.dart';
-import 'reservas_host_screen.dart';
-import 'ganancias_host_screen.dart';
-import 'cuenta_host_screen.dart';
-import '../widgets/nav_bottom_host.dart';
+import 'screens/inicio_host_screen.dart';
+import 'screens/mis_espacios_host_screen.dart';
+import 'screens/reservas_host_screen.dart';
+import 'screens/ganancias_host_screen.dart';
+import 'screens/cuenta_host_screen.dart';
+import 'widgets/nav_bottom_host.dart';
 
 class HomeHostScreen extends StatefulWidget {
   const HomeHostScreen({super.key});

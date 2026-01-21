@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_host.dart';
+import '../home_host.dart';
 
 class WelcomeHostInfoScreen extends StatefulWidget {
   final VoidCallback? onContinue;
