@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'perfil/ayuda_screen.dart';
 import 'perfil/mis_reservas_screen.dart';
 import 'perfil/terminos_screen.dart';
-
+import 'perfil/editar_perfil.dart';
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
 
@@ -37,6 +37,10 @@ class PerfilScreen extends StatelessWidget {
               _PerfilItem(
                 icon: Icons.person_outline,
                 title: 'Modificar mis datos',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditarPerfil()),
+                ),
               ),
               _PerfilItem(
                 icon: Icons.calendar_month_outlined,
