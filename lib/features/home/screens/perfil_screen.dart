@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'perfil/ayuda_screen.dart';
+import 'perfil/mis_reservas_screen.dart';
+import 'perfil/terminos_screen.dart';
 
 class PerfilScreen extends StatelessWidget {
   const PerfilScreen({super.key});
@@ -39,10 +41,18 @@ class PerfilScreen extends StatelessWidget {
               _PerfilItem(
                 icon: Icons.calendar_month_outlined,
                 title: 'Mis reservas',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const MisReservasScreen()),
+                ),
               ),
               _PerfilItem(
                 icon: Icons.description_outlined,
                 title: 'Términos y condiciones',
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const TerminosCondicionesScreen()),
+                ),
               ),
               _PerfilItem(
                 icon: Icons.help_outline,

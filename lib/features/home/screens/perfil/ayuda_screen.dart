@@ -151,10 +151,7 @@ class AyudaScreen extends StatelessWidget {
       _HelpOption(
         icon: Icons.support_agent_outlined,
         title: 'Contactar a soporte técnico',
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const seg.SeguridadScreen()),
-        ),
+        onTap: () => _showContactModal(context),
       ),
     ];
 
