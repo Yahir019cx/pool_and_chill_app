@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final ApiClient apiClient;
+
+  const RegisterScreen({super.key, required this.apiClient});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -80,10 +83,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     GestureDetector(
                       onTap: () => _selectDate(context),
                       child: AbsorbPointer(
-                        child: _textField(
-                          "AAAA-MM-DD",
-                          _birthDateController,
-                        ),
+                        child: _textField("AAAA-MM-DD", _birthDateController),
                       ),
                     ),
 
@@ -136,7 +136,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => LoginScreen(),
+                              builder: (_) =>
+                                  LoginScreen(apiClient: widget.apiClient),
                             ),
                           );
                         },
@@ -161,31 +162,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // ---------------- UI helpers ----------------
 
   Widget _sectionTitle(String text) => Padding(
-        padding: const EdgeInsets.only(top: 15, bottom: 5),
-        child: Text(
-          text,
-          style: GoogleFonts.openSans(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(top: 15, bottom: 5),
+    child: Text(
+      text,
+      style: GoogleFonts.openSans(fontSize: 16, fontWeight: FontWeight.bold),
+    ),
+  );
 
   Widget _textField(
     String hint,
     TextEditingController controller, {
     bool obscureText = false,
-  }) =>
-      TextFormField(
-        controller: controller,
-        obscureText: obscureText,
-        decoration: InputDecoration(
-          hintText: hint,
-          enabledBorder: const UnderlineInputBorder(),
-          focusedBorder: const UnderlineInputBorder(),
-        ),
-        onChanged: (_) => setState(() {}),
-      );
+  }) => TextFormField(
+    controller: controller,
+    obscureText: obscureText,
+    decoration: InputDecoration(
+      hintText: hint,
+      enabledBorder: const UnderlineInputBorder(),
+      focusedBorder: const UnderlineInputBorder(),
+    ),
+    onChanged: (_) => setState(() {}),
+  );
 
   Widget _checkbox(
     BuildContext context, {
@@ -193,27 +190,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String label,
     required ValueChanged<bool> onChanged,
     required String content,
-  }) =>
-      Row(
-        children: [
-          Checkbox(
-            value: value,
-            onChanged: (v) => onChanged(v ?? false),
-          ),
-          GestureDetector(
-            onTap: () => _showLegalDialog(context, label, content),
-            child: Text(
-              label,
-              style: GoogleFonts.openSans(
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        ],
-      );
+  }) => Row(
+    children: [
+      Checkbox(value: value, onChanged: (v) => onChanged(v ?? false)),
+      GestureDetector(
+        onTap: () => _showLegalDialog(context, label, content),
+        child: Text(
+          label,
+          style: GoogleFonts.openSans(decoration: TextDecoration.underline),
+        ),
+      ),
+    ],
+  );
 
-  void _showLegalDialog(
-      BuildContext context, String title, String content) {
+  void _showLegalDialog(BuildContext context, String title, String content) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -243,9 +233,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.only(top: 50, bottom: 30),
       decoration: const BoxDecoration(
         color: Color(0xFF41838F),
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       child: Center(
         child: Text(

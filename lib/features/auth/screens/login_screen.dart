@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import 'package:pool_and_chill_app/data/api/api_client.dart';
+import 'package:pool_and_chill_app/data/services/auth_service.dart';
+import 'package:pool_and_chill_app/data/models/login/index.dart';
+import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
+
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final ApiClient apiClient;
+
+  const LoginScreen({super.key, required this.apiClient});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -12,6 +20,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   int _selectedIndex = 0;
+  bool _loading = false;
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -23,6 +32,44 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Completa todos los campos')),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+
+    try {
+      final authService = AuthService(widget.apiClient);
+      final AuthResponseModel session = await authService.login(
+        email,
+        password,
+      );
+
+      widget.apiClient.setAccessToken(session.accessToken);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => WelcomeScreen(apiClient: widget.apiClient),
+        ),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Credenciales inválidas')));
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -32,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Container(color: Colors.white),
 
-          /// Header
           Container(
             height: height * 0.45,
             width: double.infinity,
@@ -64,7 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          /// Content
           Positioned(
             top: height * 0.27,
             left: 0,
@@ -79,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   const SizedBox(height: 50),
 
-                  /// Toggle
                   Container(
                     decoration: BoxDecoration(
                       color: const Color.fromARGB(255, 248, 248, 248),
@@ -103,26 +147,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         minHeight: 50,
                         minWidth: 120,
                       ),
-                      isSelected: [
-                        _selectedIndex == 0,
-                        _selectedIndex == 1
-                      ],
+                      isSelected: [_selectedIndex == 0, _selectedIndex == 1],
                       onPressed: (index) {
                         setState(() => _selectedIndex = index);
                         if (index == 1) {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
+                              builder: (_) =>
+                                  RegisterScreen(apiClient: widget.apiClient),
                             ),
                           );
                         }
                       },
                       children: [
-                        Text('Log In',
-                            style: GoogleFonts.lilitaOne(fontSize: 16)),
-                        Text('Sign In',
-                            style: GoogleFonts.lilitaOne(fontSize: 16)),
+                        Text(
+                          'Log In',
+                          style: GoogleFonts.lilitaOne(fontSize: 16),
+                        ),
+                        Text(
+                          'Sign In',
+                          style: GoogleFonts.lilitaOne(fontSize: 16),
+                        ),
                       ],
                     ),
                   ),
@@ -145,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 25),
 
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _loading ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
@@ -160,13 +206,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    child: Text(
-                      'Log In',
-                      style: GoogleFonts.lilitaOne(
-                        fontSize: 16,
-                        color: const Color.fromARGB(255, 62, 131, 140),
-                      ),
-                    ),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'Log In',
+                            style: GoogleFonts.lilitaOne(
+                              fontSize: 16,
+                              color: const Color.fromARGB(255, 62, 131, 140),
+                            ),
+                          ),
                   ),
 
                   const SizedBox(height: 60),
@@ -228,12 +280,13 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: InputDecoration(
           labelText: label,
           enabledBorder: const UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Color.fromARGB(255, 62, 131, 140)),
+            borderSide: BorderSide(color: Color.fromARGB(255, 62, 131, 140)),
           ),
           focusedBorder: const UnderlineInputBorder(
-            borderSide:
-                BorderSide(color: Color.fromARGB(255, 62, 131, 140), width: 2),
+            borderSide: BorderSide(
+              color: Color.fromARGB(255, 62, 131, 140),
+              width: 2,
+            ),
           ),
         ),
       ),
