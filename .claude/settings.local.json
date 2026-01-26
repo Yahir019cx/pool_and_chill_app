@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__flutter-ui-mcp__refactor_flutter_ui_code",
-      "Bash(flutter analyze:*)"
+      "Bash(flutter analyze:*)",
+      "Bash(.gradlew clean:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

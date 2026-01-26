@@ -48,6 +48,27 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Actualiza el perfil con los nuevos datos
+  void setProfile(UserProfileModel profile) {
+    _profile = profile;
+    notifyListeners();
+  }
+
+  /// Actualiza el perfil del usuario en el backend
+  Future<void> updateProfile({
+    String? displayName,
+    String? bio,
+    String? phoneNumber,
+  }) async {
+    await _userService.updateProfile(
+      displayName: displayName,
+      bio: bio,
+      phoneNumber: phoneNumber,
+    );
+    // Refrescar perfil completo para obtener todos los datos
+    await refreshProfile();
+  }
+
   // ===== INTERNAL =====
   void _setLoading(bool value) {
     _loading = value;

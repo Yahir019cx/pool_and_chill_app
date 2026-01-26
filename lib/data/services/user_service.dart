@@ -20,15 +20,14 @@ class UserService {
 
   /// Actualizar imagen de perfil
   /// Envía la URL de Firebase Storage al backend
-  Future<UserProfileModel> updateProfileImage(String imageUrl) async {
+  Future<void> updateProfileImage(String imageUrl) async {
     final response = await api.patch(
       ApiRoutes.updateImage,
       body: {'profileImageUrl': imageUrl},
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return UserProfileModel.fromJson(data);
+      return; // Éxito - el perfil se refrescará después
     } else if (response.statusCode == 400) {
       final error = jsonDecode(response.body);
       throw Exception(error['message'] ?? 'URL de imagen inválida');
@@ -40,12 +39,39 @@ class UserService {
   }
 
   /// Eliminar imagen de perfil
-  Future<UserProfileModel> deleteProfileImage() async {
+  Future<void> deleteProfileImage() async {
     final response = await api.delete(ApiRoutes.updateImage);
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      return UserProfileModel.fromJson(data);
+      return; // Éxito - el perfil se refrescará después
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    } else {
+      throw Exception('Error del servidor: ${response.statusCode}');
+    }
+  }
+
+  /// Actualizar perfil del usuario
+  Future<void> updateProfile({
+    String? displayName,
+    String? bio,
+    String? phoneNumber,
+  }) async {
+    final body = <String, dynamic>{};
+    if (displayName != null) body['displayName'] = displayName;
+    if (bio != null) body['bio'] = bio;
+    if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
+
+    final response = await api.patch(
+      ApiRoutes.updateProfile,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      return; // Éxito - el perfil se refrescará después
+    } else if (response.statusCode == 400) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Datos inválidos');
     } else if (response.statusCode == 401) {
       throw Exception('Sesión expirada. Por favor, inicia sesión de nuevo.');
     } else {

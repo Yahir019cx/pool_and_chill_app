@@ -35,6 +35,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   final StorageService _storageService = StorageService();
   final ImagePicker _imagePicker = ImagePicker();
   bool _isUploadingImage = false;
+  bool _isSaving = false;
 
   static const Color primary = Color(0xFF3CA2A2);
   static const Color inputBg = Color(0xFFF4F6F8);
@@ -109,23 +110,33 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
           /// ---------- BOTÓN ----------
           ElevatedButton(
-            onPressed: _guardar,
+            onPressed: _isSaving ? null : _guardar,
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,
+              disabledBackgroundColor: primary.withValues(alpha: 0.6),
               elevation: 0,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: const Text(
-              'Guardar cambios',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            child: _isSaving
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text(
+                    'Guardar cambios',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ],
       ),
@@ -335,8 +346,8 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
       // 2. Actualizar en backend
       await authProvider.userService.updateProfileImage(imageUrl);
 
-      // 3. Actualizar estado local
-      authProvider.updateUserImage(imageUrl);
+      // 3. Refrescar perfil completo para obtener todos los datos
+      await authProvider.refreshProfile();
 
       _showSuccess('Foto de perfil actualizada');
     } catch (e) {
@@ -390,8 +401,8 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
       // 2. Eliminar en Firebase Storage
       await _storageService.deleteOldProfileImage(profile.userId);
 
-      // 3. Actualizar estado local
-      authProvider.updateUserImage(null);
+      // 3. Refrescar perfil completo
+      await authProvider.refreshProfile();
 
       _showSuccess('Foto de perfil eliminada');
     } catch (e) {
@@ -484,14 +495,37 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     }
   }
 
-  void _guardar() {
+  Future<void> _guardar() async {
     FocusScope.of(context).unfocus();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cambios guardados (mock)'),
-      ),
-    );
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
+
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final profile = authProvider.profile;
+
+      if (profile == null) {
+        _showError('No hay sesión activa');
+        return;
+      }
+
+      // Construir displayName desde nombre y apellido
+      final displayName = '${_nombreCtrl.text.trim()} ${_apellidoCtrl.text.trim()}'.trim();
+
+      await authProvider.updateProfile(
+        displayName: displayName.isNotEmpty ? displayName : null,
+        bio: _bioCtrl.text.trim().isNotEmpty ? _bioCtrl.text.trim() : null,
+        phoneNumber: _telefonoCtrl.text.trim().isNotEmpty ? _telefonoCtrl.text.trim() : null,
+      );
+
+      _showSuccess('Cambios guardados');
+    } catch (e) {
+      _showError('Error al guardar: $e');
+    } finally {
+      setState(() => _isSaving = false);
+    }
   }
 
   // ---------- HELPERS ----------
