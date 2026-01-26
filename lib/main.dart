@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:pool_and_chill_app/features/auth/screens/login_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/api/api_client.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/features/auth/screens/login_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,29 +14,27 @@ Future<void> main() async {
     baseUrl: dotenv.env['API_BASE_URL']!,
   );
 
-  runApp(MyApp(apiClient: apiClient));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(apiClient),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  final ApiClient apiClient;
-
-  const MyApp({
-    super.key,
-    required this.apiClient,
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Pool & Chill',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(255, 62, 131, 140),
-        ),
-      ),
-      home: LoginScreen(apiClient: apiClient),
+      home: auth.isAuthenticated
+          ? const WelcomeScreen()
+          : const LoginScreen(),
     );
   }
 }

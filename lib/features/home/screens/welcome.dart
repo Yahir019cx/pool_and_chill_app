@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pool_and_chill_app/data/api/api_client.dart';
 import '../widgets/nav_bottom.dart';
 import 'inicio_screen.dart';
 import 'rentas_screen.dart';
 import 'favoritos_screen.dart';
 import 'perfil_screen.dart';
-class WelcomeScreen extends StatefulWidget {
-  final ApiClient apiClient;
 
-  const WelcomeScreen({
-    super.key,
-    required this.apiClient,
-  });
+class WelcomeScreen extends StatefulWidget {
+  const WelcomeScreen({super.key});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -33,7 +28,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: SafeArea(
         child: IndexedStack(
           index: selectedNavIndex,
-          children: [
+          children: const [
             InicioScreen(),
             RentasScreen(),
             FavoritosScreen(),

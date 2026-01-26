@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
-  final ApiClient apiClient;
-
-  const RegisterScreen({super.key, required this.apiClient});
-
+  const RegisterScreen({super.key});
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
@@ -136,8 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  LoginScreen(apiClient: widget.apiClient),
+                              builder: (_) => const LoginScreen(),
                             ),
                           );
                         },
