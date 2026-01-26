@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'perfil/ayuda_screen.dart';
 import 'perfil/mis_reservas_screen.dart';
 import 'perfil/terminos_screen.dart';
@@ -11,6 +13,12 @@ class PerfilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final profile = auth.profile;
+
+    final displayName = profile?.displayName ?? '';
+    final bio = profile?.bio ?? '';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -35,26 +43,31 @@ class PerfilScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Nombre Apellido',
-                style: TextStyle(
+
+              // Display name
+              Text(
+                displayName,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 4),
+
+              // Bio
               Text(
-                'usuario@email.com',
+                bio,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   color: Colors.grey.shade600,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 6),
 
               // Stats
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(16),
@@ -74,7 +87,7 @@ class PerfilScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
 
-              // Opciones de cuenta
+              // Cuenta
               _MenuSection(
                 title: 'Cuenta',
                 items: [
@@ -83,7 +96,9 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Modificar mis datos',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const EditarPerfil()),
+                      MaterialPageRoute(
+                        builder: (_) => const EditarPerfil(),
+                      ),
                     ),
                   ),
                   _MenuItem(
@@ -91,7 +106,9 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Mis reservas',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const MisReservasScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const MisReservasScreen(),
+                      ),
                     ),
                   ),
                   _MenuItem(
@@ -130,7 +147,9 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Ayuda',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AyudaScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const AyudaScreen(),
+                      ),
                     ),
                   ),
                   _MenuItem(
@@ -138,7 +157,10 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Términos y condiciones',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const TerminosCondicionesScreen()),
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const TerminosCondicionesScreen(),
+                      ),
                     ),
                   ),
                 ],
@@ -152,14 +174,15 @@ class PerfilScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.swap_horiz_rounded,
                     label: 'Cambiar a modo anfitrión',
-                    onTap: () {
-                    },
+                    onTap: () {},
                     showBadge: true,
                   ),
                   _MenuItem(
                     icon: Icons.logout_rounded,
                     label: 'Cerrar sesión',
-                    onTap: () {},
+                    onTap: () async {
+                      await auth.logout();
+                    },
                     isDestructive: true,
                   ),
                 ],
@@ -312,10 +335,8 @@ class _MenuItem extends StatelessWidget {
             ),
             if (showBadge)
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: primary,
                   borderRadius: BorderRadius.circular(8),

@@ -1,19 +1,20 @@
 import 'dart:convert';
-import '../api/api_client.dart';
-import '../api/api_routes.dart';
+import 'package:pool_and_chill_app/data/api/index.dart';
+import 'package:pool_and_chill_app/data/models/user/index.dart';
 
 class UserService {
   final ApiClient api;
 
   UserService(this.api);
 
-  Future<Map<String, dynamic>> getMe() async {
+  Future<UserProfileModel> getMe() async {
     final response = await api.get(ApiRoutes.me);
 
     if (response.statusCode != 200) {
-      throw Exception('Unauthorized');
+      throw Exception('Failed to load user profile');
     }
 
-    return jsonDecode(response.body);
+    final Map<String, dynamic> data = jsonDecode(response.body);
+    return UserProfileModel.fromJson(data);
   }
 }
