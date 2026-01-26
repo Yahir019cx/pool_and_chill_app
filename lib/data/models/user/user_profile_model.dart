@@ -104,4 +104,67 @@ class UserProfileModel {
       isStaff: json['isStaff'] == true,
     );
   }
+
+  /// Crea una copia del modelo con los campos especificados actualizados
+  UserProfileModel copyWith({
+    String? userId,
+    String? email,
+    String? phoneNumber,
+    bool? isEmailVerified,
+    bool? isPhoneVerified,
+    bool? isAgeVerified,
+    bool? isIdentityVerified,
+    int? accountStatus,
+    DateTime? createdAt,
+    DateTime? lastLoginAt,
+    String? profileId,
+    String? firstName,
+    String? lastName,
+    String? displayName,
+    String? bio,
+    String? profileImageUrl,
+    DateTime? dateOfBirth,
+    int? gender,
+    bool? isHostOnboarded,
+    List<String>? roles,
+    bool? hasPassword,
+    List<dynamic>? linkedProviders,
+    bool? isHost,
+    bool? isStaff,
+    bool clearProfileImageUrl = false,
+  }) {
+    return UserProfileModel(
+      userId: userId ?? this.userId,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      isPhoneVerified: isPhoneVerified ?? this.isPhoneVerified,
+      isAgeVerified: isAgeVerified ?? this.isAgeVerified,
+      isIdentityVerified: isIdentityVerified ?? this.isIdentityVerified,
+      accountStatus: accountStatus ?? this.accountStatus,
+      createdAt: createdAt ?? this.createdAt,
+      lastLoginAt: lastLoginAt ?? this.lastLoginAt,
+      profileId: profileId ?? this.profileId,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      displayName: displayName ?? this.displayName,
+      bio: bio ?? this.bio,
+      profileImageUrl: clearProfileImageUrl ? null : (profileImageUrl ?? this.profileImageUrl),
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      gender: gender ?? this.gender,
+      isHostOnboarded: isHostOnboarded ?? this.isHostOnboarded,
+      roles: roles ?? this.roles,
+      hasPassword: hasPassword ?? this.hasPassword,
+      linkedProviders: linkedProviders ?? this.linkedProviders,
+      isHost: isHost ?? this.isHost,
+      isStaff: isStaff ?? this.isStaff,
+    );
+  }
+
+  /// Obtiene las iniciales del usuario (primera letra del nombre y apellido)
+  String get initials {
+    final first = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
+    final last = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
+    return '$first$last';
+  }
 }

@@ -1,4 +1,4 @@
-package com.example.pool_and_chill_app
+package com.poolandchill.app
 
 import io.flutter.embedding.android.FlutterActivity
 

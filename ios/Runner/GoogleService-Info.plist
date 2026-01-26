@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>395705090497-lbmk3720mgq5fhq22qh4i3v0qhne96i6.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAEiuVzr4kQcju-LB2TpGBUCZoY__HG09A</string>
+	<key>GCM_SENDER_ID</key>
+	<string>395705090497</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.poolandchill.app</string>
+	<key>PROJECT_ID</key>
+	<string>poolandchillapp</string>
+	<key>STORAGE_BUCKET</key>
+	<string>poolandchillapp.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:395705090497:ios:30713314b87e7bd365ef40</string>
+</dict>
+</plist>

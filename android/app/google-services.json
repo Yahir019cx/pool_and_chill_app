@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "395705090497",
+    "project_id": "poolandchillapp",
+    "storage_bucket": "poolandchillapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:395705090497:android:93a53983bfea7c4e65ef40",
+        "android_client_info": {
+          "package_name": "com.poolandchill.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "395705090497-lbmk3720mgq5fhq22qh4i3v0qhne96i6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poolandchill.app",
+            "certificate_hash": "2067e0e3cdd3d93e8e77a2d4c0339606c6ef25d4"
+          }
+        },
+        {
+          "client_id": "395705090497-7n4m477hvgf5un5kiv0ajcfk58tvi9o2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZs1w9K9cVi6WUGPUihLN2C-dsJd40ojI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "395705090497-7n4m477hvgf5un5kiv0ajcfk58tvi9o2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

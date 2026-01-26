@@ -2,6 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Permisos para imagen de perfil -->
+	<key>NSCameraUsageDescription</key>
+	<string>Necesitamos acceso a tu cámara para tomar fotos de perfil</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Necesitamos acceso a tu galería para elegir fotos de perfil</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Necesitamos acceso para guardar fotos</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

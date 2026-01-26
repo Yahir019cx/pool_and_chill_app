@@ -25,6 +25,29 @@ class AuthProvider extends ChangeNotifier {
   bool get isBootstrapped => _bootstrapped;
   UserProfileModel? get profile => _profile;
 
+  // Expone el UserService para operaciones de perfil
+  UserService get userService => _userService;
+
+  // ===== PROFILE IMAGE =====
+  /// Actualiza la imagen de perfil en memoria
+  void updateUserImage(String? imageUrl) {
+    if (_profile != null) {
+      _profile = _profile!.copyWith(
+        profileImageUrl: imageUrl,
+        clearProfileImageUrl: imageUrl == null,
+      );
+      notifyListeners();
+    }
+  }
+
+  /// Refresca el perfil completo desde el servidor
+  Future<void> refreshProfile() async {
+    if (_profile != null) {
+      _profile = await _userService.getMe();
+      notifyListeners();
+    }
+  }
+
   // ===== INTERNAL =====
   void _setLoading(bool value) {
     _loading = value;
