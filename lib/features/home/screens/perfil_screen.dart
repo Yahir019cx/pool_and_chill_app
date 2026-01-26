@@ -57,17 +57,16 @@ class PerfilScreen extends StatelessWidget {
               // Bio
               Text(
                 bio,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),
               const SizedBox(height: 6),
 
               // Stats
               Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 24,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(16),
@@ -96,9 +95,7 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Modificar mis datos',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const EditarPerfil(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const EditarPerfil()),
                     ),
                   ),
                   _MenuItem(
@@ -147,9 +144,7 @@ class PerfilScreen extends StatelessWidget {
                     label: 'Ayuda',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const AyudaScreen(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const AyudaScreen()),
                     ),
                   ),
                   _MenuItem(
@@ -158,8 +153,7 @@ class PerfilScreen extends StatelessWidget {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            const TerminosCondicionesScreen(),
+                        builder: (_) => const TerminosCondicionesScreen(),
                       ),
                     ),
                   ),
@@ -180,10 +174,32 @@ class PerfilScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.logout_rounded,
                     label: 'Cerrar sesión',
-                    onTap: () async {
-                      await auth.logout();
-                    },
                     isDestructive: true,
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Cerrar sesión'),
+                          content: const Text(
+                            '¿Seguro que deseas cerrar sesión?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Cerrar sesión'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true && context.mounted) {
+                        context.read<AuthProvider>().logout();
+                      }
+                    },
                   ),
                 ],
               ),
@@ -217,10 +233,7 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade500,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
         ),
       ],
     );
@@ -231,10 +244,7 @@ class _MenuSection extends StatelessWidget {
   final String title;
   final List<_MenuItem> items;
 
-  const _MenuSection({
-    required this.title,
-    required this.items,
-  });
+  const _MenuSection({required this.title, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -264,11 +274,7 @@ class _MenuSection extends StatelessWidget {
                 children: [
                   entry.value,
                   if (!isLast)
-                    Divider(
-                      height: 1,
-                      indent: 56,
-                      color: Colors.grey.shade200,
-                    ),
+                    Divider(height: 1, indent: 56, color: Colors.grey.shade200),
                 ],
               );
             }).toList(),
@@ -335,8 +341,7 @@ class _MenuItem extends StatelessWidget {
             ),
             if (showBadge)
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: primary,
                   borderRadius: BorderRadius.circular(8),
@@ -351,11 +356,7 @@ class _MenuItem extends StatelessWidget {
                 ),
               ),
             const SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right,
-              color: Colors.grey.shade400,
-              size: 22,
-            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade400, size: 22),
           ],
         ),
       ),

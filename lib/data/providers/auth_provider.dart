@@ -13,24 +13,50 @@ class AuthProvider extends ChangeNotifier {
 
   UserProfileModel? _profile;
   bool _loading = false;
+  bool _bootstrapped = false;
 
   AuthProvider(this.apiClient)
-    : _authService = AuthService(apiClient),
-      _userService = UserService(apiClient);
+      : _authService = AuthService(apiClient),
+        _userService = UserService(apiClient);
 
   // ===== GETTERS =====
   bool get isLoading => _loading;
   bool get isAuthenticated => _profile != null;
+  bool get isBootstrapped => _bootstrapped;
   UserProfileModel? get profile => _profile;
 
-  // ===== PRIVATE STATE HELPERS =====
+  // ===== INTERNAL =====
   void _setLoading(bool value) {
     _loading = value;
     notifyListeners();
   }
 
+  // ===== BOOTSTRAP (Splash) =====
+  Future<void> bootstrap() async {
+    _setLoading(true);
+
+    try {
+      final accessToken = await SecureStorage.getAccessToken();
+      if (accessToken != null) {
+        apiClient.setAccessToken(accessToken);
+        _profile = await _userService.getMe();
+      }
+    } catch (_) {
+      _profile = null;
+      await SecureStorage.clear();
+      apiClient.clearAccessToken();
+    } finally {
+      _loading = false;
+      _bootstrapped = true;
+      notifyListeners();
+    }
+  }
+
   // ===== LOGIN =====
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({
+    required String email,
+    required String password,
+  }) async {
     _setLoading(true);
 
     try {
@@ -44,31 +70,6 @@ class AuthProvider extends ChangeNotifier {
       );
 
       _profile = await _userService.getMe();
-    } catch (e) {
-      _profile = null;
-      rethrow;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // ===== RESTORE SESSION (Splash) =====
-  Future<bool> tryRestoreSession() async {
-    _setLoading(true);
-
-    try {
-      final accessToken = await SecureStorage.getAccessToken();
-      if (accessToken == null) return false;
-
-      apiClient.setAccessToken(accessToken);
-      _profile = await _userService.getMe();
-
-      return true;
-    } catch (_) {
-      _profile = null;
-      await SecureStorage.clear();
-      apiClient.clearAccessToken();
-      return false;
     } finally {
       _setLoading(false);
     }
