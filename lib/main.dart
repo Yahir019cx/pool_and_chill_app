@@ -14,9 +14,12 @@ Future<void> main() async {
     baseUrl: dotenv.env['API_BASE_URL']!,
   );
 
+  final authProvider = AuthProvider(apiClient);
+  apiClient.attachAuthProvider(authProvider);
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(apiClient),
+    ChangeNotifierProvider<AuthProvider>.value(
+      value: authProvider,
       child: const MyApp(),
     ),
   );

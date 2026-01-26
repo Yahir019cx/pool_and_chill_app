@@ -8,10 +8,7 @@ class AuthService {
 
   AuthService(this.api);
 
-  Future<AuthResponseModel> login(
-    String email,
-    String password,
-  ) async {
+  Future<AuthResponseModel> login(String email, String password) async {
     final response = await api.post(
       ApiRoutes.login,
       withAuth: false,
@@ -25,7 +22,24 @@ class AuthService {
       throw Exception('Login failed');
     }
 
-    final Map<String, dynamic> data = jsonDecode(response.body);
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return AuthResponseModel.fromJson(data);
+  }
+
+  Future<AuthResponseModel> refresh(String refreshToken) async {
+    final response = await api.post(
+      ApiRoutes.refresh,
+      withAuth: false,
+      body: {
+        'refreshToken': refreshToken,
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Refresh failed');
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
     return AuthResponseModel.fromJson(data);
   }
 }

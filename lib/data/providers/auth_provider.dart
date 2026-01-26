@@ -16,8 +16,8 @@ class AuthProvider extends ChangeNotifier {
   bool _bootstrapped = false;
 
   AuthProvider(this.apiClient)
-      : _authService = AuthService(apiClient),
-        _userService = UserService(apiClient);
+    : _authService = AuthService(apiClient),
+      _userService = UserService(apiClient);
 
   // ===== GETTERS =====
   bool get isLoading => _loading;
@@ -53,10 +53,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ===== LOGIN =====
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     _setLoading(true);
 
     try {
@@ -81,5 +78,33 @@ class AuthProvider extends ChangeNotifier {
     await SecureStorage.clear();
     apiClient.clearAccessToken();
     notifyListeners();
+  }
+
+  bool _refreshing = false;
+
+  Future<bool> refreshSession() async {
+    if (_refreshing) return false;
+    _refreshing = true;
+
+    try {
+      final refreshToken = await SecureStorage.getRefreshToken();
+      if (refreshToken == null) throw Exception();
+
+      final session = await _authService.refresh(refreshToken);
+
+      apiClient.setAccessToken(session.accessToken);
+
+      await SecureStorage.saveTokens(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      );
+
+      return true;
+    } catch (_) {
+      await logout();
+      return false;
+    } finally {
+      _refreshing = false;
+    }
   }
 }
