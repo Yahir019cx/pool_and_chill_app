@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
+
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
-import 'package:pool_and_chill_app/features/auth/screens/login_screen.dart';
-import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
+import 'package:pool_and_chill_app/app/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,14 +27,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Pool & Chill',
-      home: auth.isAuthenticated
-          ? const WelcomeScreen()
-          : const LoginScreen(),
+      home: AuthGate(),
     );
   }
 }
