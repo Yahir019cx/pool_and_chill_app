@@ -29,18 +29,30 @@ class PerfilScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               // Avatar
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: primary,
-                  size: 45,
-                ),
+              CircleAvatar(
+                radius: 45,
+                backgroundColor: primary.withValues(alpha: 0.1),
+                backgroundImage: profile?.profileImageUrl != null &&
+                        profile!.profileImageUrl!.isNotEmpty
+                    ? NetworkImage(profile.profileImageUrl!)
+                    : null,
+                child: profile?.profileImageUrl == null ||
+                        profile!.profileImageUrl!.isEmpty
+                    ? (profile?.initials.isNotEmpty == true
+                        ? Text(
+                            profile!.initials,
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: primary,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.person_rounded,
+                            color: primary,
+                            size: 45,
+                          ))
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -186,10 +198,16 @@ class PerfilScreen extends StatelessWidget {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.grey,
+                              ),
                               child: const Text('Cancelar'),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: primary,
+                              ),
                               child: const Text('Cerrar sesión'),
                             ),
                           ],

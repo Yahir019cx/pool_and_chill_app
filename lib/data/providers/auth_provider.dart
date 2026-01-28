@@ -59,11 +59,13 @@ class AuthProvider extends ChangeNotifier {
     String? displayName,
     String? bio,
     String? phoneNumber,
+    String? location,
   }) async {
     await _userService.updateProfile(
       displayName: displayName,
       bio: bio,
       phoneNumber: phoneNumber,
+      location: location,
     );
     // Refrescar perfil completo para obtener todos los datos
     await refreshProfile();

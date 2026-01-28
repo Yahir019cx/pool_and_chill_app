@@ -56,11 +56,13 @@ class UserService {
     String? displayName,
     String? bio,
     String? phoneNumber,
+    String? location,
   }) async {
     final body = <String, dynamic>{};
     if (displayName != null) body['displayName'] = displayName;
     if (bio != null) body['bio'] = bio;
     if (phoneNumber != null) body['phoneNumber'] = phoneNumber;
+    if (location != null) body['location'] = location;
 
     final response = await api.patch(
       ApiRoutes.updateProfile,

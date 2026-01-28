@@ -22,6 +22,7 @@ class UserProfileModel {
 
   final String? bio;
   final String? profileImageUrl;
+  final String? location;
 
   final DateTime? dateOfBirth;
   final int? gender;
@@ -52,6 +53,7 @@ class UserProfileModel {
     required this.displayName,
     this.bio,
     this.profileImageUrl,
+    this.location,
     this.dateOfBirth,
     this.gender,
     required this.isHostOnboarded,
@@ -87,6 +89,7 @@ class UserProfileModel {
 
       bio: json['bio'],
       profileImageUrl: json['profileImageUrl'],
+      location: json['location'],
 
       dateOfBirth: json['dateOfBirth'] != null
           ? DateTime.parse(json['dateOfBirth'])
@@ -123,6 +126,7 @@ class UserProfileModel {
     String? displayName,
     String? bio,
     String? profileImageUrl,
+    String? location,
     DateTime? dateOfBirth,
     int? gender,
     bool? isHostOnboarded,
@@ -150,6 +154,7 @@ class UserProfileModel {
       displayName: displayName ?? this.displayName,
       bio: bio ?? this.bio,
       profileImageUrl: clearProfileImageUrl ? null : (profileImageUrl ?? this.profileImageUrl),
+      location: location ?? this.location,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       gender: gender ?? this.gender,
       isHostOnboarded: isHostOnboarded ?? this.isHostOnboarded,

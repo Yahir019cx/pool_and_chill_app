@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 
 class NavBottom extends StatelessWidget {
@@ -44,6 +43,8 @@ class NavBottom extends StatelessWidget {
     );
   }
 
+  static const Color _primaryColor = Color(0xFF3CA2A2);
+
   Widget _buildItem(
     BuildContext context,
     IconData icon,
@@ -51,17 +52,10 @@ class NavBottom extends StatelessWidget {
     String label,
     int index,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final isActive = selectedIndex == index;
-    final isIOS = Platform.isIOS;
 
-    // Colores adaptados a cada plataforma
-    final activeColor = isIOS
-        ? const Color(0xFF3CA2A2)
-        : colorScheme.primary;
-    final inactiveColor = isIOS
-        ? Colors.grey
-        : colorScheme.onSurfaceVariant;
+    const activeColor = _primaryColor;
+    final inactiveColor = Colors.grey;
 
     return Expanded(
       child: Material(

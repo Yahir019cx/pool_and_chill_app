@@ -199,7 +199,12 @@ class _LoginScreenState extends State<LoginScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Color.fromARGB(255, 62, 131, 140),
+                              ),
+                            ),
                           )
                         : Text(
                             'Log In',
@@ -269,6 +274,9 @@ class _LoginScreenState extends State<LoginScreen> {
         style: GoogleFonts.openSans(fontSize: 16),
         decoration: InputDecoration(
           labelText: label,
+          floatingLabelStyle: const TextStyle(
+            color: Color.fromARGB(255, 62, 131, 140),
+          ),
           enabledBorder: const UnderlineInputBorder(
             borderSide: BorderSide(
               color: Color.fromARGB(255, 62, 131, 140),

@@ -1,9 +1,9 @@
 // perfil/widgets/editar_perfil_form.dart
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -24,12 +24,9 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
   final _nombreCtrl = TextEditingController();
   final _apellidoCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
   final _ubicacionCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
-
-  DateTime? _fechaNacimiento;
 
   // Para manejo de imagen
   final StorageService _storageService = StorageService();
@@ -51,10 +48,9 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     if (profile != null) {
       _nombreCtrl.text = profile.firstName;
       _apellidoCtrl.text = profile.lastName;
-      _emailCtrl.text = profile.email;
       _telefonoCtrl.text = profile.phoneNumber ?? '';
+      _ubicacionCtrl.text = profile.location ?? '';
       _bioCtrl.text = profile.bio ?? '';
-      _fechaNacimiento = profile.dateOfBirth;
     }
   }
 
@@ -62,7 +58,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   void dispose() {
     _nombreCtrl.dispose();
     _apellidoCtrl.dispose();
-    _emailCtrl.dispose();
     _telefonoCtrl.dispose();
     _ubicacionCtrl.dispose();
     _bioCtrl.dispose();
@@ -92,17 +87,10 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
           _input('Nombre', _nombreCtrl),
           _input('Apellido', _apellidoCtrl),
           _input(
-            'Correo electrónico',
-            _emailCtrl,
-            keyboard: TextInputType.emailAddress,
-          ),
-          _input(
             'Teléfono',
             _telefonoCtrl,
             keyboard: TextInputType.phone,
           ),
-
-          _datePicker(),
           _input('Ubicación', _ubicacionCtrl),
           _input('Biografía', _bioCtrl, maxLines: 3),
 
@@ -150,6 +138,52 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     final hasImage = profile?.profileImageUrl != null &&
         profile!.profileImageUrl!.isNotEmpty;
 
+    if (Platform.isIOS) {
+      _showCupertinoImageOptions(hasImage);
+    } else {
+      _showMaterialImageOptions(hasImage);
+    }
+  }
+
+  void _showCupertinoImageOptions(bool hasImage) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Cambiar foto de perfil'),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.camera);
+            },
+            child: const Text('Tomar foto'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickImage(ImageSource.gallery);
+            },
+            child: const Text('Elegir de galería'),
+          ),
+          if (hasImage)
+            CupertinoActionSheetAction(
+              isDestructiveAction: true,
+              onPressed: () {
+                Navigator.pop(context);
+                _confirmDeleteImage();
+              },
+              child: const Text('Eliminar foto'),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancelar'),
+        ),
+      ),
+    );
+  }
+
+  void _showMaterialImageOptions(bool hasImage) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -161,7 +195,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Indicador de arrastre
               Container(
                 width: 40,
                 height: 4,
@@ -171,17 +204,11 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
               const Text(
                 'Cambiar foto de perfil',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
-
-              // Tomar foto
               ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: primary,
@@ -193,8 +220,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                   _pickImage(ImageSource.camera);
                 },
               ),
-
-              // Elegir de galería
               ListTile(
                 leading: CircleAvatar(
                   backgroundColor: primary.withValues(alpha: 0.8),
@@ -206,8 +231,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                   _pickImage(ImageSource.gallery);
                 },
               ),
-
-              // Eliminar foto (solo si tiene foto)
               if (hasImage)
                 ListTile(
                   leading: const CircleAvatar(
@@ -223,16 +246,10 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                     _confirmDeleteImage();
                   },
                 ),
-
               const SizedBox(height: 10),
-
-              // Cancelar
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(
-                  'Cancelar',
-                  style: TextStyle(color: Colors.grey),
-                ),
+                child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
               ),
             ],
           ),
@@ -299,30 +316,54 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
   void _showPermissionDialog(ImageSource source) {
     final isCamera = source == ImageSource.camera;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Permiso necesario'),
-        content: Text(
-          isCamera
-              ? 'Necesitamos acceso a tu cámara para tomar fotos de perfil.'
-              : 'Necesitamos acceso a tu galería para elegir fotos de perfil.',
+    final message = isCamera
+        ? 'Necesitamos acceso a tu cámara para tomar fotos de perfil.'
+        : 'Necesitamos acceso a tu galería para elegir fotos de perfil.';
+
+    if (Platform.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Permiso necesario'),
+          content: Text(message),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
+              child: const Text('Abrir configuración'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const Text('Abrir configuración'),
-          ),
-        ],
-      ),
-    );
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Permiso necesario'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                openAppSettings();
+              },
+              child: const Text('Abrir configuración'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _uploadImage(File imageFile) async {
@@ -358,29 +399,55 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   }
 
   void _confirmDeleteImage() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar foto'),
-        content: const Text(
-          '¿Estás seguro de que quieres eliminar tu foto de perfil?',
+    if (Platform.isIOS) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Eliminar foto'),
+          content: const Text(
+            '¿Estás seguro de que quieres eliminar tu foto de perfil?',
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            CupertinoDialogAction(
+              isDestructiveAction: true,
+              onPressed: () {
+                Navigator.pop(context);
+                _deleteImage();
+              },
+              child: const Text('Eliminar'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Eliminar foto'),
+          content: const Text(
+            '¿Estás seguro de que quieres eliminar tu foto de perfil?',
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteImage();
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _deleteImage();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> _deleteImage() async {
@@ -443,58 +510,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     );
   }
 
-  Widget _datePicker() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: InkWell(
-        onTap: _pickFecha,
-        borderRadius: BorderRadius.circular(12),
-        child: InputDecorator(
-          decoration: InputDecoration(
-            labelText: 'Fecha de nacimiento',
-            filled: true,
-            fillColor: inputBg,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
-          child: Text(
-            _fechaNacimiento == null
-                ? 'Selecciona una fecha'
-                : DateFormat('dd/MM/yyyy').format(_fechaNacimiento!),
-            style: TextStyle(
-              color: _fechaNacimiento == null ? Colors.grey : Colors.black87,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ---------- ACTIONS ----------
-
-  void _pickFecha() async {
-    final now = DateTime.now();
-
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _fechaNacimiento ?? DateTime(now.year - 18),
-      firstDate: DateTime(1900),
-      lastDate: now,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(primary: primary),
-        ),
-        child: child!,
-      ),
-    );
-
-    if (picked != null) {
-      setState(() => _fechaNacimiento = picked);
-    }
-  }
-
   Future<void> _guardar() async {
     FocusScope.of(context).unfocus();
 
@@ -518,6 +533,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
         displayName: displayName.isNotEmpty ? displayName : null,
         bio: _bioCtrl.text.trim().isNotEmpty ? _bioCtrl.text.trim() : null,
         phoneNumber: _telefonoCtrl.text.trim().isNotEmpty ? _telefonoCtrl.text.trim() : null,
+        location: _ubicacionCtrl.text.trim().isNotEmpty ? _ubicacionCtrl.text.trim() : null,
       );
 
       _showSuccess('Cambios guardados');
@@ -542,10 +558,28 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
   void _showSuccess(String message) {
     if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
+        content: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        backgroundColor: primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        margin: const EdgeInsets.only(bottom: 24, left: 60, right: 60),
+        duration: const Duration(milliseconds: 1500),
+        elevation: 2,
       ),
     );
   }
