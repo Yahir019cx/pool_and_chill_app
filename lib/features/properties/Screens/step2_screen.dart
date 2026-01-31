@@ -1,20 +1,39 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:pool_and_chill_app/data/models/property/index.dart';
+import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
-class Step2Screen extends StatefulWidget {
-  const Step2Screen({super.key});
+class Step2Screen extends ConsumerStatefulWidget {
+  final VoidCallback onNext;
+  final VoidCallback onPrevious;
+
+  const Step2Screen({
+    super.key,
+    required this.onNext,
+    required this.onPrevious,
+  });
 
   @override
-  State<Step2Screen> createState() => _Step2ScreenState();
+  ConsumerState<Step2Screen> createState() => _Step2ScreenState();
 }
 
-class _Step2ScreenState extends State<Step2Screen> {
+class _Step2ScreenState extends ConsumerState<Step2Screen> {
   GoogleMapController? _mapController;
-
   LatLng _center = const LatLng(21.9944, -102.2826);
   LatLng? _selectedLocation;
-  AddressData? _addressData;
+
+  @override
+  void initState() {
+    super.initState();
+    // Restaurar estado previo si existe
+    final state = ref.read(propertyRegistrationProvider);
+    if (state.addressData?.lat != null && state.addressData?.lng != null) {
+      _center = LatLng(state.addressData!.lat!, state.addressData!.lng!);
+      _selectedLocation = _center;
+    }
+  }
 
   void _moveToLocation(LatLng location) {
     if (!mounted) return;
@@ -31,6 +50,10 @@ class _Step2ScreenState extends State<Step2Screen> {
 
   Future<void> _onTapMap(LatLng location) async {
     _moveToLocation(location);
+    final notifier = ref.read(propertyRegistrationProvider.notifier);
+
+    // Guardar coordenadas
+    notifier.setLocation(location.latitude, location.longitude);
 
     try {
       final placemarks = await placemarkFromCoordinates(
@@ -42,22 +65,36 @@ class _Step2ScreenState extends State<Step2Screen> {
 
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-
-        setState(() {
-          _addressData = AddressData(
-            calle: p.thoroughfare ?? '',
-            numero: p.subThoroughfare ?? '',
-            colonia: p.subLocality ?? '',
-            cp: p.postalCode ?? '',
-            ciudad: p.locality ?? '',
-            estado: p.administrativeArea ?? '',
-          );
-        });
+        notifier.setAddressData(AddressData(
+          calle: p.thoroughfare ?? '',
+          numero: p.subThoroughfare ?? '',
+          colonia: p.subLocality ?? '',
+          cp: p.postalCode ?? '',
+          ciudad: p.locality ?? '',
+          estado: p.administrativeArea ?? '',
+          lat: location.latitude,
+          lng: location.longitude,
+        ));
+      } else {
+        notifier.setAddressData(AddressData(
+          lat: location.latitude,
+          lng: location.longitude,
+        ));
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Error geocoding: $e');
+      if (mounted) {
+        notifier.setAddressData(AddressData(
+          lat: location.latitude,
+          lng: location.longitude,
+        ));
+      }
+    }
   }
 
   void _openAddressSheet() {
+    final currentData = ref.read(propertyRegistrationProvider).addressData;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -65,29 +102,38 @@ class _Step2ScreenState extends State<Step2Screen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _AddressForm(
-        initialData: _addressData,
+        initialData: currentData,
         onConfirm: (data) async {
+          final notifier = ref.read(propertyRegistrationProvider.notifier);
+
           try {
-            final results =
-                await locationFromAddress(data.toGeocodingString());
+            final results = await locationFromAddress(data.toGeocodingString());
 
             if (!mounted) return;
 
             if (results.isNotEmpty) {
-              setState(() => _addressData = data);
-              _moveToLocation(
-                LatLng(
-                  results.first.latitude,
-                  results.first.longitude,
+              final loc = results.first;
+              notifier.setAddressData(data.copyWith(
+                lat: loc.latitude,
+                lng: loc.longitude,
+              ));
+              _moveToLocation(LatLng(loc.latitude, loc.longitude));
+            } else {
+              notifier.setAddressData(data);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Dirección guardada, pero no se encontró en el mapa'),
                 ),
               );
             }
-          } catch (_) {
+          } catch (e) {
+            debugPrint('Error buscando dirección: $e');
             if (!mounted) return;
 
+            notifier.setAddressData(data);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('No se pudo encontrar la dirección'),
+                content: Text('No se pudo encontrar la dirección en el mapa'),
               ),
             );
           }
@@ -98,148 +144,122 @@ class _Step2ScreenState extends State<Step2Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Registrar espacio',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
+    final state = ref.watch(propertyRegistrationProvider);
+    final hasLocation = _selectedLocation != null || state.addressData?.lat != null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      child: Column(
+        children: [
+          const Text(
+            'Paso 2 de 4',
+            style: TextStyle(fontSize: 13, color: Colors.black45),
           ),
-        ),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: Column(
-            children: [
-              const Text(
-                'Paso 2 de 4',
-                style: TextStyle(fontSize: 13, color: Colors.black45),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '¿Dónde se encuentra tu espacio?',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              InkWell(
+          const SizedBox(height: 8),
+          const Text(
+            '¿Dónde se encuentra tu espacio?',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+          InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: _openAddressSheet,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(14),
-                onTap: _openAddressSheet,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.location_on, size: 20),
+                  SizedBox(width: 10),
+                  Text(
+                    'Ingresar o editar dirección',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.location_on, size: 20),
-                      SizedBox(width: 10),
-                      Text(
-                        'Ingresar o editar dirección',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: GoogleMap(
+                onMapCreated: (c) => _mapController = c,
+                initialCameraPosition: CameraPosition(target: _center, zoom: 14),
+                onTap: _onTapMap,
+                markers: _selectedLocation == null
+                    ? {}
+                    : {
+                        Marker(
+                          markerId: const MarkerId('selected'),
+                          position: _selectedLocation!,
                         ),
+                      },
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: widget.onPrevious,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFF3CA2A2)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                    ],
+                    ),
+                    child: const Text(
+                      'Anterior',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3CA2A2),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 250,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: GoogleMap(
-                    onMapCreated: (c) => _mapController = c,
-                    initialCameraPosition: CameraPosition(
-                      target: _center,
-                      zoom: 14,
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: hasLocation ? widget.onNext : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3CA2A2),
+                      disabledBackgroundColor:
+                          const Color(0xFF3CA2A2).withValues(alpha: 0.4),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                    onTap: _onTapMap,
-                    markers: _selectedLocation == null
-                        ? {}
-                        : {
-                            Marker(
-                              markerId: const MarkerId('selected'),
-                              position: _selectedLocation!,
-                            ),
-                          },
-                  ),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed:
-                      _selectedLocation == null || _addressData == null
-                          ? null
-                          : () {},
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3CA2A2),
-                    disabledBackgroundColor:
-                        const Color(0xFF3CA2A2).withOpacity(0.4),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Siguiente',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                    child: const Text(
+                      'Siguiente',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
-  }
-}
-
-class AddressData {
-  final String calle;
-  final String numero;
-  final String colonia;
-  final String cp;
-  final String ciudad;
-  final String estado;
-
-  const AddressData({
-    required this.calle,
-    required this.numero,
-    required this.colonia,
-    required this.cp,
-    required this.ciudad,
-    required this.estado,
-  });
-
-  String toGeocodingString() {
-    return '$calle $numero, $colonia, $cp, $ciudad, $estado';
   }
 }
 
@@ -247,10 +267,7 @@ class _AddressForm extends StatefulWidget {
   final AddressData? initialData;
   final Function(AddressData data) onConfirm;
 
-  const _AddressForm({
-    required this.onConfirm,
-    this.initialData,
-  });
+  const _AddressForm({required this.onConfirm, this.initialData});
 
   @override
   State<_AddressForm> createState() => _AddressFormState();
@@ -332,10 +349,7 @@ class _AddressFormState extends State<_AddressForm> {
                   ),
                   child: const Text(
                     'Buscar en el mapa',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
                   ),
                 ),
               ),
@@ -355,8 +369,7 @@ class _AddressFormState extends State<_AddressForm> {
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
-        keyboardType:
-            isNumber ? TextInputType.number : TextInputType.text,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
         decoration: InputDecoration(
           labelText: label,

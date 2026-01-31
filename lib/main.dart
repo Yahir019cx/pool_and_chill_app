@@ -1,10 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' hide ChangeNotifierProvider;
 import 'package:provider/provider.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/app/auth_gate.dart';
 
 Future<void> main() async {
@@ -20,9 +22,14 @@ Future<void> main() async {
   apiClient.attachAuthProvider(authProvider);
 
   runApp(
-    ChangeNotifierProvider<AuthProvider>.value(
-      value: authProvider,
-      child: const MyApp(),
+    ProviderScope(
+      overrides: [
+        apiClientProvider.overrideWithValue(apiClient),
+      ],
+      child: ChangeNotifierProvider<AuthProvider>.value(
+        value: authProvider,
+        child: const MyApp(),
+      ),
     ),
   );
 }
