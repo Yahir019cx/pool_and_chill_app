@@ -152,6 +152,93 @@ class CampingSpecs {
   }
 }
 
+/// Step 4: Información básica del espacio
+@immutable
+class BasicInfo {
+  final String nombre;
+  final String descripcion;
+  final String checkIn;
+  final String checkOut;
+  final double precioLunesJueves;
+  final double precioViernesDomingo;
+
+  const BasicInfo({
+    this.nombre = '',
+    this.descripcion = '',
+    this.checkIn = '12:00 PM',
+    this.checkOut = '10:00 PM',
+    this.precioLunesJueves = 0,
+    this.precioViernesDomingo = 0,
+  });
+
+  bool get isValid =>
+      nombre.trim().isNotEmpty &&
+      descripcion.trim().isNotEmpty &&
+      precioLunesJueves > 0 &&
+      precioViernesDomingo > 0;
+
+  BasicInfo copyWith({
+    String? nombre,
+    String? descripcion,
+    String? checkIn,
+    String? checkOut,
+    double? precioLunesJueves,
+    double? precioViernesDomingo,
+  }) {
+    return BasicInfo(
+      nombre: nombre ?? this.nombre,
+      descripcion: descripcion ?? this.descripcion,
+      checkIn: checkIn ?? this.checkIn,
+      checkOut: checkOut ?? this.checkOut,
+      precioLunesJueves: precioLunesJueves ?? this.precioLunesJueves,
+      precioViernesDomingo: precioViernesDomingo ?? this.precioViernesDomingo,
+    );
+  }
+}
+
+/// Step 6: Fotos del espacio
+@immutable
+class PropertyPhotos {
+  final List<String> photoPaths;
+
+  const PropertyPhotos({this.photoPaths = const []});
+
+  bool get isValid => photoPaths.isNotEmpty;
+
+  PropertyPhotos copyWith({List<String>? photoPaths}) {
+    return PropertyPhotos(photoPaths: photoPaths ?? this.photoPaths);
+  }
+}
+
+/// Step 7: Verificación de identidad (INE)
+@immutable
+class IdentityVerification {
+  final String? ineFrontPath;
+  final String? ineBackPath;
+  final String? selfiePath;
+
+  const IdentityVerification({
+    this.ineFrontPath,
+    this.ineBackPath,
+    this.selfiePath,
+  });
+
+  bool get isComplete =>
+      ineFrontPath != null && ineBackPath != null && selfiePath != null;
+
+  IdentityVerification copyWith({
+    String? ineFrontPath,
+    String? ineBackPath,
+    String? selfiePath,
+  }) {
+    return IdentityVerification(
+      ineFrontPath: ineFrontPath ?? this.ineFrontPath,
+      ineBackPath: ineBackPath ?? this.ineBackPath,
+      selfiePath: selfiePath ?? this.selfiePath,
+    );
+  }
+}
+
 @immutable
 class PropertyRegistrationState {
   final Set<String> tiposEspacioSeleccionados;
@@ -159,6 +246,10 @@ class PropertyRegistrationState {
   final CabanaSpecs cabana;
   final AlbercaSpecs alberca;
   final CampingSpecs camping;
+  final BasicInfo basicInfo;
+  final List<String> reglas;
+  final PropertyPhotos photos;
+  final IdentityVerification identity;
   final int currentStep;
 
   const PropertyRegistrationState({
@@ -167,6 +258,10 @@ class PropertyRegistrationState {
     this.cabana = const CabanaSpecs(),
     this.alberca = const AlbercaSpecs(),
     this.camping = const CampingSpecs(),
+    this.basicInfo = const BasicInfo(),
+    this.reglas = const [],
+    this.photos = const PropertyPhotos(),
+    this.identity = const IdentityVerification(),
     this.currentStep = 1,
   });
 
@@ -176,6 +271,10 @@ class PropertyRegistrationState {
     CabanaSpecs? cabana,
     AlbercaSpecs? alberca,
     CampingSpecs? camping,
+    BasicInfo? basicInfo,
+    List<String>? reglas,
+    PropertyPhotos? photos,
+    IdentityVerification? identity,
     int? currentStep,
   }) {
     return PropertyRegistrationState(
@@ -184,6 +283,10 @@ class PropertyRegistrationState {
       cabana: cabana ?? this.cabana,
       alberca: alberca ?? this.alberca,
       camping: camping ?? this.camping,
+      basicInfo: basicInfo ?? this.basicInfo,
+      reglas: reglas ?? this.reglas,
+      photos: photos ?? this.photos,
+      identity: identity ?? this.identity,
       currentStep: currentStep ?? this.currentStep,
     );
   }
@@ -200,4 +303,12 @@ class PropertyRegistrationState {
 
   /// Query string para el API de amenidades
   String get categoriasQuery => categoriasApi.join(',');
+
+  /// Valida si el registro está completo para enviar
+  bool get isReadyToSubmit =>
+      tiposEspacioSeleccionados.isNotEmpty &&
+      addressData != null &&
+      basicInfo.isValid &&
+      photos.isValid &&
+      identity.isComplete;
 }

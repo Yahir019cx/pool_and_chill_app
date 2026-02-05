@@ -139,6 +139,109 @@ class PropertyRegistrationNotifier extends StateNotifier<PropertyRegistrationSta
     state = state.copyWith(camping: state.camping.copyWith(amenidades: current));
   }
 
+  /// Step 4: Información básica
+  void setBasicInfo(BasicInfo info) {
+    state = state.copyWith(basicInfo: info);
+  }
+
+  void updateBasicInfoField(String field, dynamic value) {
+    final b = state.basicInfo;
+    state = state.copyWith(
+      basicInfo: switch (field) {
+        'nombre' => b.copyWith(nombre: value as String),
+        'descripcion' => b.copyWith(descripcion: value as String),
+        'checkIn' => b.copyWith(checkIn: value as String),
+        'checkOut' => b.copyWith(checkOut: value as String),
+        'precioLunesJueves' => b.copyWith(precioLunesJueves: value as double),
+        'precioViernesDomingo' => b.copyWith(precioViernesDomingo: value as double),
+        _ => b,
+      },
+    );
+  }
+
+  /// Step 5: Reglas
+  void setReglas(List<String> reglas) {
+    state = state.copyWith(reglas: reglas);
+  }
+
+  void addRegla(String regla) {
+    if (regla.trim().isEmpty) return;
+    state = state.copyWith(reglas: [...state.reglas, regla.trim()]);
+  }
+
+  void updateRegla(int index, String regla) {
+    if (index < 0 || index >= state.reglas.length) return;
+    final updated = List<String>.from(state.reglas);
+    updated[index] = regla.trim();
+    state = state.copyWith(reglas: updated);
+  }
+
+  void removeRegla(int index) {
+    if (index < 0 || index >= state.reglas.length) return;
+    final updated = List<String>.from(state.reglas)..removeAt(index);
+    state = state.copyWith(reglas: updated);
+  }
+
+  /// Step 6: Fotos
+  void addPhoto(String path) {
+    final current = List<String>.from(state.photos.photoPaths);
+    current.add(path);
+    state = state.copyWith(photos: state.photos.copyWith(photoPaths: current));
+  }
+
+  void removePhoto(int index) {
+    if (index < 0 || index >= state.photos.photoPaths.length) return;
+    final current = List<String>.from(state.photos.photoPaths)..removeAt(index);
+    state = state.copyWith(photos: state.photos.copyWith(photoPaths: current));
+  }
+
+  void reorderPhotos(int oldIndex, int newIndex) {
+    final current = List<String>.from(state.photos.photoPaths);
+    if (newIndex > oldIndex) newIndex -= 1;
+    final item = current.removeAt(oldIndex);
+    current.insert(newIndex, item);
+    state = state.copyWith(photos: state.photos.copyWith(photoPaths: current));
+  }
+
+  /// Step 7: Verificación de identidad
+  void setIneFront(String path) {
+    state = state.copyWith(
+      identity: state.identity.copyWith(ineFrontPath: path),
+    );
+  }
+
+  void setIneBack(String path) {
+    state = state.copyWith(
+      identity: state.identity.copyWith(ineBackPath: path),
+    );
+  }
+
+  void setSelfie(String path) {
+    state = state.copyWith(
+      identity: state.identity.copyWith(selfiePath: path),
+    );
+  }
+
+  void clearIdentityPhoto(String type) {
+    state = state.copyWith(
+      identity: switch (type) {
+        'front' => IdentityVerification(
+            ineBackPath: state.identity.ineBackPath,
+            selfiePath: state.identity.selfiePath,
+          ),
+        'back' => IdentityVerification(
+            ineFrontPath: state.identity.ineFrontPath,
+            selfiePath: state.identity.selfiePath,
+          ),
+        'selfie' => IdentityVerification(
+            ineFrontPath: state.identity.ineFrontPath,
+            ineBackPath: state.identity.ineBackPath,
+          ),
+        _ => state.identity,
+      },
+    );
+  }
+
   /// Navegación
   void setCurrentStep(int step) {
     state = state.copyWith(currentStep: step);

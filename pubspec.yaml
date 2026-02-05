@@ -34,7 +34,7 @@ dependencies:
   firebase_storage: ^11.6.0
 
   # Image picking & compression
-  image_picker: ^1.0.7
+  image_picker: ^1.2.1
   flutter_image_compress: ^2.1.0
 
   # Maps & Location

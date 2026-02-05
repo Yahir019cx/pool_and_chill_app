@@ -16,8 +16,9 @@ class PropertyService {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => AmenityModel.fromJson(json)).toList();
+      final json = jsonDecode(response.body);
+      final List<dynamic> data = json['data'] ?? [];
+      return data.map((item) => AmenityModel.fromJson(item)).toList();
     }
 
     throw Exception('Error al obtener amenidades: ${response.statusCode}');

@@ -13,10 +13,10 @@ class AmenityModel {
 
   factory AmenityModel.fromJson(Map<String, dynamic> json) {
     return AmenityModel(
-      id: json['id']?.toString() ?? '',
-      name: json['name'] ?? '',
-      category: json['category'] ?? '',
-      icon: json['icon'],
+      id: (json['ID_Amenity'] ?? json['id'])?.toString() ?? '',
+      name: json['AmenityName'] ?? json['name'] ?? '',
+      category: json['CategoryCode'] ?? json['category'] ?? '',
+      icon: json['Icon'] ?? json['icon'],
     );
   }
 
