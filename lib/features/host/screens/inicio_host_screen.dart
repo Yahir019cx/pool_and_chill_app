@@ -30,30 +30,51 @@ class InicioHostScreen extends StatelessWidget {
                       // Header
                       Row(
                         children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: primary.withValues(alpha: 0.1),
-                            backgroundImage: profile?.profileImageUrl != null &&
-                                    profile!.profileImageUrl!.isNotEmpty
-                                ? NetworkImage(profile.profileImageUrl!)
-                                : null,
-                            child: profile?.profileImageUrl == null ||
-                                    profile!.profileImageUrl!.isEmpty
-                                ? (profile?.initials.isNotEmpty == true
-                                    ? Text(
-                                        profile!.initials,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: primary,
-                                        ),
-                                      )
-                                    : const Icon(
-                                        Icons.person_rounded,
-                                        color: primary,
-                                        size: 26,
-                                      ))
-                                : null,
+                          Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: primary.withValues(alpha: 0.1),
+                                backgroundImage: profile?.profileImageUrl != null &&
+                                        profile!.profileImageUrl!.isNotEmpty
+                                    ? NetworkImage(profile.profileImageUrl!)
+                                    : null,
+                                child: profile?.profileImageUrl == null ||
+                                        profile!.profileImageUrl!.isEmpty
+                                    ? (profile?.initials.isNotEmpty == true
+                                        ? Text(
+                                            profile!.initials,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: primary,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.person_rounded,
+                                            color: primary,
+                                            size: 26,
+                                          ))
+                                    : null,
+                              ),
+                              if (profile?.isIdentityVerified == true)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(1),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.verified,
+                                      color: primary,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                           const SizedBox(width: 12),
                           Expanded(
