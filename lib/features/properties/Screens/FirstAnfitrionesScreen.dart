@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/step_item.dart';
-import '../../home/screens/welcome.dart';
 
 class FirstAnfitrionesScreen extends StatelessWidget {
   const FirstAnfitrionesScreen({super.key, this.onStartPressed});
@@ -19,10 +18,7 @@ class FirstAnfitrionesScreen extends StatelessWidget {
           child: InkWell(
             borderRadius: BorderRadius.circular(20),
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-              );
+              Navigator.pop(context);
             },
             child: const Icon(Icons.arrow_back, color: Colors.black, size: 25),
           ),

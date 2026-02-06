@@ -51,6 +51,20 @@ class UserService {
     }
   }
 
+  /// Completar onboarding de host
+  Future<void> completeHostOnboarding() async {
+    final response = await api.post(ApiRoutes.completeHostOnboarding);
+
+    if (response.statusCode == 200) {
+      return;
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Error al completar el registro');
+    }
+  }
+
   /// Actualizar perfil del usuario
   Future<void> updateProfile({
     String? displayName,

@@ -1,55 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import '../widgets/card_espacio_host.dart';
 
-class MisEspaciosHostScreen extends StatefulWidget {
+class MisEspaciosHostScreen extends StatelessWidget {
   const MisEspaciosHostScreen({super.key});
 
-  @override
-  State<MisEspaciosHostScreen> createState() => _MisEspaciosHostScreenState();
-}
-
-class _MisEspaciosHostScreenState extends State<MisEspaciosHostScreen> {
   static const Color primary = Color(0xFF2D9D91);
-
-  // Datos de ejemplo - en producción vendrían de un provider/bloc
-  final List<Map<String, dynamic>> _espacios = [
-    {
-      'nombre': 'Alberca Principal',
-      'ubicacion': 'Col. Centro, Monterrey',
-      'precio': 1200.0,
-      'rating': 4.8,
-      'reservas': 24,
-      'activo': true,
-      'fotos': <String>[],
-    },
-    {
-      'nombre': 'Alberca con Jardín',
-      'ubicacion': 'Col. Valle, Monterrey',
-      'precio': 1500.0,
-      'rating': 4.9,
-      'reservas': 18,
-      'activo': true,
-      'fotos': <String>[],
-    },
-    {
-      'nombre': 'Terraza con Alberca',
-      'ubicacion': 'Col. Cumbres, Monterrey',
-      'precio': 2000.0,
-      'rating': 4.7,
-      'reservas': 12,
-      'activo': false,
-      'fotos': <String>[],
-    },
-  ];
-
-  void _toggleEspacioStatus(int index, bool newStatus) {
-    setState(() {
-      _espacios[index]['activo'] = newStatus;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final properties = authProvider.myProperties;
+    final isLoading = authProvider.isLoadingProperties;
+    final activos = properties.where((p) => p.isActive).length;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -72,7 +38,12 @@ class _MisEspaciosHostScreenState extends State<MisEspaciosHostScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Navegar a agregar espacio
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PublishScreen(),
+                        ),
+                      );
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -110,7 +81,7 @@ class _MisEspaciosHostScreenState extends State<MisEspaciosHostScreen> {
               child: Row(
                 children: [
                   Text(
-                    '${_espacios.length} espacios',
+                    '${properties.length} espacios',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -118,8 +89,8 @@ class _MisEspaciosHostScreenState extends State<MisEspaciosHostScreen> {
                   ),
                   const Spacer(),
                   Text(
-                    '${_espacios.where((e) => e['activo'] == true).length} activos',
-                    style: TextStyle(
+                    '$activos activos',
+                    style: const TextStyle(
                       fontSize: 13,
                       color: primary,
                       fontWeight: FontWeight.w500,
@@ -131,31 +102,107 @@ class _MisEspaciosHostScreenState extends State<MisEspaciosHostScreen> {
 
             // Lista de espacios
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
-                itemCount: _espacios.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final espacio = _espacios[index];
-                  return EspacioHostCard(
-                    nombre: espacio['nombre'],
-                    ubicacion: espacio['ubicacion'],
-                    precioPorDia: espacio['precio'],
-                    rating: espacio['rating'],
-                    totalReservas: espacio['reservas'],
-                    isActivo: espacio['activo'],
-                    fotos: List<String>.from(espacio['fotos']),
-                    onTap: () {
-                      // Navegar a detalle del espacio
-                    },
-                    onEdit: () {
-                      // Navegar a editar espacio
-                    },
-                    onToggleStatus: (newStatus) {
-                      _toggleEspacioStatus(index, newStatus);
-                    },
-                  );
-                },
+              child: isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: primary),
+                    )
+                  : properties.isEmpty
+                      ? _buildEmptyState(context)
+                      : RefreshIndicator(
+                          color: primary,
+                          onRefresh: () => authProvider.fetchMyProperties(),
+                          child: ListView.separated(
+                            padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
+                            itemCount: properties.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
+                            itemBuilder: (context, index) {
+                              final property = properties[index];
+                              return EspacioHostCard(
+                                nombre: property.title,
+                                ubicacion: property.locationDisplay,
+                                precioPorDia: property.priceFrom,
+                                rating: property.rating,
+                                totalReservas: property.totalReservations,
+                                isActivo: property.isActive,
+                                fotos: property.imageUrls,
+                                onTap: () {
+                                  // Navegar a detalle del espacio
+                                },
+                                onEdit: () {
+                                  // Navegar a editar espacio
+                                },
+                                onToggleStatus: (newStatus) {
+                                  // TODO: implementar toggle de status en API
+                                },
+                              );
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.villa_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Aún no tienes espacios',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Publica tu primer espacio y comienza a recibir reservas',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PublishScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+              ),
+              child: const Text(
+                'Agregar espacio',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],

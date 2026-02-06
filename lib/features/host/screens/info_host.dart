@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import '../home_host.dart';
 
 class WelcomeHostInfoScreen extends StatefulWidget {
@@ -39,14 +41,36 @@ class _WelcomeHostInfoScreenState extends State<WelcomeHostInfoScreen>
     super.dispose();
   }
 
-  void _continuar() {
+  bool _isLoading = false;
+
+  Future<void> _continuar() async {
     if (widget.onContinue != null) {
       widget.onContinue!();
-    } else {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await context.read<AuthProvider>().completeHostOnboarding();
+
+      if (!mounted) return;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeHostScreen()),
       );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al completar el registro: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -164,10 +188,20 @@ class _WelcomeHostInfoScreenState extends State<WelcomeHostInfoScreen>
             Positioned(
               bottom: 36,
               right: 24,
-              child: _ArrowActionButton(
-                onTap: _continuar,
-                controller: _pulseController,
-              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 68,
+                      height: 68,
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF2D9D91),
+                        ),
+                      ),
+                    )
+                  : _ArrowActionButton(
+                      onTap: _continuar,
+                      controller: _pulseController,
+                    ),
             ),
           ],
         ),

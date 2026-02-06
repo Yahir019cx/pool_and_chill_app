@@ -27,7 +27,7 @@ class UserProfileModel {
   final DateTime? dateOfBirth;
   final int? gender;
 
-  final bool isHostOnboarded;
+  final int isHostOnboarded;
 
   final List<String> roles;
   final bool hasPassword;
@@ -97,7 +97,7 @@ class UserProfileModel {
 
       gender: json['gender'],
 
-      isHostOnboarded: json['isHostOnboarded'] == true,
+      isHostOnboarded: json['isHostOnboarded'] ?? 0,
 
       roles: List<String>.from(json['roles'] ?? []),
       hasPassword: json['hasPassword'] == true,
@@ -129,7 +129,7 @@ class UserProfileModel {
     String? location,
     DateTime? dateOfBirth,
     int? gender,
-    bool? isHostOnboarded,
+    int? isHostOnboarded,
     List<String>? roles,
     bool? hasPassword,
     List<dynamic>? linkedProviders,

@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/app/auth_gate.dart';
+import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
 
 class CuentaHostScreen extends StatelessWidget {
   const CuentaHostScreen({super.key});
@@ -7,6 +12,13 @@ class CuentaHostScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<AuthProvider>().profile;
+    final displayName = profile?.displayName ?? 'Anfitrión';
+    final imageUrl = profile?.profileImageUrl;
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    final isVerified = profile?.isIdentityVerified == true; 
+    final bio = profile?.bio;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -17,61 +29,69 @@ class CuentaHostScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               // Perfil
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: primary,
-                  size: 45,
-                ),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 45,
+                    backgroundColor: primary.withValues(alpha: 0.1),
+                    backgroundImage: hasImage
+                        ? NetworkImage(imageUrl)
+                        : null,
+                    child: !hasImage
+                        ? (profile?.initials.isNotEmpty == true
+                            ? Text(
+                                profile!.initials,
+                                style: const TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: primary,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.person_rounded,
+                                color: primary,
+                                size: 45,
+                              ))
+                        : null,
+                  ),
+                  if (isVerified)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified,
+                          color: primary,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 16),
-              const Text(
-                'Juan Anfitrión',
-                style: TextStyle(
+              Text(
+                displayName,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'juan@email.com',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
+              if (bio != null && bio.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  bio,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade500,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.verified, color: primary, size: 18),
-                    SizedBox(width: 6),
-                    Text(
-                      'Anfitrión verificado',
-                      style: TextStyle(
-                        color: primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              ],
               const SizedBox(height: 32),
 
               // Opciones
@@ -81,7 +101,14 @@ class CuentaHostScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.person_outline,
                     label: 'Editar perfil',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const EditarPerfil(),
+                        ),
+                      );
+                    },
                   ),
                   _MenuItem(
                     icon: Icons.account_balance_outlined,
@@ -123,13 +150,60 @@ class CuentaHostScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.swap_horiz_rounded,
                     label: 'Cambiar a modo huésped',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const WelcomeScreen(),
+                        ),
+                        (route) => false,
+                      );
+                    },
                     showBadge: true,
                   ),
                   _MenuItem(
                     icon: Icons.logout_rounded,
                     label: 'Cerrar sesión',
-                    onTap: () {},
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (_) => AlertDialog(
+                          title: const Text('Cerrar sesión'),
+                          content: const Text(
+                            '¿Seguro que deseas cerrar sesión?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.grey,
+                              ),
+                              child: const Text('Cancelar'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: primary,
+                              ),
+                              child: const Text('Cerrar sesión'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirm == true && context.mounted) {
+                        await context.read<AuthProvider>().logout();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AuthGate(),
+                            ),
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
                     isDestructive: true,
                   ),
                 ],

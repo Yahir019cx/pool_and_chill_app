@@ -2,28 +2,36 @@ import 'package:flutter/material.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/models/user/index.dart';
+import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/services/auth_service.dart';
 import 'package:pool_and_chill_app/data/services/user_service.dart';
+import 'package:pool_and_chill_app/data/services/property_service.dart';
 import 'package:pool_and_chill_app/data/storage/secure_storage.dart';
 
 class AuthProvider extends ChangeNotifier {
   final ApiClient apiClient;
   final AuthService _authService;
   final UserService _userService;
+  final PropertyService _propertyService;
 
   UserProfileModel? _profile;
+  List<MyPropertyModel> _myProperties = [];
   bool _loading = false;
   bool _bootstrapped = false;
+  bool _loadingProperties = false;
 
   AuthProvider(this.apiClient)
     : _authService = AuthService(apiClient),
-      _userService = UserService(apiClient);
+      _userService = UserService(apiClient),
+      _propertyService = PropertyService(apiClient);
 
   // ===== GETTERS =====
   bool get isLoading => _loading;
   bool get isAuthenticated => _profile != null;
   bool get isBootstrapped => _bootstrapped;
   UserProfileModel? get profile => _profile;
+  List<MyPropertyModel> get myProperties => _myProperties;
+  bool get isLoadingProperties => _loadingProperties;
 
   // Expone el UserService para operaciones de perfil
   UserService get userService => _userService;
@@ -71,6 +79,29 @@ class AuthProvider extends ChangeNotifier {
     await refreshProfile();
   }
 
+  // ===== MY PROPERTIES =====
+  /// Obtiene las propiedades del host autenticado
+  Future<void> fetchMyProperties() async {
+    _loadingProperties = true;
+    notifyListeners();
+
+    try {
+      _myProperties = await _propertyService.getMyProperties();
+    } catch (_) {
+      _myProperties = [];
+    } finally {
+      _loadingProperties = false;
+      notifyListeners();
+    }
+  }
+
+  // ===== HOST ONBOARDING =====
+  /// Completa el onboarding de host y refresca el perfil
+  Future<void> completeHostOnboarding() async {
+    await _userService.completeHostOnboarding();
+    await refreshProfile();
+  }
+
   // ===== INTERNAL =====
   void _setLoading(bool value) {
     _loading = value;
@@ -86,6 +117,9 @@ class AuthProvider extends ChangeNotifier {
       if (accessToken != null) {
         apiClient.setAccessToken(accessToken);
         _profile = await _userService.getMe();
+        if (_profile != null && _profile!.isHost) {
+          await fetchMyProperties();
+        }
       }
     } catch (_) {
       _profile = null;
@@ -113,6 +147,9 @@ class AuthProvider extends ChangeNotifier {
       );
 
       _profile = await _userService.getMe();
+      if (_profile != null && _profile!.isHost) {
+        await fetchMyProperties();
+      }
     } finally {
       _setLoading(false);
     }
@@ -121,6 +158,7 @@ class AuthProvider extends ChangeNotifier {
   // ===== LOGOUT =====
   Future<void> logout() async {
     _profile = null;
+    _myProperties = [];
     await SecureStorage.clear();
     apiClient.clearAccessToken();
     notifyListeners();

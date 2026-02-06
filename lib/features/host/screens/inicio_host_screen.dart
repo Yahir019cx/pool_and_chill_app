@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 
 class InicioHostScreen extends StatelessWidget {
   const InicioHostScreen({super.key});
@@ -7,6 +10,8 @@ class InicioHostScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.watch<AuthProvider>().profile;
+    final displayName = profile?.displayName ?? 'Anfitrión';
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -25,18 +30,30 @@ class InicioHostScreen extends StatelessWidget {
                       // Header
                       Row(
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              color: primary,
-                              size: 26,
-                            ),
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: primary.withValues(alpha: 0.1),
+                            backgroundImage: profile?.profileImageUrl != null &&
+                                    profile!.profileImageUrl!.isNotEmpty
+                                ? NetworkImage(profile.profileImageUrl!)
+                                : null,
+                            child: profile?.profileImageUrl == null ||
+                                    profile!.profileImageUrl!.isEmpty
+                                ? (profile?.initials.isNotEmpty == true
+                                    ? Text(
+                                        profile!.initials,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: primary,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.person_rounded,
+                                        color: primary,
+                                        size: 26,
+                                      ))
+                                : null,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -44,7 +61,7 @@ class InicioHostScreen extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '¡Hola, Anfitrión!',
+                                  '¡Hola, $displayName!',
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
@@ -60,20 +77,6 @@ class InicioHostScreen extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade50,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Icon(
-                              Icons.notifications_none_rounded,
-                              color: Colors.grey.shade600,
-                              size: 22,
                             ),
                           ),
                         ],
@@ -129,7 +132,14 @@ class InicioHostScreen extends StatelessWidget {
                             child: _QuickActionCard(
                               icon: Icons.add_business_rounded,
                               label: 'Agregar espacio',
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const PublishScreen(),
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           const SizedBox(width: 12),

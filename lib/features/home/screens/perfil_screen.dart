@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/app/auth_gate.dart';
+import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
+import 'package:pool_and_chill_app/features/host/home_host.dart';
+import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import 'perfil/ayuda_screen.dart';
 import 'perfil/mis_reservas_screen.dart';
 import 'perfil/terminos_screen.dart';
@@ -179,9 +183,43 @@ class PerfilScreen extends StatelessWidget {
                 items: [
                   _MenuItem(
                     icon: Icons.swap_horiz_rounded,
-                    label: 'Cambiar a modo anfitrión',
-                    onTap: () {},
-                    showBadge: true,
+                    label: profile?.isHost == true
+                        ? 'Panel de anfitrión'
+                        : 'Cambiar a modo anfitrión',
+                    onTap: () {
+                      if (profile == null) return;
+
+                      // Host con onboarding completo → Dashboard
+                      if (profile.isHost && profile.isHostOnboarded == 2) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HomeHostScreen(),
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Host en onboarding → Bienvenida host
+                      if (profile.isHost && profile.isHostOnboarded == 1) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const WelcomeAnfitrionScreen(),
+                          ),
+                        );
+                        return;
+                      }
+
+                      // No es host → Publicar primera propiedad
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PublishScreen(),
+                        ),
+                      );
+                    },
+                    showBadge: profile?.isHost != true,
                   ),
                   _MenuItem(
                     icon: Icons.logout_rounded,
@@ -215,7 +253,16 @@ class PerfilScreen extends StatelessWidget {
                       );
 
                       if (confirm == true && context.mounted) {
-                        context.read<AuthProvider>().logout();
+                        await context.read<AuthProvider>().logout();
+                        if (context.mounted) {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AuthGate(),
+                            ),
+                            (route) => false,
+                          );
+                        }
                       }
                     },
                   ),
