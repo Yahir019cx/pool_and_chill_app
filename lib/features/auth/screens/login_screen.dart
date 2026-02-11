@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/features/auth/widgets/auth_snackbar.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -31,9 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa todos los campos')),
-      );
+      AuthSnackbar.showWarning(context, 'Completa todos los campos');
       return;
     }
 
@@ -44,12 +43,15 @@ class _LoginScreenState extends State<LoginScreen> {
         email: email,
         password: password,
       );
-      // 👉 NO navegamos aquí
-      // main.dart decide qué pantalla mostrar
-    } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Credenciales inválidas')),
-      );
+
+      if (!mounted) return;
+
+      // Limpiar el stack para que AuthGate tome el control
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      debugPrint('LOGIN ERROR: $e');
+      AuthSnackbar.showError(context, e.toString());
     }
   }
 
@@ -68,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
             height: height * 0.45,
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Color.fromARGB(255, 62, 131, 140),
+              color: Color.fromARGB(255, 236, 242, 243),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -83,11 +85,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 Transform.translate(
                   offset: const Offset(0, -160),
-                  child: Text(
-                    "Relájate, disfruta, reserva.",
-                    style: GoogleFonts.oleoScript(
-                      color: Colors.white,
+                  child: const Text(
+                    "El lujo de elegir",
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 69, 145, 155),
                       fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -127,9 +130,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       borderRadius: BorderRadius.circular(20),
                       borderColor: Colors.transparent,
                       selectedBorderColor: Colors.transparent,
-                      fillColor: const Color.fromARGB(255, 62, 131, 140),
-                      selectedColor: Colors.white,
-                      color: Colors.black,
+                      fillColor: const Color.fromARGB(255, 236, 242, 243),
+                      selectedColor: const Color.fromARGB(255, 69, 145, 155),
+                      color: const Color.fromARGB(255, 19, 19, 19),
                       constraints: const BoxConstraints(
                         minHeight: 50,
                         minWidth: 120,
@@ -190,7 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                         side: const BorderSide(
-                          color: Color.fromARGB(255, 62, 131, 140),
+                          color: Color.fromARGB(255, 69, 145, 155),
                           width: 2,
                         ),
                       ),
@@ -202,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Color.fromARGB(255, 62, 131, 140),
+                                Color.fromARGB(255, 69, 145, 155),
                               ),
                             ),
                           )
@@ -210,8 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Log In',
                             style: GoogleFonts.lilitaOne(
                               fontSize: 16,
-                              color:
-                                  const Color.fromARGB(255, 62, 131, 140),
+                              color: const Color.fromARGB(255, 69, 145, 155),
                             ),
                           ),
                   ),
@@ -219,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 60),
 
                   Row(
-                    children: const [
+                    children: [
                       Expanded(
                         child: Divider(
                           color: Color.fromARGB(255, 62, 131, 140),
@@ -228,10 +230,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           endIndent: 10,
                         ),
                       ),
-                      Text("o bien"),
+                      Text("o bien", style: GoogleFonts.openSans(fontSize: 14)),
                       Expanded(
                         child: Divider(
-                          color: Color.fromARGB(255, 62, 131, 140),
+                          color: Color.fromARGB(255, 69, 145, 155),
                           thickness: 2,
                           indent: 10,
                           endIndent: 40,
@@ -274,17 +276,22 @@ class _LoginScreenState extends State<LoginScreen> {
         style: GoogleFonts.openSans(fontSize: 16),
         decoration: InputDecoration(
           labelText: label,
-          floatingLabelStyle: const TextStyle(
-            color: Color.fromARGB(255, 62, 131, 140),
+          labelStyle: GoogleFonts.openSans(
+            fontSize: 16,
+            color: Colors.grey.shade600,
+          ),
+          floatingLabelStyle: GoogleFonts.openSans(
+            color: const Color.fromARGB(255, 69, 145, 155),
+            fontWeight: FontWeight.w500,
           ),
           enabledBorder: const UnderlineInputBorder(
             borderSide: BorderSide(
-              color: Color.fromARGB(255, 62, 131, 140),
+              color: Color.fromARGB(255, 69, 145, 155),
             ),
           ),
           focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(
-              color: Color.fromARGB(255, 62, 131, 140),
+              color: Color.fromARGB(255, 69, 145, 155),
               width: 2,
             ),
           ),

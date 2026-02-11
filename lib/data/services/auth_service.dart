@@ -26,6 +26,52 @@ class AuthService {
     return AuthResponseModel.fromJson(data);
   }
 
+  Future<RegisterResponseModel> register({
+    required String email,
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required String password,
+    String? dateOfBirth,
+    int? gender,
+  }) async {
+    final body = <String, dynamic>{
+      'email': email,
+      'firstName': firstName,
+      'lastName': lastName,
+      'phoneNumber': phoneNumber,
+      'password': password,
+      'type': 2,
+    };
+
+    if (dateOfBirth != null) body['dateOfBirth'] = dateOfBirth;
+    if (gender != null) body['gender'] = gender;
+
+    final response = await api.post(
+      ApiRoutes.register,
+      withAuth: false,
+      body: body,
+    );
+
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return RegisterResponseModel.fromJson(data);
+    }
+
+    final error = jsonDecode(response.body) as Map<String, dynamic>;
+    final message = error['message'];
+
+    if (message is List) {
+      throw Exception(message.join('\n'));
+    }
+
+    throw Exception(message ?? 'Error al registrar');
+  }
+
+  Future<void> logout() async {
+    await api.post(ApiRoutes.logout, withAuth: true);
+  }
+
   Future<AuthResponseModel> refresh(String refreshToken) async {
     final response = await api.post(
       ApiRoutes.refresh,

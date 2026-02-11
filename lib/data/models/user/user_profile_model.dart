@@ -18,7 +18,7 @@ class UserProfileModel {
 
   final String firstName;
   final String lastName;
-  final String displayName;
+  final String? displayName;
 
   final String? bio;
   final String? profileImageUrl;

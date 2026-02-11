@@ -155,8 +155,41 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ===== REGISTER =====
+  Future<void> register({
+    required String email,
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+    required String password,
+    String? dateOfBirth,
+    int? gender,
+  }) async {
+    _setLoading(true);
+
+    try {
+      await _authService.register(
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        password: password,
+        dateOfBirth: dateOfBirth,
+        gender: gender,
+      );
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // ===== LOGOUT =====
   Future<void> logout() async {
+    try {
+      await _authService.logout();
+    } catch (_) {
+      // Si falla el endpoint, igual limpiamos localmente
+    }
+
     _profile = null;
     _myProperties = [];
     await SecureStorage.clear();

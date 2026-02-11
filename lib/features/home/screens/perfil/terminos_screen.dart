@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class TerminosCondicionesScreen extends StatelessWidget {
   const TerminosCondicionesScreen({super.key});
@@ -33,7 +32,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Términos y condiciones',
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -49,7 +48,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
               Text(
                 'Comprometidos con tu confianza',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),
@@ -58,7 +57,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
               Text(
                 'Consulta nuestros documentos legales de forma clara y transparente.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey.shade700,
                   height: 1.5,
@@ -106,7 +105,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
         leading: Icon(icon, color: _primaryColor),
         title: Text(
           titulo,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
@@ -115,7 +114,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
           padding: const EdgeInsets.only(top: 6),
           child: Text(
             descripcion,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 13.5,
               color: Colors.grey.shade700,
             ),
@@ -179,7 +178,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
                         child: Text(
                           titulo,
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
@@ -201,7 +200,7 @@ class TerminosCondicionesScreen extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
                 child: Text(
                   contenido,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 14,
                     height: 1.6,
                     color: Colors.grey.shade800,

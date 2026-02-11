@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -41,7 +40,7 @@ class FAQScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Preguntas frecuentes',
-          style: GoogleFonts.poppins(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
@@ -73,7 +72,7 @@ class FAQScreen extends StatelessWidget {
         icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
         label: Text(
           '¿Necesitas ayuda?',
-          style: GoogleFonts.poppins(
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -112,7 +111,7 @@ class FAQScreen extends StatelessWidget {
               ),
               Text(
                 '¿Cómo deseas contactarnos?',
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
@@ -190,7 +189,7 @@ class _FAQCard extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           title: Text(
             pregunta,
-            style: GoogleFonts.poppins(
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
@@ -203,10 +202,10 @@ class _FAQCard extends StatelessWidget {
           children: [
             Text(
               respuesta,
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 14,
                 height: 1.6,
-                color: Colors.grey.shade700,
+                color: Colors.grey,
               ),
             ),
           ],
@@ -246,7 +245,7 @@ class _ContactoItem extends StatelessWidget {
             const SizedBox(width: 14),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w500,
               ),

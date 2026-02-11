@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -43,7 +42,7 @@ class SeguridadScreen extends StatelessWidget {
             _dragHandle(),
             Text(
               '¿Cómo deseas contactar al equipo de seguridad?',
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
               ),
@@ -130,7 +129,7 @@ class SeguridadScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(
           'Seguridad y Reportes',
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -146,7 +145,7 @@ class SeguridadScreen extends StatelessWidget {
               Text(
                 'Tu seguridad es nuestra prioridad',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),
@@ -155,7 +154,7 @@ class SeguridadScreen extends StatelessWidget {
               Text(
                 'Si has tenido una situación sospechosa o incómoda, repórtala de inmediato. Nuestro equipo revisará tu caso de forma confidencial y prioritaria.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey.shade700,
                   height: 1.5,
@@ -177,7 +176,7 @@ class SeguridadScreen extends StatelessWidget {
         icon: const Icon(Icons.security_rounded, color: Colors.white),
         label: Text(
           'Contactar al equipo de seguridad',
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -211,7 +210,7 @@ class SeguridadScreen extends StatelessWidget {
         title: Text(
           titulo,
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
@@ -221,7 +220,7 @@ class SeguridadScreen extends StatelessWidget {
           child: Text(
             descripcion,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade700,
             ),
@@ -253,7 +252,7 @@ class SeguridadScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               texto,
-              style: GoogleFonts.poppins(fontSize: 14.5),
+              style: TextStyle(fontSize: 14.5),
             ),
           ],
         ),

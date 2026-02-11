@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
-import 'package:pool_and_chill_app/app/auth_gate.dart';
 import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
 import 'package:pool_and_chill_app/features/host/home_host.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
@@ -255,13 +254,7 @@ class PerfilScreen extends StatelessWidget {
                       if (confirm == true && context.mounted) {
                         await context.read<AuthProvider>().logout();
                         if (context.mounted) {
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AuthGate(),
-                            ),
-                            (route) => false,
-                          );
+                          Navigator.of(context).popUntil((route) => route.isFirst);
                         }
                       }
                     },

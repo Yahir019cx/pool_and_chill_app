@@ -4,7 +4,7 @@ class UserModel {
   final String? phoneNumber;
   final String firstName;
   final String lastName;
-  final String displayName;
+  final String? displayName;
   final String? profileImageUrl;
   final List<String> roles;
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -61,7 +60,7 @@ class AyudaScreen extends StatelessWidget {
               ),
               Text(
                 '¿Cómo deseas contactarnos?',
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 16,
                 ),
@@ -164,7 +163,7 @@ class AyudaScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
           'Centro de ayuda',
-          style: GoogleFonts.poppins(
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.black87,
           ),
@@ -179,7 +178,7 @@ class AyudaScreen extends StatelessWidget {
               Text(
                 'Encuentra respuestas o contáctanos',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),
@@ -188,7 +187,7 @@ class AyudaScreen extends StatelessWidget {
               Text(
                 'Estamos aquí para ayudarte con cualquier duda relacionada con Pool&Chill.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
+                style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey.shade700,
                   height: 1.5,
@@ -226,7 +225,7 @@ class AyudaScreen extends StatelessWidget {
         leading: Icon(option.icon, color: const Color(0xFF3CA2A2)),
         title: Text(
           option.title,
-          style: GoogleFonts.poppins(
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),
@@ -258,7 +257,7 @@ class AyudaScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               text,
-              style: GoogleFonts.poppins(fontSize: 14.5),
+              style: const TextStyle(fontSize: 14.5),
             ),
           ],
         ),
