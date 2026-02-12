@@ -71,8 +71,17 @@ class PerfilScreen extends StatelessWidget {
 
               // Bio
               Text(
-                bio,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                bio.isNotEmpty
+                    ? bio
+                    : 'Aquí se mostrará tu biografía',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: bio.isNotEmpty
+                      ? Colors.grey.shade600
+                      : Colors.grey.shade400,
+                  fontStyle:
+                      bio.isNotEmpty ? FontStyle.normal : FontStyle.italic,
+                ),
               ),
               const SizedBox(height: 6),
 

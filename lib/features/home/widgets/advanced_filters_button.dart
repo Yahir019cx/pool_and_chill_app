@@ -1,11 +1,27 @@
 import 'package:flutter/material.dart';
 
+/// Valores de los filtros avanzados aplicados.
+class AdvancedFilterValues {
+  final double? minPrice;
+  final double? maxPrice;
+
+  const AdvancedFilterValues({this.minPrice, this.maxPrice});
+
+  bool get hasActiveFilters => minPrice != null || maxPrice != null;
+
+  static const empty = AdvancedFilterValues();
+}
+
 class AdvancedFiltersButton extends StatelessWidget {
+  final AdvancedFilterValues currentFilters;
+  final ValueChanged<AdvancedFilterValues> onApply;
   final VoidCallback onClear;
   final bool hasActiveFilters;
 
   const AdvancedFiltersButton({
     super.key,
+    this.currentFilters = AdvancedFilterValues.empty,
+    required this.onApply,
     required this.onClear,
     this.hasActiveFilters = false,
   });
@@ -65,20 +81,31 @@ class AdvancedFiltersButton extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => _FiltersSheet(
-        onClear: onClear,
-        hasActiveFilters: hasActiveFilters,
+        currentFilters: currentFilters,
+        onApply: (values) {
+          Navigator.pop(context);
+          onApply(values);
+        },
+        onClear: () {
+          Navigator.pop(context);
+          onClear();
+        },
       ),
     );
   }
 }
 
+// ─── Bottom Sheet de filtros avanzados ──────────────────────────────
+
 class _FiltersSheet extends StatefulWidget {
+  final AdvancedFilterValues currentFilters;
+  final ValueChanged<AdvancedFilterValues> onApply;
   final VoidCallback onClear;
-  final bool hasActiveFilters;
 
   const _FiltersSheet({
+    required this.currentFilters,
+    required this.onApply,
     required this.onClear,
-    required this.hasActiveFilters,
   });
 
   @override
@@ -86,25 +113,60 @@ class _FiltersSheet extends StatefulWidget {
 }
 
 class _FiltersSheetState extends State<_FiltersSheet> {
-  final Set<String> _selectedFilters = {};
+  final _minPriceController = TextEditingController();
+  final _maxPriceController = TextEditingController();
 
-  static const _filters = [
-    'Día completo',
-    'Por horas',
-    'Menor a \$3,000',
-    '\$3,000 - \$5,000',
-    'Más de \$5,000',
-    'Con alberca',
-    'Pet friendly',
-    'Estacionamiento',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    if (widget.currentFilters.minPrice != null) {
+      _minPriceController.text =
+          widget.currentFilters.minPrice!.toStringAsFixed(0);
+    }
+    if (widget.currentFilters.maxPrice != null) {
+      _maxPriceController.text =
+          widget.currentFilters.maxPrice!.toStringAsFixed(0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _minPriceController.dispose();
+    _maxPriceController.dispose();
+    super.dispose();
+  }
+
+  bool get _hasFilters =>
+      _minPriceController.text.isNotEmpty ||
+      _maxPriceController.text.isNotEmpty;
+
+  void _clearAll() {
+    setState(() {
+      _minPriceController.clear();
+      _maxPriceController.clear();
+    });
+    widget.onClear();
+  }
+
+  void _apply() {
+    final minPrice = double.tryParse(_minPriceController.text);
+    final maxPrice = double.tryParse(_maxPriceController.text);
+
+    widget.onApply(AdvancedFilterValues(
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final hasFilters = _selectedFilters.isNotEmpty || widget.hasActiveFilters;
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        20 + MediaQuery.of(context).padding.bottom,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,12 +195,9 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              if (hasFilters)
+              if (_hasFilters)
                 TextButton(
-                  onPressed: () {
-                    setState(() => _selectedFilters.clear());
-                    widget.onClear();
-                  },
+                  onPressed: _clearAll,
                   child: const Text(
                     'Limpiar todo',
                     style: TextStyle(
@@ -149,53 +208,80 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Filter chips
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _filters.map((filter) {
-              final isSelected = _selectedFilters.contains(filter);
-              return FilterChip(
-                label: Text(filter),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedFilters.add(filter);
-                    } else {
-                      _selectedFilters.remove(filter);
-                    }
-                  });
-                },
-                selectedColor: const Color(0xFF3CA2A2).withValues(alpha: 0.2),
-                checkmarkColor: const Color(0xFF3CA2A2),
-                labelStyle: TextStyle(
-                  color: isSelected
-                      ? const Color(0xFF3CA2A2)
-                      : Colors.grey.shade700,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected
-                        ? const Color(0xFF3CA2A2)
-                        : Colors.grey.shade300,
+          // ── Rango de precios ──
+          const Text(
+            'Rango de precios',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _minPriceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Mínimo',
+                    prefixText: '\$ ',
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF3CA2A2)),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 14),
                   ),
                 ),
-                backgroundColor: Colors.white,
-              );
-            }).toList(),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _maxPriceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Máximo',
+                    prefixText: '\$ ',
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF3CA2A2)),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 14),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          // Apply button
+          // ── Botón Aplicar ──
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: _apply,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3CA2A2),
                 foregroundColor: Colors.white,
@@ -204,18 +290,15 @@ class _FiltersSheetState extends State<_FiltersSheet> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(
-                _selectedFilters.isEmpty
-                    ? 'Aplicar filtros'
-                    : 'Aplicar ${_selectedFilters.length} filtros',
-                style: const TextStyle(
+              child: const Text(
+                'Aplicar filtros',
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );

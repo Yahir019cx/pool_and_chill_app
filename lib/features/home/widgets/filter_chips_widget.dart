@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 class FilterChipsWidget extends StatelessWidget {
+  /// Índice del chip seleccionado (solo uno a la vez), `null` si ninguno.
   final int? selectedIndex;
+
+  /// Se llama al tocar un chip.
   final ValueChanged<int> onSelected;
 
   const FilterChipsWidget({

@@ -8,6 +8,140 @@ class PropertyService {
 
   PropertyService(this._apiClient);
 
+  /// Busca propiedades con filtros y paginación.
+  Future<SearchPropertiesResponse> searchProperties({
+    bool? hasPool,
+    bool? hasCabin,
+    bool? hasCamping,
+    int? stateId,
+    int? cityId,
+    double? minPrice,
+    double? maxPrice,
+    String? search,
+    String? amenities,
+    String? sortBy,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final params = <String, String>{
+      'page': page.toString(),
+      'pageSize': pageSize.toString(),
+    };
+
+    if (hasPool == true) params['hasPool'] = 'true';
+    if (hasCabin == true) params['hasCabin'] = 'true';
+    if (hasCamping == true) params['hasCamping'] = 'true';
+    if (stateId != null) params['stateId'] = stateId.toString();
+    if (cityId != null) params['cityId'] = cityId.toString();
+    if (minPrice != null) params['minPrice'] = minPrice.toStringAsFixed(0);
+    if (maxPrice != null) params['maxPrice'] = maxPrice.toStringAsFixed(0);
+    if (search != null && search.isNotEmpty) {
+      params['search'] = search;
+    }
+    if (amenities != null && amenities.isNotEmpty) {
+      params['amenities'] = amenities;
+    }
+    if (sortBy != null && sortBy.isNotEmpty) {
+      params['sortBy'] = sortBy;
+    }
+
+    final queryString = params.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+
+    final path = '${ApiRoutes.searchProperties}?$queryString';
+
+    final response = await _apiClient.get(path, withAuth: false);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return SearchPropertiesResponse.fromJson(json);
+    }
+
+    throw Exception(
+      'Error al buscar propiedades: ${response.statusCode}',
+    );
+  }
+
+  /// Obtiene el detalle de una propiedad por ID (POST /properties/by-id).
+  Future<PropertyDetailResponse> getPropertyById(String propertyId) async {
+    final response = await _apiClient.post(
+      ApiRoutes.propertyById,
+      body: {'propertyId': propertyId},
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['success'] != true) {
+        throw Exception('Error al obtener el detalle de la propiedad');
+      }
+      final data = json['data'] as Map<String, dynamic>? ?? {};
+      return PropertyDetailResponse.fromJson(data);
+    }
+
+    throw Exception(
+      'Error al obtener detalle: ${response.statusCode}',
+    );
+  }
+
+  // ─── FAVORITOS ──────────────────────────────────────────────────
+
+  /// Obtiene solo los IDs de propiedades favoritas del usuario.
+  Future<List<String>> getFavoriteIds() async {
+    final response = await _apiClient.get(ApiRoutes.favoriteIds);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>? ?? {};
+      final List<dynamic> ids = data['propertyIds'] ?? [];
+      return ids.map((e) => e.toString()).toList();
+    }
+
+    throw Exception('Error al obtener favoritos: ${response.statusCode}');
+  }
+
+  /// Obtiene la lista completa de propiedades favoritas.
+  Future<List<SearchPropertyModel>> getFavorites() async {
+    final response = await _apiClient.get(ApiRoutes.favorites);
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = json['data'] as Map<String, dynamic>? ?? {};
+      final List<dynamic> properties = data['properties'] ?? [];
+      return properties
+          .map((e) =>
+              SearchPropertyModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    throw Exception('Error al obtener favoritos: ${response.statusCode}');
+  }
+
+  /// Agrega una propiedad a favoritos.
+  Future<void> addFavorite(String propertyId) async {
+    final response = await _apiClient.post(
+      ApiRoutes.favorites,
+      body: {'propertyId': propertyId},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Error al agregar favorito: ${response.statusCode}');
+    }
+  }
+
+  /// Quita una propiedad de favoritos.
+  Future<void> removeFavorite(String propertyId) async {
+    final response = await _apiClient.delete(
+      ApiRoutes.removeFavorite(propertyId),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Error al quitar favorito: ${response.statusCode}');
+    }
+  }
+
+  // ─── AMENIDADES ────────────────────────────────────────────────
+
   /// Obtiene las amenidades filtradas por categorías
   /// [categories] puede ser: "pool", "cabin", "camping" o combinaciones "pool,cabin"
   Future<List<AmenityModel>> getAmenities(String categories) async {

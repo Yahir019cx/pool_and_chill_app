@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -227,10 +228,25 @@ class _EspacioHostCardState extends State<EspacioHostCard> {
         ),
       );
     }
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Container(
+      memCacheWidth: 600,
+      fadeInDuration: const Duration(milliseconds: 200),
+      placeholder: (_, imageUrl) => Container(
+        color: Colors.grey.shade200,
+        child: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Color(0xFF2D9D91),
+            ),
+          ),
+        ),
+      ),
+      errorWidget: (_, imageUrl, error) => Container(
         color: Colors.grey.shade200,
         child: Center(
           child: Icon(

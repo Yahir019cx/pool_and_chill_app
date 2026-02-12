@@ -20,6 +20,13 @@ final amenitiesProvider = FutureProvider.family<List<AmenityModel>, String>((ref
   return service.getAmenities(categories);
 });
 
+/// Provider para el detalle de una propiedad por ID (POST /properties/by-id).
+final propertyDetailProvider =
+    FutureProvider.family<PropertyDetailResponse, String>((ref, propertyId) async {
+  final service = ref.read(propertyServiceProvider);
+  return service.getPropertyById(propertyId);
+});
+
 /// Notifier para el estado del registro de propiedad
 class PropertyRegistrationNotifier extends StateNotifier<PropertyRegistrationState> {
   PropertyRegistrationNotifier() : super(const PropertyRegistrationState());

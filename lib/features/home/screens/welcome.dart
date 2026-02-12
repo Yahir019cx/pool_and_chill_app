@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart' as provider_pkg;
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
 import '../widgets/nav_bottom.dart';
 import 'inicio_screen.dart';
 import 'rentas_screen.dart';
@@ -16,6 +20,20 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   int selectedNavIndex = 0;
 
+  void _onNavTap(int i) {
+    setState(() => selectedNavIndex = i);
+
+    // Al entrar al tab de Favoritos (índice 2), recargar la lista.
+    if (i == 2) {
+      final auth = provider_pkg.Provider.of<AuthProvider>(context, listen: false);
+      if (auth.isAuthenticated) {
+        ProviderScope.containerOf(context)
+            .read(favoritesProvider.notifier)
+            .loadFavorites();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,7 +42,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       floatingActionButton: _buildFab(context),
       bottomNavigationBar: NavBottom(
         selectedIndex: selectedNavIndex,
-        onNavTap: (i) => setState(() => selectedNavIndex = i),
+        onNavTap: _onNavTap,
       ),
       body: SafeArea(
         child: IndexedStack(

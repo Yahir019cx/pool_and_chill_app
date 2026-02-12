@@ -14,7 +14,15 @@ class ApiRoutes {
   // PROPERTIES
   static const properties = '/properties';
   static const myProperties = '/properties/my';
+  static const searchProperties = '/properties/search';
+  static const propertyById = '/properties/by-id';
   static const propertiesAmenities = '/properties/catalogs/amenities';
+
+  // FAVORITES
+  static const favorites = '/properties/favorites';
+  static const favoriteIds = '/properties/favorites/ids';
+  static String removeFavorite(String propertyId) =>
+      '/properties/favorites/$propertyId';
 
   /// Obtiene amenidades filtradas por categorías (ej: "pool,cabin,camping")
   static String amenitiesByCategory(String categories) =>

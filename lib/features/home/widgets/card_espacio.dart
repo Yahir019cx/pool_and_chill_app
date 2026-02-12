@@ -1,14 +1,26 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:pool_and_chill_app/data/models/property/search_property_model.dart';
 
 class EspacioCard extends StatefulWidget {
-  final bool initialFavorite;
+  final SearchPropertyModel property;
+  final bool isFavorite;
+
+  /// Callback al pulsar el corazón. Si es `null` el botón se oculta.
+  final ValueChanged<String>? onFavoriteToggle;
+
+  /// Callback al tocar la card (abrir detalle). Si es `null` la card no es clicable.
+  final ValueChanged<String>? onTap;
 
   const EspacioCard({
     super.key,
-    this.initialFavorite = false,
+    required this.property,
+    this.isFavorite = false,
+    this.onFavoriteToggle,
+    this.onTap,
   });
 
   @override
@@ -21,30 +33,21 @@ class _EspacioCardState extends State<EspacioCard> {
 
   late final PageController _pageController;
   Timer? _autoScrollTimer;
-
-  late bool _esFavorito;
   int _currentIndex = 0;
 
-  final List<String> _fotos = [
-    'https://picsum.photos/600/400?1',
-    'https://picsum.photos/600/400?2',
-    'https://picsum.photos/600/400?3',
-  ];
-
-  final String _titulo = 'Espacio Premium';
-  final String _tipos = 'Alberca, Jardín, Terraza';
-  final int _precioPorDia = 2500;
+  List<String> get _fotos => widget.property.imageUrls;
 
   List<String> get _extendedFotos {
+    if (_fotos.isEmpty) return [];
+    if (_fotos.length == 1) return _fotos;
     return [_fotos.last, ..._fotos, _fotos.first];
   }
 
   @override
   void initState() {
     super.initState();
-    _esFavorito = widget.initialFavorite;
-    _pageController = PageController(initialPage: 1);
-    _startAutoScroll();
+    _pageController = PageController(initialPage: _fotos.length > 1 ? 1 : 0);
+    if (_fotos.length > 1) _startAutoScroll();
   }
 
   @override
@@ -68,6 +71,7 @@ class _EspacioCardState extends State<EspacioCard> {
   }
 
   void _handlePageChanged(int index) async {
+    if (_fotos.length <= 1) return;
     _startAutoScroll();
 
     final lastIndex = _fotos.length;
@@ -93,9 +97,10 @@ class _EspacioCardState extends State<EspacioCard> {
 
   @override
   Widget build(BuildContext context) {
-    final precio = NumberFormat("#,##0", "es_MX").format(_precioPorDia);
+    final precio =
+        NumberFormat("#,##0", "es_MX").format(widget.property.priceFrom);
 
-    return Card(
+    final card = Card(
       elevation: 4,
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       shape: RoundedRectangleBorder(
@@ -109,71 +114,111 @@ class _EspacioCardState extends State<EspacioCard> {
         ],
       ),
     );
+
+    if (widget.onTap == null) return card;
+    return GestureDetector(
+      onTap: () => widget.onTap!(widget.property.propertyId),
+      child: card,
+    );
   }
 
   Widget _buildCarousel() {
+    final fotos = _fotos;
+    final extended = _extendedFotos;
+
     return Stack(
       alignment: Alignment.center,
       children: [
         SizedBox(
           height: 180,
           width: double.infinity,
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: _extendedFotos.length,
-            onPageChanged: _handlePageChanged,
-            itemBuilder: (_, index) {
-              return Image.network(
-                _extendedFotos[index],
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.image),
-              );
-            },
-          ),
+          child: fotos.isEmpty
+              ? Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Icon(Icons.image, size: 48, color: Colors.grey),
+                  ),
+                )
+              : PageView.builder(
+                  controller: _pageController,
+                  itemCount: extended.length,
+                  onPageChanged: _handlePageChanged,
+                  itemBuilder: (_, index) {
+                    return CachedNetworkImage(
+                      imageUrl: extended[index],
+                      fit: BoxFit.cover,
+                      memCacheWidth: 600,
+                      fadeInDuration: const Duration(milliseconds: 200),
+                      placeholder: (_, url) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF3CA2A2),
+                            ),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (_, url, error) => Container(
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(Icons.image, color: Colors.grey),
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
 
-        // Favorite button with tooltip
-        Positioned(
-          top: 8,
-          right: 8,
-          child: _FavoriteButton(
-            isFavorite: _esFavorito,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _esFavorito = !_esFavorito);
-            },
+        // Botón favorito
+        if (widget.onFavoriteToggle != null)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: _FavoriteButton(
+              isFavorite: widget.isFavorite,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onFavoriteToggle!(widget.property.propertyId);
+              },
+            ),
           ),
-        ),
 
-        // Page indicators
-        Positioned(
-          bottom: 8,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(
-              _fotos.length,
-              (index) => AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: _currentIndex == index ? 16 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3),
-                  color: _currentIndex == index
-                      ? Colors.white
-                      : Colors.white.withValues(alpha: 0.5),
+        // Indicadores de página
+        if (fotos.length > 1)
+          Positioned(
+            bottom: 8,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                fotos.length,
+                (index) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: _currentIndex == index ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    color: _currentIndex == index
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
 
   Widget _buildInfo(String precio) {
+    final prop = widget.property;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -184,37 +229,72 @@ class _EspacioCardState extends State<EspacioCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _titulo,
+                  prop.propertyName,
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (prop.location.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    prop.location,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Text(
-                  "\$$precio MXN",
+                  "Desde \$$precio MXN",
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF3E838C),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  _tipos,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey,
+                if (prop.tiposDisplay.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    prop.tiposDisplay,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(top: 4),
-            child: Icon(
-              Icons.star_border,
-              color: Colors.amber,
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  prop.rating == 'Nuevo' ? Icons.star_border : Icons.star,
+                  color: Colors.amber,
+                  size: 20,
+                ),
+                const SizedBox(width: 2),
+                Text(
+                  prop.rating,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (prop.reviewCount > 0) ...[
+                  Text(
+                    ' (${prop.reviewCount})',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
@@ -222,6 +302,8 @@ class _EspacioCardState extends State<EspacioCard> {
     );
   }
 }
+
+// ─── Botón de favorito con animación ───────────────────────────────
 
 class _FavoriteButton extends StatefulWidget {
   final bool isFavorite;
@@ -267,24 +349,26 @@ class _FavoriteButtonState extends State<_FavoriteButton>
     _controller.forward(from: 0);
 
     setState(() => _showTooltip = true);
-    Future.delayed(const Duration(milliseconds: 1200), () {
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) setState(() => _showTooltip = false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Leemos el valor ACTUAL de isFavorite vía widget (que se actualiza
+    // de forma optimista desde el provider).
     final isFav = widget.isFavorite;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Animated tooltip
+        // Tooltip lateral animado ("Guardado" / "Eliminado")
         AnimatedSlide(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 250),
           offset: _showTooltip ? Offset.zero : const Offset(0.5, 0),
           child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 250),
             opacity: _showTooltip ? 1.0 : 0.0,
             child: Container(
               margin: const EdgeInsets.only(right: 8),
@@ -312,7 +396,7 @@ class _FavoriteButtonState extends State<_FavoriteButton>
           ),
         ),
 
-        // Heart button
+        // Botón corazón
         GestureDetector(
           onTap: _handleTap,
           child: AnimatedBuilder(
