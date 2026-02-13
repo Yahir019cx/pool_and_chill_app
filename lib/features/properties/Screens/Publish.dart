@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'step1_screen.dart';
 import 'step2_screen.dart';
@@ -88,6 +90,22 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final skipStep7 = auth.profile?.isIdentityVerified ?? false;
+
+    final children = <Widget>[
+      FirstAnfitrionesScreen(onStartPressed: _nextPage),
+      Step1Screen(onNext: _onStep1Next),
+      Step2Screen(onNext: _nextPage, onPrevious: _previousPage),
+      Step3Screen(onNext: _nextPage, onPrevious: _previousPage),
+      Step4Screen(onNext: _nextPage, onPrevious: _previousPage),
+      Step5Screen(onNext: _nextPage, onPrevious: _previousPage),
+      Step6Screen(onNext: _nextPage, onPrevious: _previousPage),
+      if (!skipStep7)
+        Step7Screen(onNext: _nextPage, onPrevious: _previousPage),
+      Step8Screen(onPrevious: _previousPage),
+    ];
+
     return PopScope(
       canPop: _currentPage == 0,
       onPopInvokedWithResult: (didPop, _) {
@@ -121,52 +139,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             onPageChanged: (page) => setState(() => _currentPage = page),
-            children: [
-              // Page 0: Intro
-              FirstAnfitrionesScreen(onStartPressed: _nextPage),
-
-              // Page 1: Step 1 - Tipo de espacio
-              Step1Screen(onNext: _onStep1Next),
-
-              // Page 2: Step 2 - Ubicación
-              Step2Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 3: Step 3 - Detalles
-              Step3Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 4: Step 4 - Información básica
-              Step4Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 5: Step 5 - Reglas
-              Step5Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 6: Step 6 - Fotos
-              Step6Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 7: Step 7 - Verificación de identidad
-              Step7Screen(
-                onNext: _nextPage,
-                onPrevious: _previousPage,
-              ),
-
-              // Page 8: Step 8 - Revisión y envío
-              Step8Screen(onPrevious: _previousPage),
-            ],
+            children: children,
           ),
         ),
       ),

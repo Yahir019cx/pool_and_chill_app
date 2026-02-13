@@ -16,7 +16,6 @@ class ApiRoutes {
   static const myProperties = '/properties/my';
   static const searchProperties = '/properties/search';
   static const propertyById = '/properties/by-id';
-  static const propertiesAmenities = '/properties/catalogs/amenities';
 
   // FAVORITES
   static const favorites = '/properties/favorites';
@@ -24,7 +23,16 @@ class ApiRoutes {
   static String removeFavorite(String propertyId) =>
       '/properties/favorites/$propertyId';
 
-  /// Obtiene amenidades filtradas por categorías (ej: "pool,cabin,camping")
+  /// Catálogo de amenidades (GET /catalogs/amenities). Query: category=pool|cabin|camping (varios separados por coma).
+  static const catalogAmenities = '/catalogs/amenities';
   static String amenitiesByCategory(String categories) =>
-      '$propertiesAmenities?category=$categories';
+      '$catalogAmenities?category=$categories';
+
+  // KYC / Verificación (Didit)
+  static const kycStart = '/kyc/start';
+  static const kycStatus = '/kyc/status';
+
+  // Catálogos (ubicación)
+  static const catalogStates = '/catalogs/states';
+  static String catalogCities(int stateId) => '/catalogs/cities/$stateId';
 }

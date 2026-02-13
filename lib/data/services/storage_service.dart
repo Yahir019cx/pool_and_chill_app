@@ -1,35 +1,29 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  /// Subir imagen de perfil a Firebase Storage
-  /// Retorna la URL de descarga de la imagen
+  /// Subir imagen de perfil a Firebase Storage (sin comprimir, igual que el flujo del avatar).
+  /// Retorna la URL de descarga de la imagen.
   Future<String> uploadProfileImage(File imageFile, String userId) async {
     try {
-      // 1. Comprimir imagen antes de subir
-      final compressedFile = await compressImage(imageFile);
+      if (!await imageFile.exists()) {
+        throw Exception('El archivo de imagen no existe');
+      }
 
-      // 2. Generar nombre único con timestamp
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = 'profile_$timestamp.jpg';
 
-      // 3. Crear referencia en Firebase Storage
-      // Ruta: profiles/{userId}/profile_{timestamp}.jpg
       final storageRef = _storage
           .ref()
           .child('profiles')
           .child(userId)
           .child(fileName);
 
-      // 4. Eliminar imagen anterior del usuario
       await deleteOldProfileImage(userId);
 
-      // 5. Subir archivo con metadata
       final metadata = SettableMetadata(
         contentType: 'image/jpeg',
         customMetadata: {
@@ -38,12 +32,7 @@ class StorageService {
         },
       );
 
-      final uploadTask = storageRef.putFile(compressedFile, metadata);
-
-      // 6. Esperar a que termine la subida
-      final snapshot = await uploadTask;
-
-      // 7. Obtener URL de descarga
+      final snapshot = await storageRef.putFile(imageFile, metadata);
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
       return downloadUrl;
@@ -77,30 +66,36 @@ class StorageService {
     }
   }
 
-  /// Comprimir imagen antes de subir
-  /// Redimensiona a máximo 1024x1024 y calidad 85%
-  Future<File> compressImage(File imageFile) async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final targetPath = '${tempDir.path}/compressed_$timestamp.jpg';
-
-      final compressedFile = await FlutterImageCompress.compressAndGetFile(
-        imageFile.absolute.path,
-        targetPath,
-        quality: 85,
-        minWidth: 1024,
-        minHeight: 1024,
-        format: CompressFormat.jpeg,
+  /// Subir varias imágenes de propiedad a Firebase Storage (sin comprimir).
+  /// Ruta: properties/{userId}/img_{timestamp}_{i}.jpg
+  /// Retorna la lista de URLs de descarga en el mismo orden que [imageFiles].
+  Future<List<String>> uploadPropertyImages(
+    List<File> imageFiles,
+    String userId,
+  ) async {
+    if (imageFiles.isEmpty) return [];
+    final urls = <String>[];
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    for (var i = 0; i < imageFiles.length; i++) {
+      final file = imageFiles[i];
+      if (!await file.exists()) continue;
+      final fileName = 'img_${timestamp}_$i.jpg';
+      final storageRef = _storage
+          .ref()
+          .child('properties')
+          .child(userId)
+          .child(fileName);
+      final metadata = SettableMetadata(
+        contentType: 'image/jpeg',
+        customMetadata: {
+          'userId': userId,
+          'uploadedAt': DateTime.now().toIso8601String(),
+        },
       );
-
-      if (compressedFile == null) {
-        throw Exception('Error al comprimir imagen');
-      }
-
-      return File(compressedFile.path);
-    } catch (e) {
-      throw Exception('Error al comprimir imagen: $e');
+      final snapshot = await storageRef.putFile(file, metadata);
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      urls.add(downloadUrl);
     }
+    return urls;
   }
 }

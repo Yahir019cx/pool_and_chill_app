@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
+import 'package:pool_and_chill_app/data/models/catalog_model.dart';
 import 'package:pool_and_chill_app/data/services/property_service.dart';
+import 'package:pool_and_chill_app/data/services/catalog_service.dart';
 
 /// Provider para el ApiClient (se sobreescribe en main.dart)
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -12,6 +14,24 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 final propertyServiceProvider = Provider<PropertyService>((ref) {
   final apiClient = ref.read(apiClientProvider);
   return PropertyService(apiClient);
+});
+
+/// Provider para el servicio de catálogos (estados/ciudades)
+final catalogServiceProvider = Provider<CatalogService>((ref) {
+  final apiClient = ref.read(apiClientProvider);
+  return CatalogService(apiClient);
+});
+
+/// Catálogo de estados (GET /catalogs/states)
+final statesCatalogProvider = FutureProvider<List<StateCatalogItem>>((ref) async {
+  final service = ref.read(catalogServiceProvider);
+  return service.getStates();
+});
+
+/// Ciudades por estado (GET /catalogs/cities/:stateId)
+final citiesCatalogProvider = FutureProvider.family<List<CityCatalogItem>, int>((ref, stateId) async {
+  final service = ref.read(catalogServiceProvider);
+  return service.getCities(stateId);
 });
 
 /// Provider para las amenidades del catálogo

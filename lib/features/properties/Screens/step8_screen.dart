@@ -1,7 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
+import 'package:pool_and_chill_app/data/models/property/index.dart';
+import 'package:pool_and_chill_app/data/services/storage_service.dart';
+import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
+import 'package:pool_and_chill_app/features/host/home_host.dart';
 import '../widgets/step_navigation_buttons.dart';
 
 class Step8Screen extends ConsumerStatefulWidget {
@@ -21,32 +27,85 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
   static const Color mainColor = Color(0xFF3CA2A2);
 
   Future<void> _submit() async {
+    final state = ref.read(propertyRegistrationProvider);
+    final auth = context.read<AuthProvider>();
+    final userId = auth.profile?.userId;
+
+    if (userId == null || userId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sesión no válida. Inicia sesión de nuevo.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
-      // TODO: Implementar envío al API
-      await Future.delayed(const Duration(seconds: 2));
+      // 1. Primero subir imágenes a Firebase y recuperar las URLs
+      final storage = StorageService();
+      final filePaths = state.photos.photoPaths;
+      final files = filePaths.map((p) => File(p)).toList();
+      final urls = await storage.uploadPropertyImages(files, userId);
 
-      if (mounted) {
-        _showSuccessDialog();
+      if (urls.isEmpty) {
+        throw Exception(
+          'No se pudieron subir las imágenes. Vuelve al paso 6 y vuelve a seleccionar las fotos.',
+        );
+      }
+
+      // 2. Construir el body con las URLs obtenidas (y el resto del wizard)
+      final amenities = await ref.read(
+        amenitiesProvider(state.categoriasQuery).future,
+      );
+      final nameToId = <String, int>{};
+      for (final a in amenities) {
+        final id = int.tryParse(a.id);
+        if (id != null) nameToId[a.name] = id;
+      }
+      int? amenityNameToId(String name) => nameToId[name];
+
+      final body = buildPublishPropertyBody(
+        state,
+        urls,
+        amenityNameToId: amenityNameToId,
+      );
+
+      // 3. Solo entonces llamar al backend (POST /properties)
+      final propertyService = ref.read(propertyServiceProvider);
+      final response = await propertyService.createProperty(body);
+
+      if (!mounted) return;
+      if (response.success) {
+        _showSuccessDialog(auth);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response.message),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
+        final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : 'Error al enviar. Intenta de nuevo.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Error al enviar. Intenta de nuevo.'),
+            content: Text(message),
             backgroundColor: Colors.red.shade600,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessDialog(AuthProvider auth) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -91,10 +150,27 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
               width: double.infinity,
               height: 48,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.pop(ctx);
-                  Navigator.pop(context);
                   ref.read(propertyRegistrationProvider.notifier).reset();
+                  await auth.refreshProfile();
+                  if (!mounted) return;
+                  final profile = auth.profile;
+                  if (profile?.isHostOnboarded == 1) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const WelcomeAnfitrionScreen(),
+                      ),
+                    );
+                  } else {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HomeHostScreen(),
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mainColor,
@@ -104,7 +180,7 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                   ),
                 ),
                 child: const Text(
-                  'Entendido',
+                  'Continuar',
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -122,7 +198,10 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(propertyRegistrationProvider);
-    final isReady = state.isReadyToSubmit;
+    final isReady = state.tiposEspacioSeleccionados.isNotEmpty &&
+        state.addressData != null &&
+        state.basicInfo.isValid &&
+        state.photos.isValid;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -245,18 +324,13 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  // Verificación de identidad
+                  // Verificación de identidad (Didit o INE)
                   _SummarySection(
                     title: 'Verificación de identidad',
                     icon: Icons.verified_user_outlined,
-                    isComplete: state.identity.isComplete,
+                    isComplete: true,
                     children: [
-                      _SummaryRow(
-                        'Estado',
-                        state.identity.isComplete
-                            ? 'Completado'
-                            : 'Pendiente',
-                      ),
+                      const _SummaryRow('Estado', 'Completado en paso 7'),
                     ],
                   ),
                   const SizedBox(height: 24),

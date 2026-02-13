@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
+import 'package:pool_and_chill_app/data/services/kyc_service.dart';
 import '../widgets/step_navigation_buttons.dart';
-import '../widgets/ine_capture_card.dart';
 
+/// Step 7: Verificación de identidad con Didit (KYC).
+/// Si el usuario ya está verificado (isIdentityVerified), este step se salta desde Publish.
 class Step7Screen extends ConsumerStatefulWidget {
   final VoidCallback onNext;
   final VoidCallback onPrevious;
@@ -20,62 +21,61 @@ class Step7Screen extends ConsumerStatefulWidget {
 }
 
 class _Step7ScreenState extends ConsumerState<Step7Screen> {
-  final _picker = ImagePicker();
   bool _isLoading = false;
+  bool _verificationStarted = false;
+  String? _statusMessage;
   static const Color mainColor = Color(0xFF3CA2A2);
 
-  Future<void> _captureImage(String type) async {
+  Future<void> _startVerification() async {
+    debugPrint('[Didit] Step7: usuario pulsó Verificar identidad');
+    final apiClient = ref.read(apiClientProvider);
+    final kycService = KycService(apiClient);
+
+    setState(() {
+      _isLoading = true;
+      _statusMessage = null;
+    });
+
     try {
-      setState(() => _isLoading = true);
-
-      final image = await _picker.pickImage(
-        source: ImageSource.camera,
-        preferredCameraDevice:
-            type == 'selfie' ? CameraDevice.front : CameraDevice.rear,
-        imageQuality: 90,
-        maxWidth: 1920,
-        maxHeight: 1920,
-      );
-
-      if (image != null && mounted) {
-        final notifier = ref.read(propertyRegistrationProvider.notifier);
-        switch (type) {
-          case 'front':
-            notifier.setIneFront(image.path);
-            break;
-          case 'back':
-            notifier.setIneBack(image.path);
-            break;
-          case 'selfie':
-            notifier.setSelfie(image.path);
-            break;
+      debugPrint('[Didit] Step7: llamando a startDiditVerificationOnDevice()');
+      await kycService.startDiditVerificationOnDevice();
+      debugPrint('[Didit] Step7: startDiditVerificationOnDevice() retornó OK');
+      if (!mounted) return;
+      setState(() {
+        _verificationStarted = true;
+        _statusMessage = 'Flujo de verificación abierto. Si ya lo completaste, pulsa Siguiente.';
+      });
+      // Opcional: consultar estado para mostrar "Verificado" / "Pendiente"
+      final status = await kycService.getStatus();
+      if (!mounted) return;
+      setState(() {
+        if (status.isVerified) {
+          _statusMessage = 'Identidad verificada.';
+        } else {
+          _statusMessage = status.verificationStatus;
         }
-      }
-    } catch (e) {
+      });
+    } catch (e, st) {
+      debugPrint('[Didit] Step7: ERROR - $e');
+      debugPrint('[Didit] Step7: stackTrace - $st');
       if (mounted) {
+        setState(() {
+          _statusMessage = e.toString().replaceFirst('Exception: ', '');
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Error al capturar imagen'),
+            content: Text(_statusMessage ?? 'Error al iniciar verificación'),
             backgroundColor: Colors.red.shade600,
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _clearImage(String type) {
-    ref.read(propertyRegistrationProvider.notifier).clearIdentityPhoto(type);
   }
 
   @override
   Widget build(BuildContext context) {
-    final identity = ref.watch(propertyRegistrationProvider).identity;
-    final isComplete = identity.isComplete;
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       child: Column(
@@ -92,133 +92,104 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
           ),
           const SizedBox(height: 20),
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: mainColor),
-                  )
-                : SingleChildScrollView(
-                    child: Column(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Aviso de privacidad
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.blue.shade100),
-                          ),
-                          child: Row(
+                        Icon(
+                          Icons.verified_user_outlined,
+                          color: Colors.blue.shade700,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.security,
-                                color: Colors.blue.shade700,
-                                size: 20,
+                              Text(
+                                'Verificación segura con Didit',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue.shade800,
+                                ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Tus datos están protegidos',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.blue.shade800,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Tus documentos se utilizan únicamente para verificar tu identidad y cumplir con regulaciones. No compartimos esta información con terceros.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.blue.shade700,
-                                        height: 1.4,
-                                      ),
-                                    ),
-                                  ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'Verificaremos tu identidad de forma segura. Al pulsar "Verificar" se abrirá el flujo oficial. Tus datos están protegidos.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blue.shade700,
+                                  height: 1.4,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Captura tu INE',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Asegúrate de que la imagen sea clara y legible',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        IneCaptureCard(
-                          title: 'INE Frente',
-                          description: 'Foto frontal de tu credencial',
-                          icon: Icons.credit_card,
-                          imagePath: identity.ineFrontPath,
-                          onCapture: () => _captureImage('front'),
-                          onRetake: identity.ineFrontPath != null
-                              ? () => _clearImage('front')
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        IneCaptureCard(
-                          title: 'INE Reverso',
-                          description: 'Foto trasera de tu credencial',
-                          icon: Icons.flip,
-                          imagePath: identity.ineBackPath,
-                          onCapture: () => _captureImage('back'),
-                          onRetake: identity.ineBackPath != null
-                              ? () => _clearImage('back')
-                              : null,
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          'Selfie de verificación',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Tomaremos una foto para comparar con tu INE',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        IneCaptureCard(
-                          title: 'Selfie',
-                          description: 'Foto de tu rostro mirando a la cámara',
-                          icon: Icons.face,
-                          imagePath: identity.selfiePath,
-                          onCapture: () => _captureImage('selfie'),
-                          onRetake: identity.selfiePath != null
-                              ? () => _clearImage('selfie')
-                              : null,
-                        ),
-                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  if (_isLoading)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(color: mainColor),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton.icon(
+                        onPressed: _startVerification,
+                        icon: const Icon(Icons.badge_outlined, size: 22),
+                        label: const Text(
+                          'Verificar identidad',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mainColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_statusMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _statusMessage!,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           StepNavigationButtons(
             onPrevious: widget.onPrevious,
             onNext: widget.onNext,
-            isNextEnabled: isComplete,
+            isNextEnabled: _verificationStarted,
           ),
         ],
       ),

@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // SDK Didit (KYC)
+        maven { url = uri("https://raw.githubusercontent.com/didit-protocol/sdk-android/main/repository") }
     }
 }
 

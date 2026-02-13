@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import '../widgets/step_navigation_buttons.dart';
 import '../widgets/photo_grid.dart';
@@ -26,6 +29,21 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
   static const int _maxPhotos = 10;
   static const int _maxFileSizeMB = 10;
 
+  /// Copia la imagen a una ruta persistente para que siga existiendo al subir en Step 8.
+  Future<String?> _persistPhotoPath(String sourcePath, [int suffix = 0]) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final photoDir = Directory('${dir.path}/property_photos');
+      if (!await photoDir.exists()) await photoDir.create(recursive: true);
+      final name = '${DateTime.now().millisecondsSinceEpoch}_$suffix.jpg';
+      final destFile = File('${photoDir.path}/$name');
+      await File(sourcePath).copy(destFile.path);
+      return destFile.path;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _pickImages(ImageSource source) async {
     try {
       setState(() => _isLoading = true);
@@ -37,6 +55,8 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
           maxHeight: 1920,
         );
 
+        final notifier = ref.read(propertyRegistrationProvider.notifier);
+        var i = 0;
         for (final image in images) {
           final fileSize = await image.length();
           if (fileSize > _maxFileSizeMB * 1024 * 1024) {
@@ -45,7 +65,13 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
             }
             continue;
           }
-          ref.read(propertyRegistrationProvider.notifier).addPhoto(image.path);
+          final persistentPath = await _persistPhotoPath(image.path, i);
+          if (persistentPath != null && mounted) {
+            notifier.addPhoto(persistentPath);
+          } else if (mounted) {
+            notifier.addPhoto(image.path);
+          }
+          i++;
         }
       } else {
         final image = await _picker.pickImage(
@@ -55,15 +81,15 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
           maxHeight: 1920,
         );
 
-        if (image != null) {
+        if (image != null && mounted) {
           final fileSize = await image.length();
           if (fileSize > _maxFileSizeMB * 1024 * 1024) {
-            if (mounted) {
-              _showError('La imagen excede ${_maxFileSizeMB}MB');
-            }
+            _showError('La imagen excede ${_maxFileSizeMB}MB');
             return;
           }
-          ref.read(propertyRegistrationProvider.notifier).addPhoto(image.path);
+          final persistentPath = await _persistPhotoPath(image.path);
+          final path = persistentPath ?? image.path;
+          ref.read(propertyRegistrationProvider.notifier).addPhoto(path);
         }
       }
     } catch (e) {

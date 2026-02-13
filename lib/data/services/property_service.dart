@@ -8,6 +8,32 @@ class PropertyService {
 
   PropertyService(this._apiClient);
 
+  /// Crea una propiedad (POST /properties). Body según contrato del backend.
+  /// 201: devuelve PublishPropertyResponse con propertyId.
+  /// 400/401/500: lanza Exception con mensaje para mostrar al usuario.
+  Future<PublishPropertyResponse> createProperty(PublishPropertyBody body) async {
+    final response = await _apiClient.post(
+      ApiRoutes.properties,
+      body: body.toJson(),
+    );
+
+    if (response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return PublishPropertyResponse.fromJson(json);
+    }
+
+    String message = 'Error al crear la propiedad';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
   /// Busca propiedades con filtros y paginación.
   Future<SearchPropertiesResponse> searchProperties({
     bool? hasPool,
@@ -142,17 +168,18 @@ class PropertyService {
 
   // ─── AMENIDADES ────────────────────────────────────────────────
 
-  /// Obtiene las amenidades filtradas por categorías
-  /// [categories] puede ser: "pool", "cabin", "camping" o combinaciones "pool,cabin"
+  /// Obtiene el catálogo de amenidades (GET /catalogs/amenities?category=...).
+  /// Público, no requiere auth. [categories] ej: "pool", "pool,cabin", "pool,cabin,camping".
   Future<List<AmenityModel>> getAmenities(String categories) async {
-    final response = await _apiClient.get(
-      ApiRoutes.amenitiesByCategory(categories),
-    );
+    final path = categories.trim().isEmpty
+        ? ApiRoutes.catalogAmenities
+        : ApiRoutes.amenitiesByCategory(categories);
+    final response = await _apiClient.get(path, withAuth: false);
 
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
       final List<dynamic> data = json['data'] ?? [];
-      return data.map((item) => AmenityModel.fromJson(item)).toList();
+      return data.map((item) => AmenityModel.fromJson(item as Map<String, dynamic>)).toList();
     }
 
     throw Exception('Error al obtener amenidades: ${response.statusCode}');

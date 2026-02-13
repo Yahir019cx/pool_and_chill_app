@@ -10,6 +10,10 @@ class AddressData {
   final String estado;
   final double? lat;
   final double? lng;
+  /// ID del estado en el catálogo (GET /catalogs/states). Requerido para POST /properties.
+  final int? stateId;
+  /// ID de la ciudad en el catálogo (GET /catalogs/cities/:stateId). Requerido para POST /properties.
+  final int? cityId;
 
   const AddressData({
     this.calle = '',
@@ -20,6 +24,8 @@ class AddressData {
     this.estado = '',
     this.lat,
     this.lng,
+    this.stateId,
+    this.cityId,
   });
 
   String toGeocodingString() => '$calle $numero, $colonia, $cp, $ciudad, $estado';
@@ -33,6 +39,8 @@ class AddressData {
     String? estado,
     double? lat,
     double? lng,
+    int? stateId,
+    int? cityId,
   }) {
     return AddressData(
       calle: calle ?? this.calle,
@@ -43,6 +51,8 @@ class AddressData {
       estado: estado ?? this.estado,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
+      stateId: stateId ?? this.stateId,
+      cityId: cityId ?? this.cityId,
     );
   }
 }
