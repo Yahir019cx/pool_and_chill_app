@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
-
+import 'package:pool_and_chill_app/features/home/screens/perfil/ayuda_screen.dart';
 class CuentaHostScreen extends StatelessWidget {
   const CuentaHostScreen({super.key});
 
@@ -133,7 +133,10 @@ class CuentaHostScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.help_outline,
                     label: 'Centro de ayuda',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AyudaScreen()),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.description_outlined,
