@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -50,8 +51,8 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (e) {
       if (!mounted) return;
-      debugPrint('LOGIN ERROR: $e');
-      AuthSnackbar.showError(context, e.toString());
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      AuthSnackbar.showError(context, msg);
     }
   }
 
@@ -174,11 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 15),
 
-                  _buildInput(
-                    controller: _passwordController,
-                    label: 'Contraseña',
-                    obscure: true,
-                  ),
+                  _buildPasswordInput(),
 
                   const SizedBox(height: 25),
 
@@ -294,6 +291,49 @@ class _LoginScreenState extends State<LoginScreen> {
               color: Color.fromARGB(255, 69, 145, 155),
               width: 2,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPasswordInput() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: TextField(
+        controller: _passwordController,
+        obscureText: _obscurePassword,
+        style: GoogleFonts.openSans(fontSize: 16),
+        decoration: InputDecoration(
+          labelText: 'Contraseña',
+          labelStyle: GoogleFonts.openSans(
+            fontSize: 16,
+            color: Colors.grey.shade600,
+          ),
+          floatingLabelStyle: GoogleFonts.openSans(
+            color: const Color.fromARGB(255, 69, 145, 155),
+            fontWeight: FontWeight.w500,
+          ),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: Color.fromARGB(255, 69, 145, 155),
+            ),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(
+              color: Color.fromARGB(255, 69, 145, 155),
+              width: 2,
+            ),
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+              color: Colors.grey.shade600,
+              size: 20,
+            ),
+            onPressed: () {
+              setState(() => _obscurePassword = !_obscurePassword);
+            },
           ),
         ),
       ),
