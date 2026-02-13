@@ -80,50 +80,48 @@ class PropertyDetailResponse {
     return result;
   }
 
-  /// Mayor maxCapacity entre pools, cabins y camping.
+  /// Rango de precios global (min weekday - max weekend) de todos los tipos.
+  ({int min, int max})? get priceRange {
+    final prices = <int>[];
+    for (final p in pools) {
+      if (p.priceWeekday != null) prices.add(p.priceWeekday!);
+      if (p.priceWeekend != null) prices.add(p.priceWeekend!);
+    }
+    for (final c in cabins) {
+      if (c.priceWeekday != null) prices.add(c.priceWeekday!);
+      if (c.priceWeekend != null) prices.add(c.priceWeekend!);
+    }
+    for (final ca in campingAreas) {
+      if (ca.priceWeekday != null) prices.add(ca.priceWeekday!);
+      if (ca.priceWeekend != null) prices.add(ca.priceWeekend!);
+    }
+    if (prices.isEmpty) return null;
+    prices.sort();
+    return (min: prices.first, max: prices.last);
+  }
+
+  /// Mayor capacidad entre pools, cabins y camping.
   int? get maxCapacityOverall {
     int? max;
     for (final p in pools) {
-      if (p.maxCapacity != null) {
-        final v = p.maxCapacity!.toInt();
+      if (p.maxPersons != null) {
+        final v = p.maxPersons!;
         max = max == null ? v : (v > max ? v : max);
       }
     }
     for (final c in cabins) {
-      if (c.maxCapacity != null) {
-        final v = c.maxCapacity!.toInt();
+      if (c.maxGuests != null) {
+        final v = c.maxGuests!;
         max = max == null ? v : (v > max ? v : max);
       }
     }
     for (final ca in campingAreas) {
-      if (ca.maxCapacity != null) {
-        final v = ca.maxCapacity!.toInt();
+      if (ca.maxPersons != null) {
+        final v = ca.maxPersons!;
         max = max == null ? v : (v > max ? v : max);
       }
     }
     return max;
-  }
-
-  /// Total baños (suma de cabins).
-  int? get totalBathrooms {
-    int? sum;
-    for (final c in cabins) {
-      if (c.bathrooms != null) {
-        sum = (sum ?? 0) + c.bathrooms!.toInt();
-      }
-    }
-    return sum;
-  }
-
-  /// Total habitaciones (suma de cabins).
-  int? get totalBedrooms {
-    int? sum;
-    for (final c in cabins) {
-      if (c.bedrooms != null) {
-        sum = (sum ?? 0) + c.bedrooms!.toInt();
-      }
-    }
-    return sum;
   }
 }
 
@@ -254,8 +252,7 @@ class PropertyLocationDetail {
     );
   }
 
-  bool get hasCoordinates =>
-      latitude != null && longitude != null;
+  bool get hasCoordinates => latitude != null && longitude != null;
 }
 
 // ─── Pools, Cabins, Camping ───────────────────────────────────────
@@ -263,29 +260,31 @@ class PropertyLocationDetail {
 class PoolDetail {
   final String idPool;
   final String idProperty;
-  final String? poolName;
-  final String? description;
-  final double? maxCapacity;
-  final double? depth;
-  final double? length;
-  final double? width;
-  final double? pricePerPerson;
-  final String? openingTime;
-  final String? closingTime;
+  final int? maxPersons;
+  final int? temperatureMin;
+  final int? temperatureMax;
+  final String? checkInTime;
+  final String? checkOutTime;
+  final int? maxHours;
+  final int? minHours;
+  final int? priceWeekday;
+  final int? priceWeekend;
+  final int? securityDeposit;
   final List<AmenityItem> amenities;
 
   PoolDetail({
     required this.idPool,
     required this.idProperty,
-    this.poolName,
-    this.description,
-    this.maxCapacity,
-    this.depth,
-    this.length,
-    this.width,
-    this.pricePerPerson,
-    this.openingTime,
-    this.closingTime,
+    this.maxPersons,
+    this.temperatureMin,
+    this.temperatureMax,
+    this.checkInTime,
+    this.checkOutTime,
+    this.maxHours,
+    this.minHours,
+    this.priceWeekday,
+    this.priceWeekend,
+    this.securityDeposit,
     this.amenities = const [],
   });
 
@@ -293,43 +292,59 @@ class PoolDetail {
     return PoolDetail(
       idPool: json['idPool'] ?? '',
       idProperty: json['idProperty'] ?? '',
-      poolName: json['poolName'],
-      description: json['description'],
-      maxCapacity: (json['maxCapacity'] as num?)?.toDouble(),
-      depth: (json['depth'] as num?)?.toDouble(),
-      length: (json['length'] as num?)?.toDouble(),
-      width: (json['width'] as num?)?.toDouble(),
-      pricePerPerson: (json['pricePerPerson'] as num?)?.toDouble(),
-      openingTime: json['openingTime'],
-      closingTime: json['closingTime'],
+      maxPersons: (json['maxPersons'] as num?)?.toInt(),
+      temperatureMin: (json['temperatureMin'] as num?)?.toInt(),
+      temperatureMax: (json['temperatureMax'] as num?)?.toInt(),
+      checkInTime: json['checkInTime'],
+      checkOutTime: json['checkOutTime'],
+      maxHours: (json['maxHours'] as num?)?.toInt(),
+      minHours: (json['minHours'] as num?)?.toInt(),
+      priceWeekday: (json['priceWeekday'] as num?)?.toInt(),
+      priceWeekend: (json['priceWeekend'] as num?)?.toInt(),
+      securityDeposit: (json['securityDeposit'] as num?)?.toInt(),
       amenities: (json['amenities'] as List<dynamic>?)
               ?.map((e) => AmenityItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
   }
+
+  String get formattedCheckIn => _formatTime(checkInTime);
+  String get formattedCheckOut => _formatTime(checkOutTime);
 }
 
 class CabinDetail {
   final String idCabin;
   final String idProperty;
-  final String? cabinName;
-  final String? description;
-  final double? maxCapacity;
+  final int? maxGuests;
   final int? bedrooms;
-  final int? bathrooms;
-  final double? pricePerNight;
+  final int? singleBeds;
+  final int? doubleBeds;
+  final int? fullBathrooms;
+  final int? halfBathrooms;
+  final String? checkInTime;
+  final String? checkOutTime;
+  final int? minNights;
+  final int? priceWeekday;
+  final int? priceWeekend;
+  final int? securityDeposit;
   final List<AmenityItem> amenities;
 
   CabinDetail({
     required this.idCabin,
     required this.idProperty,
-    this.cabinName,
-    this.description,
-    this.maxCapacity,
+    this.maxGuests,
     this.bedrooms,
-    this.bathrooms,
-    this.pricePerNight,
+    this.singleBeds,
+    this.doubleBeds,
+    this.fullBathrooms,
+    this.halfBathrooms,
+    this.checkInTime,
+    this.checkOutTime,
+    this.minNights,
+    this.priceWeekday,
+    this.priceWeekend,
+    this.securityDeposit,
     this.amenities = const [],
   });
 
@@ -337,36 +352,58 @@ class CabinDetail {
     return CabinDetail(
       idCabin: json['idCabin'] ?? '',
       idProperty: json['idProperty'] ?? '',
-      cabinName: json['cabinName'],
-      description: json['description'],
-      maxCapacity: (json['maxCapacity'] as num?)?.toDouble(),
-      bedrooms: json['bedrooms'],
-      bathrooms: json['bathrooms'],
-      pricePerNight: (json['pricePerNight'] as num?)?.toDouble(),
+      maxGuests: (json['maxGuests'] as num?)?.toInt(),
+      bedrooms: (json['bedrooms'] as num?)?.toInt(),
+      singleBeds: (json['singleBeds'] as num?)?.toInt(),
+      doubleBeds: (json['doubleBeds'] as num?)?.toInt(),
+      fullBathrooms: (json['fullBathrooms'] as num?)?.toInt(),
+      halfBathrooms: (json['halfBathrooms'] as num?)?.toInt(),
+      checkInTime: json['checkInTime'],
+      checkOutTime: json['checkOutTime'],
+      minNights: (json['minNights'] as num?)?.toInt(),
+      priceWeekday: (json['priceWeekday'] as num?)?.toInt(),
+      priceWeekend: (json['priceWeekend'] as num?)?.toInt(),
+      securityDeposit: (json['securityDeposit'] as num?)?.toInt(),
       amenities: (json['amenities'] as List<dynamic>?)
               ?.map((e) => AmenityItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
   }
+
+  int get totalBathrooms => (fullBathrooms ?? 0) + (halfBathrooms ?? 0);
+  int get totalBeds => (singleBeds ?? 0) + (doubleBeds ?? 0);
+
+  String get formattedCheckIn => _formatTime(checkInTime);
+  String get formattedCheckOut => _formatTime(checkOutTime);
 }
 
 class CampingAreaDetail {
   final String idCampingArea;
   final String idProperty;
-  final String? areaName;
-  final String? description;
-  final double? maxCapacity;
-  final double? pricePerPerson;
+  final int? maxPersons;
+  final int? areaSquareMeters;
+  final int? approxTents;
+  final String? checkInTime;
+  final String? checkOutTime;
+  final int? minNights;
+  final int? priceWeekday;
+  final int? priceWeekend;
+  final int? securityDeposit;
   final List<AmenityItem> amenities;
 
   CampingAreaDetail({
     required this.idCampingArea,
     required this.idProperty,
-    this.areaName,
-    this.description,
-    this.maxCapacity,
-    this.pricePerPerson,
+    this.maxPersons,
+    this.areaSquareMeters,
+    this.approxTents,
+    this.checkInTime,
+    this.checkOutTime,
+    this.minNights,
+    this.priceWeekday,
+    this.priceWeekend,
+    this.securityDeposit,
     this.amenities = const [],
   });
 
@@ -374,16 +411,24 @@ class CampingAreaDetail {
     return CampingAreaDetail(
       idCampingArea: json['idCampingArea'] ?? '',
       idProperty: json['idProperty'] ?? '',
-      areaName: json['areaName'],
-      description: json['description'],
-      maxCapacity: (json['maxCapacity'] as num?)?.toDouble(),
-      pricePerPerson: (json['pricePerPerson'] as num?)?.toDouble(),
+      maxPersons: (json['maxPersons'] as num?)?.toInt(),
+      areaSquareMeters: (json['areaSquareMeters'] as num?)?.toInt(),
+      approxTents: (json['approxTents'] as num?)?.toInt(),
+      checkInTime: json['checkInTime'],
+      checkOutTime: json['checkOutTime'],
+      minNights: (json['minNights'] as num?)?.toInt(),
+      priceWeekday: (json['priceWeekday'] as num?)?.toInt(),
+      priceWeekend: (json['priceWeekend'] as num?)?.toInt(),
+      securityDeposit: (json['securityDeposit'] as num?)?.toInt(),
       amenities: (json['amenities'] as List<dynamic>?)
               ?.map((e) => AmenityItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
   }
+
+  String get formattedCheckIn => _formatTime(checkInTime);
+  String get formattedCheckOut => _formatTime(checkOutTime);
 }
 
 class AmenityItem {
@@ -449,5 +494,21 @@ class PropertyImageDetail {
       isPrimary: json['isPrimary'] == true,
       displayOrder: json['displayOrder'] ?? 0,
     );
+  }
+}
+
+/// Formatea una fecha ISO (e.g. "1970-01-01T14:00:00.000Z") a hora legible "2:00 PM".
+String _formatTime(String? isoTime) {
+  if (isoTime == null) return '--';
+  try {
+    final dt = DateTime.parse(isoTime);
+    final hour = dt.hour;
+    final minute = dt.minute;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    final m = minute.toString().padLeft(2, '0');
+    return '$h12:$m $period';
+  } catch (_) {
+    return '--';
   }
 }

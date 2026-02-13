@@ -19,7 +19,17 @@ class AuthService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Login failed');
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        final message = error['message'];
+        if (message is List) {
+          throw Exception(message.join('\n'));
+        }
+        throw Exception(message ?? 'Error al iniciar sesión');
+      } catch (e) {
+        if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+        throw Exception('Error al iniciar sesión');
+      }
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;

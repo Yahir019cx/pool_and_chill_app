@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +11,14 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
+import 'widget_details/detail_constants.dart';
+import 'widget_details/detail_image_carousel.dart';
+import 'widget_details/detail_specs_section.dart';
+import 'widget_details/detail_check_times.dart';
+import 'widget_details/detail_amenities_section.dart';
+import 'widget_details/detail_rules_section.dart';
+import 'widget_details/detail_favorite_toast.dart';
+
 class PropertyDetailScreen extends ConsumerStatefulWidget {
   final String propertyId;
 
@@ -23,7 +30,6 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
-  static const Color primary = Color(0xFF3CA2A2);
   late final PageController _carouselController;
   Timer? _carouselTimer;
   int _carouselIndex = 0;
@@ -70,7 +76,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     }
   }
 
-  void _onFavoriteTap(String propertyId) {
+  void _onFavoriteTap(String propertyId, bool currentlyFavorite) {
     final auth =
         provider_pkg.Provider.of<AuthProvider>(context, listen: false);
     if (!auth.isAuthenticated) {
@@ -83,6 +89,19 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       return;
     }
     ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);
+    _showFavoriteOverlay(!currentlyFavorite);
+  }
+
+  void _showFavoriteOverlay(bool added) {
+    final overlay = Overlay.of(context);
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => DetailFavoriteToast(
+        added: added,
+        onDismiss: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
   }
 
   @override
@@ -90,54 +109,54 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     final asyncDetail = ref.watch(propertyDetailProvider(widget.propertyId));
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: SafeArea(
-        child: asyncDetail.when(
-          data: (data) => _buildContent(data),
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: primary),
-          ),
-          error: (err, _) => _buildError(err),
+      backgroundColor: Colors.white,
+      body: asyncDetail.when(
+        data: (data) => _buildContent(data),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: kDetailPrimary),
         ),
+        error: (err, _) => _buildError(err),
       ),
     );
   }
 
   Widget _buildError(Object err) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 56, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              'No se pudo cargar la propiedad',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade800,
+    return SafeArea(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 56, color: Colors.grey.shade400),
+              const SizedBox(height: 16),
+              const Text(
+                'No se pudo cargar la propiedad',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: kDetailDark,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              err.toString(),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 24),
-            TextButton.icon(
-              onPressed: () =>
-                  ref.invalidate(propertyDetailProvider(widget.propertyId)),
-              icon: const Icon(Icons.refresh, size: 20),
-              label: const Text('Reintentar'),
-              style: TextButton.styleFrom(foregroundColor: primary),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                err.toString(),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, color: kDetailGrey),
+              ),
+              const SizedBox(height: 24),
+              TextButton.icon(
+                onPressed: () =>
+                    ref.invalidate(propertyDetailProvider(widget.propertyId)),
+                icon: const Icon(Icons.refresh, size: 20),
+                label: const Text('Reintentar'),
+                style: TextButton.styleFrom(foregroundColor: kDetailPrimary),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -155,324 +174,253 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       });
     }
 
-    final maxPersonas = data.maxCapacityOverall;
-    final banos = data.totalBathrooms;
-    final habitaciones = data.totalBedrooms;
+    final priceRange = data.priceRange;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final topPadding = MediaQuery.of(context).padding.top;
 
-    final padding = MediaQuery.of(context).padding;
+    // Build specs
+    final allSpecs = _collectSpecs(data);
+    // Build check times
+    final checkTimes = _collectCheckTimes(data);
 
-    return CustomScrollView(
-      slivers: [
-        // Hero: carousel + overlay buttons
-        SliverToBoxAdapter(
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              SizedBox(
-                height: 320,
-                width: double.infinity,
-                child: images.isEmpty
-                    ? Container(
-                        color: Colors.grey.shade300,
-                        child: const Center(
-                          child: Icon(
-                            Icons.image,
-                            size: 64,
-                            color: Colors.grey,
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            // ─── Image Carousel ──────────────────────────────
+            SliverToBoxAdapter(
+              child: DetailImageCarousel(
+                images: images,
+                controller: _carouselController,
+                currentIndex: _carouselIndex,
+                overlayButtons: Stack(
+                  children: [
+                    Positioned(
+                      top: topPadding + 8,
+                      left: 16,
+                      child: DetailActionButton(
+                        icon: Icons.arrow_back_ios_new,
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    Positioned(
+                      top: topPadding + 8,
+                      right: 16,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          DetailActionButton(
+                            icon: Icons.share_outlined,
+                            onTap: () => _onShare(prop.propertyName),
                           ),
-                        ),
-                      )
-                    : PageView.builder(
-                        controller: _carouselController,
-                        itemCount: images.length,
-                        onPageChanged: (i) {
-                          setState(() => _carouselIndex = i);
-                          _startCarouselTimer(images.length);
-                        },
-                        itemBuilder: (_, i) {
-                          return CachedNetworkImage(
-                            imageUrl: images[i].imageURL,
-                            fit: BoxFit.cover,
-                            memCacheWidth: 800,
-                            placeholder: (_, __) => Container(
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: primary,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                            errorWidget: (_, __, ___) => Container(
-                              color: Colors.grey.shade200,
-                              child: const Center(
-                                child: Icon(Icons.image, color: Colors.grey),
-                              ),
-                            ),
-                          );
-                        },
+                          const SizedBox(width: 10),
+                          DetailActionButton(
+                            icon: isFavorite
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            iconColor:
+                                isFavorite ? Colors.redAccent : null,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _onFavoriteTap(prop.idProperty, isFavorite);
+                            },
+                          ),
+                        ],
                       ),
-              ),
-              Positioned(
-                top: 12,
-                left: 16 + padding.left,
-                child: _CircleButton(
-                  icon: Icons.arrow_back_ios_new,
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ),
-              Positioned(
-                top: 12,
-                right: 16 + padding.right,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _CircleButton(
-                      icon: Icons.share_outlined,
-                      onTap: () => _onShare(prop.propertyName),
-                    ),
-                    const SizedBox(width: 12),
-                    _CircleButton(
-                      icon:
-                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                      iconColor: isFavorite ? Colors.red : null,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        _onFavoriteTap(prop.idProperty);
-                      },
                     ),
                   ],
                 ),
               ),
-              if (images.length > 1)
-                Positioned(
-                  bottom: 16,
-                  left: 0,
-                  right: 0,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      images.length,
-                      (i) => AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _carouselIndex == i ? 20 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: _carouselIndex == i
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-
-        // Card superpuesta: nombre, tipo (sin icono), descripción, datos clave
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              20 + padding.left,
-              0,
-              20 + padding.right,
-              0,
             ),
-            child: Transform.translate(
-              offset: const Offset(0, -28),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
+
+            // ─── Body ────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    // Name
                     Text(
                       prop.propertyName,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black87,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: kDetailDark,
+                        letterSpacing: -0.5,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    // Type labels
+                    _buildTypeLabels(prop),
                     const SizedBox(height: 14),
-                    // Tipo plano (solo texto, sin icono)
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 10,
-                      runSpacing: 8,
-                      children: [
-                        if (prop.hasCabin)
-                          _TypeChipPlain(label: 'Cabaña'),
-                        if (prop.hasPool)
-                          _TypeChipPlain(label: 'Alberca'),
-                        if (prop.hasCamping)
-                          _TypeChipPlain(label: 'Camping'),
-                      ],
-                    ),
+                    // Description
                     if (prop.description != null &&
                         prop.description!.isNotEmpty) ...[
-                      const SizedBox(height: 18),
                       Text(
                         prop.description!,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.55,
-                          color: Colors.grey.shade700,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.5,
+                          color: kDetailGrey,
                         ),
                       ),
+                      const SizedBox(height: 20),
                     ],
-                    const SizedBox(height: 24),
-                    // Datos clave: personas, baños, habitaciones (siempre visibles)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _KeyDataChip(
-                          icon: Icons.people_outlined,
-                          label: maxPersonas != null
-                              ? '$maxPersonas huéspedes'
-                              : '—',
+                    _divider(),
+
+                    // ─── Servicios ────────────────────────────
+                    if (allSpecs.isNotEmpty) ...[
+                      _sectionTitle('Servicios'),
+                      const SizedBox(height: 16),
+                      DetailSpecsSection(specs: allSpecs),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // ─── Check-in / Check-out ─────────────────
+                    if (checkTimes.isNotEmpty) ...[
+                      _divider(),
+                      DetailCheckTimes(items: checkTimes),
+                      const SizedBox(height: 20),
+                    ],
+
+                    if (allSpecs.isNotEmpty || checkTimes.isNotEmpty)
+                      _divider(),
+
+                    // ─── Amenidades ───────────────────────────
+                    if (data.allAmenities.isNotEmpty) ...[
+                      _sectionTitle('Amenidades'),
+                      const SizedBox(height: 14),
+                      DetailAmenitiesSection(amenities: data.allAmenities),
+                      const SizedBox(height: 24),
+                      _divider(),
+                    ],
+
+                    // ─── Reglas ───────────────────────────────
+                    if (data.rules.isNotEmpty) ...[
+                      _sectionTitle('Reglas'),
+                      const SizedBox(height: 12),
+                      DetailRulesSection(rules: data.rules),
+                      const SizedBox(height: 24),
+                      _divider(),
+                    ],
+
+                    // ─── Ubicación ────────────────────────────
+                    if (prop.location != null &&
+                        prop.location!.hasCoordinates) ...[
+                      _sectionTitle('Ubicación'),
+                      const SizedBox(height: 4),
+                      Text(
+                        prop.location!.formattedAddress ?? '',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: kDetailGreyLight,
                         ),
-                        const SizedBox(width: 28),
-                        _KeyDataChip(
-                          icon: Icons.bathroom_outlined,
-                          label: (banos != null && banos > 0)
-                              ? '$banos baños'
-                              : '—',
+                      ),
+                      const SizedBox(height: 12),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          height: 200,
+                          width: double.infinity,
+                          child: GoogleMap(
+                            initialCameraPosition: CameraPosition(
+                              target: LatLng(
+                                prop.location!.latitude!,
+                                prop.location!.longitude!,
+                              ),
+                              zoom: 15,
+                            ),
+                            markers: {
+                              Marker(
+                                markerId: const MarkerId('property'),
+                                position: LatLng(
+                                  prop.location!.latitude!,
+                                  prop.location!.longitude!,
+                                ),
+                              ),
+                            },
+                            zoomControlsEnabled: false,
+                            scrollGesturesEnabled: false,
+                            rotateGesturesEnabled: false,
+                            tiltGesturesEnabled: false,
+                            myLocationButtonEnabled: false,
+                          ),
                         ),
-                        const SizedBox(width: 28),
-                        _KeyDataChip(
-                          icon: Icons.bed_outlined,
-                          label: (habitaciones != null && habitaciones > 0)
-                              ? '$habitaciones hab.'
-                              : '—',
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
+                    SizedBox(height: 80 + bottomPadding),
                   ],
                 ),
               ),
             ),
-          ),
+          ],
         ),
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              20 + padding.left,
-              32,
-              20 + padding.right,
-              24 + padding.bottom,
+        // ─── Sticky bottom bar ──────────────────────────────
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomPadding),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(color: Colors.grey.shade200),
+              ),
             ),
-            child: Column(
+            child: Row(
               children: [
-                // Amenidades en chips con iconos
-                if (data.allAmenities.isNotEmpty) ...[
-                  _SectionCard(
-                    title: 'Amenidades',
-                    child: Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: data.allAmenities.map((a) {
-                        return _AmenityChip(
-                          label: a.amenityName ?? a.amenityCode ?? '',
-                          icon: _iconForAmenity(a.amenityCode),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                // Reglas
-                if (data.rules.isNotEmpty) ...[
-                  _SectionCard(
-                    title: 'Reglas de la propiedad',
+                if (priceRange != null) ...[
+                  Expanded(
                     child: Column(
-                      children: (List<PropertyRule>.from(data.rules)
-                            ..sort((a, b) =>
-                                a.displayOrder.compareTo(b.displayOrder)))
-                          .map((r) => Padding(
-                                padding: const EdgeInsets.only(bottom: 14),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '• ',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        color: Colors.grey.shade700,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        r.ruleText,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 15,
-                                          color: Colors.grey.shade700,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '\$${formatPrice(priceRange.min)}',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: kDetailDark,
                                 ),
-                              ))
-                          .toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                // Mapa
-                if (prop.location != null && prop.location!.hasCoordinates) ...[
-                  _SectionCard(
-                    title: 'Ubicación',
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(14),
-                      child: SizedBox(
-                        height: 220,
-                        width: double.infinity,
-                        child: GoogleMap(
-                          initialCameraPosition: CameraPosition(
-                            target: LatLng(
-                              prop.location!.latitude!,
-                              prop.location!.longitude!,
-                            ),
-                            zoom: 15,
-                          ),
-                          markers: {
-                            Marker(
-                              markerId: const MarkerId('property'),
-                              position: LatLng(
-                                prop.location!.latitude!,
-                                prop.location!.longitude!,
                               ),
-                            ),
-                          },
+                              if (priceRange.min != priceRange.max)
+                                TextSpan(
+                                  text:
+                                      ' - \$${formatPrice(priceRange.max)}',
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: kDetailGrey,
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
+                        const Text(
+                          'Sujeto a disponibilidad',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: kDetailGreyLight,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                ],
-                const SizedBox(height: 8),
+                ] else
+                  const Spacer(),
                 SizedBox(
-                  width: double.infinity,
-                  height: 56,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -483,15 +431,16 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primary,
+                      backgroundColor: kDetailPrimary,
                       foregroundColor: Colors.white,
                       elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                       ),
                       textStyle: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     child: const Text('Reservar'),
@@ -505,188 +454,129 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     );
   }
 
-  static IconData _iconForAmenity(String? code) {
-    if (code == null) return Icons.check_circle_outline;
-    final c = code.toLowerCase();
-    if (c.contains('wifi')) return Icons.wifi;
-    if (c.contains('pool') || c.contains('alberca')) return Icons.pool;
-    if (c.contains('parking') || c.contains('estacionamiento'))
-      return Icons.local_parking;
-    if (c.contains('aire') || c.contains('ac')) return Icons.ac_unit;
-    if (c.contains('tv')) return Icons.tv;
-    if (c.contains('cocina')) return Icons.kitchen;
-    if (c.contains('bbq') || c.contains('asador')) return Icons.outdoor_grill;
-    if (c.contains('jardin') || c.contains('garden')) return Icons.yard;
-    if (c.contains('seguridad')) return Icons.security;
-    if (c.contains('mascota') || c.contains('pet')) return Icons.pets;
-    return Icons.check_circle_outline;
-  }
-}
+  // ─── Helpers ────────────────────────────────────────────────────
 
-/// Botón circular con área de toque mínima 48dp (Android) / 44pt (iOS).
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final Color? iconColor;
+  Widget _buildTypeLabels(PropertyDetailProperty prop) {
+    final types = <String>[];
+    if (prop.hasCabin) types.add('Cabaña');
+    if (prop.hasPool) types.add('Alberca');
+    if (prop.hasCamping) types.add('Camping');
+    if (types.isEmpty) return const SizedBox.shrink();
 
-  const _CircleButton({
-    required this.icon,
-    required this.onTap,
-    this.iconColor,
-  });
-
-  static const double _minTouchTarget = 48;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(_minTouchTarget / 2),
-        child: Container(
-          width: _minTouchTarget,
-          height: _minTouchTarget,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.35),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: iconColor ?? Colors.white, size: 24),
-        ),
+    return Text(
+      types.join(' · '),
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: kDetailPrimary,
+        letterSpacing: 0.3,
       ),
     );
   }
-}
 
-class _TypeChipPlain extends StatelessWidget {
-  final String label;
-
-  const _TypeChipPlain({required this.label});
-
-  static const Color primary = Color(0xFF3CA2A2);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withValues(alpha: 0.25)),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF2D9D91),
-        ),
+  Widget _sectionTitle(String title) {
+    return Text(
+      title,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 19,
+        fontWeight: FontWeight.w700,
+        color: kDetailDark,
       ),
     );
   }
-}
 
-class _KeyDataChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _KeyDataChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 24, color: primary),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade700,
-          ),
-        ),
-      ],
+  Widget _divider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Divider(color: Colors.grey.shade200, height: 1),
     );
   }
-}
 
-const Color primary = Color(0xFF3CA2A2);
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _SectionCard({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 20),
-          child,
-        ],
-      ),
-    );
+  List<SpecItem> _collectSpecs(PropertyDetailResponse data) {
+    final specs = <SpecItem>[];
+    for (final cabin in data.cabins) {
+      if (cabin.maxGuests != null) {
+        specs.add(SpecItem(Icons.people_outline, '${cabin.maxGuests}', 'Huéspedes'));
+      }
+      if (cabin.bedrooms != null && cabin.bedrooms! > 0) {
+        specs.add(SpecItem(Icons.door_back_door_outlined, '${cabin.bedrooms}', 'Habitaciones'));
+      }
+      if (cabin.singleBeds != null && cabin.singleBeds! > 0) {
+        specs.add(SpecItem(Icons.single_bed_outlined, '${cabin.singleBeds}', 'C. Individual'));
+      }
+      if (cabin.doubleBeds != null && cabin.doubleBeds! > 0) {
+        specs.add(SpecItem(Icons.king_bed_outlined, '${cabin.doubleBeds}', 'C. Doble'));
+      }
+      if (cabin.fullBathrooms != null && cabin.fullBathrooms! > 0) {
+        specs.add(SpecItem(Icons.bathtub_outlined, '${cabin.fullBathrooms}', 'Baño comp.'));
+      }
+      if (cabin.halfBathrooms != null && cabin.halfBathrooms! > 0) {
+        specs.add(SpecItem(Icons.wash_outlined, '${cabin.halfBathrooms}', 'Medio baño'));
+      }
+    }
+    for (final pool in data.pools) {
+      if (pool.maxPersons != null) {
+        specs.add(SpecItem(Icons.people_outline, '${pool.maxPersons}', 'Personas'));
+      }
+      if (pool.temperatureMin != null && pool.temperatureMax != null) {
+        specs.add(SpecItem(Icons.thermostat_outlined, '${pool.temperatureMin}°-${pool.temperatureMax}°', 'Temp.'));
+      }
+      if (pool.minHours != null) {
+        specs.add(SpecItem(Icons.timelapse_outlined, '${pool.minHours}h', 'Mín. horas'));
+      }
+      if (pool.maxHours != null) {
+        specs.add(SpecItem(Icons.schedule_outlined, '${pool.maxHours}h', 'Máx. horas'));
+      }
+    }
+    for (final camping in data.campingAreas) {
+      if (camping.maxPersons != null) {
+        specs.add(SpecItem(Icons.people_outline, '${camping.maxPersons}', 'Personas'));
+      }
+      if (camping.areaSquareMeters != null) {
+        specs.add(SpecItem(Icons.straighten_outlined, '${camping.areaSquareMeters} m²', 'Área'));
+      }
+      if (camping.approxTents != null) {
+        specs.add(SpecItem(Icons.holiday_village_outlined, '${camping.approxTents}', 'Casas'));
+      }
+    }
+    return specs;
   }
-}
 
-/// Chip con área de toque adecuada para accesibilidad.
-class _AmenityChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-
-  const _AmenityChip({required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: primary.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: primary),
-          const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF2D9D91),
-            ),
-          ),
-        ],
-      ),
-    );
+  List<InfoPair> _collectCheckTimes(PropertyDetailResponse data) {
+    final checkInfo = <InfoPair>[];
+    for (final cabin in data.cabins) {
+      if (cabin.checkInTime != null) {
+        checkInfo.add(InfoPair('Check-in', cabin.formattedCheckIn));
+      }
+      if (cabin.checkOutTime != null) {
+        checkInfo.add(InfoPair('Check-out', cabin.formattedCheckOut));
+      }
+    }
+    for (final pool in data.pools) {
+      if (pool.checkInTime != null) {
+        checkInfo.add(InfoPair('Entrada', pool.formattedCheckIn));
+      }
+      if (pool.checkOutTime != null) {
+        checkInfo.add(InfoPair('Salida', pool.formattedCheckOut));
+      }
+    }
+    for (final camping in data.campingAreas) {
+      if (camping.checkInTime != null) {
+        checkInfo.add(InfoPair('Check-in', camping.formattedCheckIn));
+      }
+      if (camping.checkOutTime != null) {
+        checkInfo.add(InfoPair('Check-out', camping.formattedCheckOut));
+      }
+    }
+    // Deduplicate (keep first 2 unique labels)
+    final unique = <InfoPair>[];
+    final seen = <String>{};
+    for (final info in checkInfo) {
+      if (seen.add(info.label)) unique.add(info);
+      if (unique.length >= 2) break;
+    }
+    return unique;
   }
 }
