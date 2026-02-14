@@ -4,7 +4,14 @@
       "mcp__flutter-ui-mcp__refactor_flutter_ui_code",
       "Bash(flutter analyze:*)",
       "Bash(.gradlew clean:*)",
-      "Bash(flutter pub get:*)"
+      "Bash(flutter pub get:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(ipconfig:*)",
+      "Bash(Select-String:*)",
+      "Bash(cmd /c \"ipconfig\")",
+      "Bash(cmd /c ipconfig)",
+      "Bash(cmd /c \"powershell -Command \"\"Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_IPAddress -notlike ''127.*'' -and $_IPAddress -notlike ''169.*'' } | Select-Object IPAddress, InterfaceAlias\"\"\")",
+      "Bash(dir \"c:\\\\Users\\\\Desarrollo\\\\Documents\\\\GitHub\\\\pool_and_chill_app\\\\ios\" /b)"
     ]
   },
   "enableAllProjectMcpServers": true,

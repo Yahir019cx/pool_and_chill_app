@@ -4,11 +4,24 @@
 <dict>
 	<!-- Permisos para imagen de perfil -->
 	<key>NSCameraUsageDescription</key>
-	<string>Necesitamos acceso a tu cámara para tomar fotos de perfil</string>
+	<string>Necesitamos acceso a tu cámara para tomar fotos de perfil y verificar tu identidad</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Necesitamos acceso a tu galería para elegir fotos de perfil</string>
+	<string>Necesitamos acceso a tu galería para elegir fotos de perfil y subir documentos</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Necesitamos acceso para guardar fotos</string>
+
+	<!-- Permisos requeridos por Didit SDK para verificación de identidad -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>El micrófono es necesario para grabar video durante la verificación de vida (liveness)</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>El NFC es necesario para leer el chip de tu documento de identidad</string>
+	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
+	<array>
+		<string>D23300000045737445494420763335</string>
+		<string>A0000002471001</string>
+		<string>A0000002472001</string>
+		<string>00000000000000</string>
+	</array>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
