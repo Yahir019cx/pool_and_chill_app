@@ -28,6 +28,9 @@ class ApiRoutes {
   static String amenitiesByCategory(String categories) =>
       '$catalogAmenities?category=$categories';
 
+  // BOOKING
+  static const bookingCalendar = '/booking/calendar';
+
   // KYC / Verificación (Didit)
   static const kycStart = '/kyc/start';
   static const kycStatus = '/kyc/status';

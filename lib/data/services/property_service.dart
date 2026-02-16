@@ -110,6 +110,26 @@ class PropertyService {
     );
   }
 
+  // ─── BOOKING / CALENDARIO ─────────────────────────────────────
+
+  /// Obtiene el calendario de disponibilidad (POST /booking/calendar).
+  Future<CalendarAvailabilityResponse> getBookingCalendar(
+      String propertyId) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingCalendar,
+      body: {'propertyId': propertyId},
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return CalendarAvailabilityResponse.fromJson(json);
+    }
+
+    throw Exception(
+      'Error al obtener calendario: ${response.statusCode}',
+    );
+  }
+
   // ─── FAVORITOS ──────────────────────────────────────────────────
 
   /// Obtiene solo los IDs de propiedades favoritas del usuario.

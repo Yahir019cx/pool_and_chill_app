@@ -11,7 +11,8 @@
       "Bash(cmd /c \"ipconfig\")",
       "Bash(cmd /c ipconfig)",
       "Bash(cmd /c \"powershell -Command \"\"Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_IPAddress -notlike ''127.*'' -and $_IPAddress -notlike ''169.*'' } | Select-Object IPAddress, InterfaceAlias\"\"\")",
-      "Bash(dir \"c:\\\\Users\\\\Desarrollo\\\\Documents\\\\GitHub\\\\pool_and_chill_app\\\\ios\" /b)"
+      "Bash(dir \"c:\\\\Users\\\\Desarrollo\\\\Documents\\\\GitHub\\\\pool_and_chill_app\\\\ios\" /b)",
+      "Bash(ls:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

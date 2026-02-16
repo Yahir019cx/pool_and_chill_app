@@ -18,6 +18,7 @@ import 'widget_details/detail_check_times.dart';
 import 'widget_details/detail_amenities_section.dart';
 import 'widget_details/detail_rules_section.dart';
 import 'widget_details/detail_favorite_toast.dart';
+import 'widget_details/booking_calendar_sheet.dart';
 
 class PropertyDetailScreen extends ConsumerStatefulWidget {
   final String propertyId;
@@ -423,10 +424,16 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Reservar — Próximamente'),
-                          duration: Duration(seconds: 2),
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (_) => UncontrolledProviderScope(
+                          container: ProviderScope.containerOf(context),
+                          child: BookingCalendarSheet(
+                            propertyId: widget.propertyId,
+                            propertyDetail: data,
+                          ),
                         ),
                       );
                     },

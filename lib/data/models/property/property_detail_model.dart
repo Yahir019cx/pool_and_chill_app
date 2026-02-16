@@ -325,6 +325,7 @@ class CabinDetail {
   final String? checkInTime;
   final String? checkOutTime;
   final int? minNights;
+  final int? maxNights;
   final int? priceWeekday;
   final int? priceWeekend;
   final int? securityDeposit;
@@ -342,6 +343,7 @@ class CabinDetail {
     this.checkInTime,
     this.checkOutTime,
     this.minNights,
+    this.maxNights,
     this.priceWeekday,
     this.priceWeekend,
     this.securityDeposit,
@@ -361,6 +363,7 @@ class CabinDetail {
       checkInTime: json['checkInTime'],
       checkOutTime: json['checkOutTime'],
       minNights: (json['minNights'] as num?)?.toInt(),
+      maxNights: (json['maxNights'] as num?)?.toInt(),
       priceWeekday: (json['priceWeekday'] as num?)?.toInt(),
       priceWeekend: (json['priceWeekend'] as num?)?.toInt(),
       securityDeposit: (json['securityDeposit'] as num?)?.toInt(),
@@ -387,6 +390,7 @@ class CampingAreaDetail {
   final String? checkInTime;
   final String? checkOutTime;
   final int? minNights;
+  final int? maxNights;
   final int? priceWeekday;
   final int? priceWeekend;
   final int? securityDeposit;
@@ -401,6 +405,7 @@ class CampingAreaDetail {
     this.checkInTime,
     this.checkOutTime,
     this.minNights,
+    this.maxNights,
     this.priceWeekday,
     this.priceWeekend,
     this.securityDeposit,
@@ -417,6 +422,7 @@ class CampingAreaDetail {
       checkInTime: json['checkInTime'],
       checkOutTime: json['checkOutTime'],
       minNights: (json['minNights'] as num?)?.toInt(),
+      maxNights: (json['maxNights'] as num?)?.toInt(),
       priceWeekday: (json['priceWeekday'] as num?)?.toInt(),
       priceWeekend: (json['priceWeekend'] as num?)?.toInt(),
       securityDeposit: (json['securityDeposit'] as num?)?.toInt(),
