@@ -28,6 +28,19 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _handleGoogleLogin() async {
+    final auth = context.read<AuthProvider>();
+    try {
+      await auth.loginWithGoogle();
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      AuthSnackbar.showError(context, msg);
+    }
+  }
+
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -244,11 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _social(FontAwesomeIcons.facebook, Colors.blue),
+                      _social(FontAwesomeIcons.google, Colors.red, _handleGoogleLogin),
                       const SizedBox(width: 15),
-                      _social(FontAwesomeIcons.google, Colors.red),
-                      const SizedBox(width: 15),
-                      _social(FontAwesomeIcons.apple, Colors.black),
+                      _social(FontAwesomeIcons.apple, Colors.black, null),
                     ],
                   ),
                 ],
@@ -340,9 +351,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _social(IconData icon, Color color) {
+  Widget _social(IconData icon, Color color, VoidCallback? onPressed) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         shape: const CircleBorder(),
         backgroundColor: Colors.grey.shade200,

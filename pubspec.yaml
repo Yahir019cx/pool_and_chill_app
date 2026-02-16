@@ -16,6 +16,9 @@ dependencies:
   flutter_dotenv: ^5.1.0
   http: ^1.2.0
   flutter_secure_storage: ^9.0.0
+
+  # Social Auth
+  google_sign_in: ^6.2.1
   #formatting
   intl: ^0.20.2
 

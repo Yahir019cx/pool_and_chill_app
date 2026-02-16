@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/models/user/index.dart';
@@ -141,6 +142,44 @@ class AuthProvider extends ChangeNotifier {
 
       apiClient.setAccessToken(session.accessToken);
 
+      await SecureStorage.saveTokens(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      );
+
+      _profile = await _userService.getMe();
+      if (_profile != null && _profile!.isHost) {
+        await fetchMyProperties();
+      }
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ===== LOGIN WITH GOOGLE =====
+  Future<void> loginWithGoogle() async {
+    _setLoading(true);
+
+    try {
+      final googleSignIn = GoogleSignIn(
+        serverClientId:
+            '395705090497-7n4m477hvgf5un5kiv0ajcfk58tvi9o2.apps.googleusercontent.com',
+        scopes: ['email', 'profile'],
+      );
+
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        // El usuario canceló el popup
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) throw Exception('No se pudo obtener el token de Google');
+
+      final session = await _authService.loginWithGoogle(idToken);
+
+      apiClient.setAccessToken(session.accessToken);
       await SecureStorage.saveTokens(
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,

@@ -78,6 +78,29 @@ class AuthService {
     throw Exception(message ?? 'Error al registrar');
   }
 
+  Future<AuthResponseModel> loginWithGoogle(String idToken) async {
+    final response = await api.post(
+      ApiRoutes.loginWithGoogle,
+      withAuth: false,
+      body: {'idToken': idToken},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        final message = error['message'];
+        if (message is List) throw Exception(message.join('\n'));
+        throw Exception(message ?? 'Error al iniciar sesión con Google');
+      } catch (e) {
+        if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+        throw Exception('Error al iniciar sesión con Google');
+      }
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return AuthResponseModel.fromJson(data);
+  }
+
   Future<void> logout() async {
     await api.post(ApiRoutes.logout, withAuth: true);
   }
