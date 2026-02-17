@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/auth_snackbar.dart';
+import 'package:pool_and_chill_app/features/auth/widgets/forgot_password_modal.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -190,7 +191,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   _buildPasswordInput(),
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 8),
+
+                  // Forgot password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 40),
+                      child: TextButton(
+                        onPressed: () => ForgotPasswordModal.show(context),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 32),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          '¿Olvidaste tu contraseña?',
+                          style: GoogleFonts.openSans(
+                            fontSize: 13,
+                            color: const Color.fromARGB(255, 69, 145, 155),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
 
                   ElevatedButton(
                     onPressed: auth.isLoading ? null : _handleLogin,

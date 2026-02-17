@@ -5,6 +5,7 @@ class ApiRoutes {
   static const refresh = '/auth/refresh';
   static const logout = '/auth/logout';
   static const loginWithGoogle = '/auth/google';
+  static const forgotPassword = '/auth/forgot-password';
 
   // USERS
   static const me = '/users/me';

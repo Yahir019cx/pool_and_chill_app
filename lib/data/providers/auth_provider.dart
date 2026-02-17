@@ -221,6 +221,16 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  // ===== FORGOT PASSWORD =====
+  Future<void> forgotPassword(String email) async {
+    _setLoading(true);
+    try {
+      await _authService.forgotPassword(email);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   // ===== LOGOUT =====
   Future<void> logout() async {
     try {

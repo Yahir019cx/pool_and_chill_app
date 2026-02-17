@@ -101,6 +101,25 @@ class AuthService {
     return AuthResponseModel.fromJson(data);
   }
 
+  /// Envía correo de restablecimiento de contraseña.
+  /// Lanza [Exception] si el email es inválido (400).
+  Future<void> forgotPassword(String email) async {
+    final response = await api.post(
+      ApiRoutes.forgotPassword,
+      withAuth: false,
+      body: {'email': email},
+    );
+
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body) as Map<String, dynamic>;
+      final message = error['message'];
+      if (message is List) {
+        throw Exception(message.join('\n'));
+      }
+      throw Exception(message ?? 'Error al enviar el correo');
+    }
+  }
+
   Future<void> logout() async {
     await api.post(ApiRoutes.logout, withAuth: true);
   }
