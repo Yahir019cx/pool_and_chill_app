@@ -13,7 +13,10 @@
       "Bash(cmd /c \"powershell -Command \"\"Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_IPAddress -notlike ''127.*'' -and $_IPAddress -notlike ''169.*'' } | Select-Object IPAddress, InterfaceAlias\"\"\")",
       "Bash(dir \"c:\\\\Users\\\\Desarrollo\\\\Documents\\\\GitHub\\\\pool_and_chill_app\\\\ios\" /b)",
       "Bash(ls:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(flutter build:*)",
+      "WebFetch(domain:docs.didit.me)",
+      "WebFetch(domain:github.com)"
     ]
   },
   "enableAllProjectMcpServers": true,

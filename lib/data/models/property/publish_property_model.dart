@@ -69,7 +69,7 @@ class PublishLocationDto {
 class PublishBasicServiceDto {
   final String checkInTime;
   final String checkOutTime;
-  final int maxHours;
+  final int? maxHours;
   final int? minHours;
   final double priceWeekday;
   final double priceWeekend;
@@ -77,7 +77,7 @@ class PublishBasicServiceDto {
   const PublishBasicServiceDto({
     required this.checkInTime,
     required this.checkOutTime,
-    required this.maxHours,
+    this.maxHours,
     this.minHours,
     required this.priceWeekday,
     required this.priceWeekend,
@@ -86,7 +86,7 @@ class PublishBasicServiceDto {
   Map<String, dynamic> toJson() => {
         'checkInTime': checkInTime,
         'checkOutTime': checkOutTime,
-        'maxHours': maxHours,
+        if (maxHours != null) 'maxHours': maxHours,
         if (minHours != null) 'minHours': minHours,
         'priceWeekday': priceWeekday,
         'priceWeekend': priceWeekend,
@@ -364,8 +364,6 @@ PublishPropertyBody buildPublishPropertyBody(
   final basicService = PublishBasicServiceDto(
     checkInTime: _timeToBackend(state.basicInfo.checkIn),
     checkOutTime: _timeToBackend(state.basicInfo.checkOut),
-    maxHours: 12,
-    minHours: 4,
     priceWeekday: state.basicInfo.precioLunesJueves,
     priceWeekend: state.basicInfo.precioViernesDomingo,
   );

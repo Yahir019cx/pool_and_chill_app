@@ -124,7 +124,7 @@ class AuthService {
     await api.post(ApiRoutes.logout, withAuth: true);
   }
 
-  Future<AuthResponseModel> refresh(String refreshToken) async {
+  Future<RefreshResponseModel> refresh(String refreshToken) async {
     final response = await api.post(
       ApiRoutes.refresh,
       withAuth: false,
@@ -138,6 +138,6 @@ class AuthService {
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    return AuthResponseModel.fromJson(data);
+    return RefreshResponseModel.fromJson(data);
   }
 }

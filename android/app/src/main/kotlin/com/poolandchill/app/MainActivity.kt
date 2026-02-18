@@ -1,5 +1,7 @@
 package com.poolandchill.app
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.lifecycleScope
 import io.flutter.embedding.android.FlutterActivity
@@ -35,8 +37,7 @@ class MainActivity : FlutterActivity() {
                     is DiditSdkState.Ready -> {
                         Log.d(TAG, "[Didit] Ready — lanzando UI de verificación")
                         DiditSdk.launchVerificationUI(this@MainActivity)
-                        pendingResult?.success(null)
-                        pendingResult = null
+                        // No resolvemos pendingResult aquí — esperamos al callback de resultado
                     }
                     is DiditSdkState.Error -> {
                         Log.e(TAG, "[Didit] Error del SDK: ${state.message}")
@@ -75,15 +76,27 @@ class MainActivity : FlutterActivity() {
                         token = sessionToken,
                         configuration = config
                     ) { verificationResult ->
-                        when (verificationResult) {
-                            is VerificationResult.Completed -> {
-                                Log.d(TAG, "[Didit] Completado — status: ${verificationResult.session.status}")
-                            }
-                            is VerificationResult.Cancelled -> {
-                                Log.d(TAG, "[Didit] Cancelado por el usuario")
-                            }
-                            is VerificationResult.Failed -> {
-                                Log.e(TAG, "[Didit] Falló: ${verificationResult.error.message}")
+                        // El callback puede venir de un hilo de fondo.
+                        // MethodChannel.Result DEBE resolverse en el UI thread.
+                        Handler(Looper.getMainLooper()).post {
+                            when (verificationResult) {
+                                is VerificationResult.Completed -> {
+                                    val status = verificationResult.session.status.name
+                                    Log.d(TAG, "[Didit] Completado — status: $status (enviando a Flutter)")
+                                    pendingResult?.success(status)
+                                    pendingResult = null
+                                }
+                                is VerificationResult.Cancelled -> {
+                                    Log.d(TAG, "[Didit] Cancelado por el usuario (enviando a Flutter)")
+                                    pendingResult?.success("CANCELLED")
+                                    pendingResult = null
+                                }
+                                is VerificationResult.Failed -> {
+                                    val msg = verificationResult.error.message
+                                    Log.e(TAG, "[Didit] Falló: $msg (enviando a Flutter)")
+                                    pendingResult?.error("VERIFICATION_FAILED", msg, null)
+                                    pendingResult = null
+                                }
                             }
                         }
                     }

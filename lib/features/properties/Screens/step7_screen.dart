@@ -22,7 +22,8 @@ class Step7Screen extends ConsumerStatefulWidget {
 
 class _Step7ScreenState extends ConsumerState<Step7Screen> {
   bool _isLoading = false;
-  bool _verificationStarted = false;
+  bool _verified = false;
+  bool _skipped = false;
   String? _statusMessage;
   static const Color mainColor = Color(0xFF3CA2A2);
 
@@ -38,23 +39,27 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
 
     try {
       debugPrint('[Didit] Step7: llamando a startDiditVerificationOnDevice()');
-      await kycService.startDiditVerificationOnDevice();
-      debugPrint('[Didit] Step7: startDiditVerificationOnDevice() retornó OK');
+      final status = await kycService.startDiditVerificationOnDevice();
+      debugPrint('[Didit] Step7: SDK retornó status=$status');
       if (!mounted) return;
-      setState(() {
-        _verificationStarted = true;
-        _statusMessage = 'Flujo de verificación abierto. Si ya lo completaste, pulsa Siguiente.';
-      });
-      // Opcional: consultar estado para mostrar "Verificado" / "Pendiente"
-      final status = await kycService.getStatus();
-      if (!mounted) return;
-      setState(() {
-        if (status.isVerified) {
-          _statusMessage = 'Identidad verificada.';
-        } else {
-          _statusMessage = status.verificationStatus;
-        }
-      });
+
+      final upperStatus = status?.toUpperCase() ?? '';
+
+      if (upperStatus == 'APPROVED') {
+        setState(() {
+          _verified = true;
+          _statusMessage = 'Identidad verificada correctamente.';
+        });
+      } else if (upperStatus == 'CANCELLED') {
+        setState(() {
+          _statusMessage = 'Verificación cancelada. Puedes intentarlo de nuevo.';
+        });
+      } else {
+        // DECLINED, PENDING, u otro estado
+        setState(() {
+          _statusMessage = 'La verificación no fue aprobada. Intenta de nuevo.';
+        });
+      }
     } catch (e, st) {
       debugPrint('[Didit] Step7: ERROR - $e');
       debugPrint('[Didit] Step7: stackTrace - $st');
@@ -140,7 +145,33 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  if (_isLoading)
+                  if (_verified)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Identidad verificada correctamente.\nPulsa Siguiente para continuar.',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green.shade800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (_isLoading)
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.all(24),
@@ -171,13 +202,46 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
                         ),
                       ),
                     ),
-                  if (_statusMessage != null) ...[
+                  if (_statusMessage != null && !_verified) ...[
                     const SizedBox(height: 16),
                     Text(
                       _statusMessage!,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade700,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ],
+                  if (!_verified && !_isLoading) ...[
+                    const SizedBox(height: 32),
+                    Center(
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _skipped = true;
+                          });
+                          widget.onNext();
+                        },
+                        child: Text(
+                          'Verificar después',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'Podrás verificar tu identidad más tarde desde tu perfil. Tu propiedad no será visible hasta completar la verificación.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],
@@ -189,7 +253,7 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
           StepNavigationButtons(
             onPrevious: widget.onPrevious,
             onNext: widget.onNext,
-            isNextEnabled: _verificationStarted,
+            isNextEnabled: _verified,
           ),
         ],
       ),

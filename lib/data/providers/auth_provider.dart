@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -246,31 +248,35 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool _refreshing = false;
+  Completer<bool>? _refreshCompleter;
 
   Future<bool> refreshSession() async {
-    if (_refreshing) return false;
-    _refreshing = true;
+    // Si ya hay un refresh en curso, esperar su resultado
+    if (_refreshCompleter != null) {
+      return _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<bool>();
 
     try {
       final refreshToken = await SecureStorage.getRefreshToken();
-      if (refreshToken == null) throw Exception();
+      if (refreshToken == null) throw Exception('No refresh token');
 
-      final session = await _authService.refresh(refreshToken);
+      final result = await _authService.refresh(refreshToken);
 
-      apiClient.setAccessToken(session.accessToken);
+      // El endpoint /auth/refresh solo devuelve accessToken + expiresIn
+      // El refreshToken no cambia, solo actualizamos el accessToken
+      apiClient.setAccessToken(result.accessToken);
+      await SecureStorage.saveAccessToken(result.accessToken);
 
-      await SecureStorage.saveTokens(
-        accessToken: session.accessToken,
-        refreshToken: session.refreshToken,
-      );
-
+      _refreshCompleter!.complete(true);
       return true;
     } catch (_) {
+      _refreshCompleter!.complete(false);
       await logout();
       return false;
     } finally {
-      _refreshing = false;
+      _refreshCompleter = null;
     }
   }
 }

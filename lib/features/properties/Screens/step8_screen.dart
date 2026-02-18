@@ -6,8 +6,7 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/services/storage_service.dart';
-import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
-import 'package:pool_and_chill_app/features/host/home_host.dart';
+import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 import '../widgets/step_navigation_buttons.dart';
 
 class Step8Screen extends ConsumerStatefulWidget {
@@ -155,22 +154,13 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                   ref.read(propertyRegistrationProvider.notifier).reset();
                   await auth.refreshProfile();
                   if (!mounted) return;
-                  final profile = auth.profile;
-                  if (profile?.isHostOnboarded == 1) {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const WelcomeAnfitrionScreen(),
-                      ),
-                    );
-                  } else {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const HomeHostScreen(),
-                      ),
-                    );
-                  }
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const WelcomeScreen(),
+                    ),
+                    (_) => false,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mainColor,
@@ -324,14 +314,23 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                  // Verificación de identidad (Didit o INE)
-                  _SummarySection(
-                    title: 'Verificación de identidad',
-                    icon: Icons.verified_user_outlined,
-                    isComplete: true,
-                    children: [
-                      const _SummaryRow('Estado', 'Completado en paso 7'),
-                    ],
+                  // Verificación de identidad (Didit)
+                  Builder(
+                    builder: (context) {
+                      final auth = context.read<AuthProvider>();
+                      final verified = auth.profile?.isIdentityVerified ?? false;
+                      return _SummarySection(
+                        title: 'Verificación de identidad',
+                        icon: Icons.verified_user_outlined,
+                        isComplete: verified,
+                        children: [
+                          _SummaryRow(
+                            'Estado',
+                            verified ? 'Verificada' : 'Pendiente',
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 24),
                 ],

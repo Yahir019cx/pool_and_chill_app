@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "395705090497-lbmk3720mgq5fhq22qh4i3v0qhne96i6.apps.googleusercontent.com",
+          "client_id": "395705090497-be0gg5jibi9gisjkmtdtep0o7qtrfcnt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poolandchill.app",
+            "certificate_hash": "f64e3204106980519fe90c3d1164325bcb242ebc"
+          }
+        },
+        {
+          "client_id": "395705090497-saltsbp3pge7i4ot0iofk8u0gvke5aep.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.poolandchill.app",
@@ -37,6 +45,13 @@
             {
               "client_id": "395705090497-7n4m477hvgf5un5kiv0ajcfk58tvi9o2.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.poolandchill.app"
+              }
             }
           ]
         }

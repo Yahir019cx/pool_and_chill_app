@@ -10,8 +10,9 @@ class DiditPlatform {
 
   /// Inicia el flujo de verificación Didit en el SDK nativo (Android o iOS).
   /// [sessionToken] debe obtenerse del backend (POST /kyc/start), no hardcodear.
+  /// Retorna el status de verificación: "APPROVED", "CANCELLED", etc.
   /// Lanza si la plataforma no es soportada o si el SDK falla.
-  static Future<void> startVerification(String sessionToken) async {
+  static Future<String?> startVerification(String sessionToken) async {
     if (!Platform.isAndroid && !Platform.isIOS) {
       throw UnsupportedError(
         'Didit SDK nativo solo está disponible en Android e iOS.',
@@ -21,10 +22,11 @@ class DiditPlatform {
     print('[Didit] DiditPlatform: invokeMethod startDiditVerification '
         '(platform=${Platform.isAndroid ? "Android" : "iOS"}, '
         'token length=${sessionToken.length})');
-    await _channel.invokeMethod<void>('startDiditVerification', <String, dynamic>{
+    final result = await _channel.invokeMethod<String>('startDiditVerification', <String, dynamic>{
       'sessionToken': sessionToken,
     });
     // ignore: avoid_print
-    print('[Didit] DiditPlatform: invokeMethod retornó OK');
+    print('[Didit] DiditPlatform: invokeMethod retornó status=$result');
+    return result;
   }
 }

@@ -94,9 +94,9 @@ class KycService {
     return KycStatusResponse.fromJson(data);
   }
 
-  /// Flujo móvil Android: inicia sesión en backend y abre el SDK nativo Didit con el sessionToken.
-  /// No almacena el token; solo lo usa para la llamada al SDK.
-  Future<void> startDiditVerificationOnDevice() async {
+  /// Flujo móvil: inicia sesión en backend y abre el SDK nativo Didit con el sessionToken.
+  /// Retorna el status de verificación: "APPROVED", "CANCELLED", etc.
+  Future<String?> startDiditVerificationOnDevice() async {
     // ignore: avoid_print
     print('[Didit] KycService: startDiditVerificationOnDevice() - obteniendo sesión...');
     final start = await startKyc();
@@ -107,8 +107,9 @@ class KycService {
     }
     // ignore: avoid_print
     print('[Didit] KycService: llamando DiditPlatform.startVerification()');
-    await DiditPlatform.startVerification(start.sessionToken);
+    final status = await DiditPlatform.startVerification(start.sessionToken);
     // ignore: avoid_print
-    print('[Didit] KycService: DiditPlatform.startVerification() retornó');
+    print('[Didit] KycService: DiditPlatform.startVerification() retornó status=$status');
+    return status;
   }
 }

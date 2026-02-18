@@ -28,8 +28,7 @@ import Combine
                 switch state {
                 case .ready:
                     NSLog("[Didit iOS] Estado: Ready — SDK lanzando UI automáticamente")
-                    self.pendingResult?(nil)
-                    self.pendingResult = nil
+                    // No resolvemos pendingResult aquí — esperamos al callback de resultado
                 case .error(let message):
                     NSLog("[Didit iOS] Estado: Error — \(message)")
                     self.pendingResult?(FlutterError(code: "SDK_ERROR", message: message, details: nil))
@@ -83,7 +82,31 @@ import Combine
                 )
 
                 // El SDK lanza la UI automáticamente cuando el estado pasa a .ready
-                DiditSdk.shared.startVerification(token: token, configuration: config)
+                DiditSdk.shared.startVerification(token: token, configuration: config) { [weak self] verificationResult in
+                    switch verificationResult {
+                    case .completed(let session):
+                        let status = "\(session.status)"
+                        NSLog("[Didit iOS] Completado — status: \(status)")
+                        self?.pendingResult?(status.uppercased())
+                        self?.pendingResult = nil
+                    case .cancelled:
+                        NSLog("[Didit iOS] Cancelado por el usuario")
+                        self?.pendingResult?("CANCELLED")
+                        self?.pendingResult = nil
+                    case .failed(let error):
+                        NSLog("[Didit iOS] Falló: \(error.localizedDescription)")
+                        self?.pendingResult?(FlutterError(
+                            code: "VERIFICATION_FAILED",
+                            message: error.localizedDescription,
+                            details: nil
+                        ))
+                        self?.pendingResult = nil
+                    @unknown default:
+                        NSLog("[Didit iOS] Resultado desconocido")
+                        self?.pendingResult?("UNKNOWN")
+                        self?.pendingResult = nil
+                    }
+                }
 
             default:
                 result(FlutterMethodNotImplemented)

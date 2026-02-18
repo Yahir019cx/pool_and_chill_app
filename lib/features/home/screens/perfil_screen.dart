@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
+import 'package:pool_and_chill_app/features/host/screens/pending_approval_screen.dart';
 import 'package:pool_and_chill_app/features/host/home_host.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import 'perfil/ayuda_screen.dart';
@@ -214,6 +215,17 @@ class PerfilScreen extends StatelessWidget {
                           context,
                           MaterialPageRoute(
                             builder: (_) => const WelcomeAnfitrionScreen(),
+                          ),
+                        );
+                        return;
+                      }
+
+                      // Propiedad enviada pero aún no aprobada (guest + isHostOnboarded=0)
+                      if (!profile.isHost && profile.isHostOnboarded == 0 && profile.roles.contains('guest')) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PendingApprovalScreen(),
                           ),
                         );
                         return;
