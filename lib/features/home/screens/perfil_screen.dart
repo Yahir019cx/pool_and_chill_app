@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/features/auth/screens/login_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
 import 'package:pool_and_chill_app/features/host/screens/pending_approval_screen.dart';
 import 'package:pool_and_chill_app/features/host/home_host.dart';
@@ -275,7 +276,12 @@ class PerfilScreen extends StatelessWidget {
                       if (confirm == true && context.mounted) {
                         await context.read<AuthProvider>().logout();
                         if (context.mounted) {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
                         }
                       }
                     },

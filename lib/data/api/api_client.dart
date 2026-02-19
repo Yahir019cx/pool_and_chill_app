@@ -105,12 +105,14 @@ class ApiClient {
 
   Future<http.Response> delete(
     String path, {
+    dynamic body,
     bool withAuth = true,
   }) {
     return _send(() {
       return http.delete(
         Uri.parse('$baseUrl$path'),
         headers: _headers(withAuth: withAuth),
+        body: body != null ? jsonEncode(body) : null,
       );
     });
   }

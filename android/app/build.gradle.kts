@@ -48,8 +48,6 @@ android {
 }
 
 dependencies {
-    implementation("me.didit:didit-sdk:3.0.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
 
 flutter {

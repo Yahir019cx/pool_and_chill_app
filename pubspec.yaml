@@ -58,8 +58,13 @@ dependencies:
   # Calendar
   table_calendar: ^3.1.2
 
-  # Deep links (Stripe Connect callback)
+  # Deep links (Stripe Connect callback + KYC)
   app_links: ^6.4.0
+
+  # WebView (KYC con Didit)
+  webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.3.0
+  webview_flutter_wkwebview: ^3.17.0
 
 dev_dependencies:
   flutter_test:

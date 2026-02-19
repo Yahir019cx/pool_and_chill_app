@@ -188,6 +188,12 @@ class PropertyRegistrationNotifier extends StateNotifier<PropertyRegistrationSta
         'checkOut' => b.copyWith(checkOut: value as String),
         'precioLunesJueves' => b.copyWith(precioLunesJueves: value as double),
         'precioViernesDomingo' => b.copyWith(precioViernesDomingo: value as double),
+        'minNights' => value == null
+            ? b.copyWith(clearMinNights: true)
+            : b.copyWith(minNights: value as int),
+        'maxNights' => value == null
+            ? b.copyWith(clearMaxNights: true)
+            : b.copyWith(maxNights: value as int),
         _ => b,
       },
     );

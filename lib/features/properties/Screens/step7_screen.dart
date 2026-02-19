@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/data/services/kyc_service.dart';
+import 'package:pool_and_chill_app/features/kyc/kyc_webview_screen.dart';
 import '../widgets/step_navigation_buttons.dart';
 
-/// Step 7: Verificación de identidad con Didit (KYC).
+/// Step 7: Verificación de identidad con Didit (WebView + deeplink).
 /// Si el usuario ya está verificado (isIdentityVerified), este step se salta desde Publish.
 class Step7Screen extends ConsumerStatefulWidget {
   final VoidCallback onNext;
@@ -27,7 +28,6 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
   static const Color mainColor = Color(0xFF3CA2A2);
 
   Future<void> _startVerification() async {
-    debugPrint('[Didit] Step7: usuario pulsó Verificar identidad');
     final apiClient = ref.read(apiClientProvider);
     final kycService = KycService(apiClient);
 
@@ -37,31 +37,47 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
     });
 
     try {
-      debugPrint('[Didit] Step7: llamando a startDiditVerificationOnDevice()');
-      final status = await kycService.startDiditVerificationOnDevice();
-      debugPrint('[Didit] Step7: SDK retornó status=$status');
+      // 1. Obtener verificationUrl del backend
+      final start = await kycService.startKyc();
+      if (start.verificationUrl.isEmpty) {
+        throw Exception('No se pudo obtener el enlace de verificación');
+      }
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      // 2. Abrir WebView — devuelve true si Didit redirigió al deeplink
+      final completed = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          builder: (_) => KycWebViewScreen(url: start.verificationUrl),
+        ),
+      );
+
       if (!mounted) return;
 
-      final upperStatus = status?.toUpperCase() ?? '';
+      if (completed != true) {
+        setState(() =>
+            _statusMessage = 'Verificación cancelada. Puedes intentarlo de nuevo.');
+        return;
+      }
 
-      if (upperStatus == 'APPROVED') {
+      // 3. Consultar resultado al backend
+      setState(() => _isLoading = true);
+      final status = await kycService.getStatus();
+      if (!mounted) return;
+
+      if (status.isVerified ||
+          status.verificationStatus.toUpperCase() == 'APPROVED') {
         setState(() {
           _verified = true;
           _statusMessage = 'Identidad verificada correctamente.';
         });
-      } else if (upperStatus == 'CANCELLED') {
-        setState(() {
-          _statusMessage = 'Verificación cancelada. Puedes intentarlo de nuevo.';
-        });
       } else {
-        // DECLINED, PENDING, u otro estado
         setState(() {
           _statusMessage = 'La verificación no fue aprobada. Intenta de nuevo.';
         });
       }
-    } catch (e, st) {
-      debugPrint('[Didit] Step7: ERROR - $e');
-      debugPrint('[Didit] Step7: stackTrace - $st');
+    } catch (e) {
       if (mounted) {
         setState(() {
           _statusMessage = e.toString().replaceFirst('Exception: ', '');
@@ -155,7 +171,8 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green.shade700, size: 28),
+                          Icon(Icons.check_circle,
+                              color: Colors.green.shade700, size: 28),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -215,9 +232,7 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
                     const SizedBox(height: 32),
                     Center(
                       child: TextButton(
-                        onPressed: () {
-                          widget.onNext();
-                        },
+                        onPressed: widget.onNext,
                         child: Text(
                           'Verificar después',
                           style: TextStyle(

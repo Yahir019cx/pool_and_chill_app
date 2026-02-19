@@ -64,6 +64,11 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
     state = state.copyWith(isLoadingIds: true, clearError: true);
     try {
       final ids = await _service.getFavoriteIds();
+      // No sobreescribir si hay un toggle en curso (evita condición de carrera).
+      if (state.togglingId != null) {
+        state = state.copyWith(isLoadingIds: false);
+        return;
+      }
       state = state.copyWith(
         favoriteIds: ids.toSet(),
         isLoadingIds: false,
@@ -81,6 +86,11 @@ class FavoritesNotifier extends StateNotifier<FavoritesState> {
     state = state.copyWith(isLoadingList: true, clearError: true);
     try {
       final list = await _service.getFavorites();
+      // No sobreescribir si hay un toggle en curso (evita condición de carrera).
+      if (state.togglingId != null) {
+        state = state.copyWith(isLoadingList: false);
+        return;
+      }
       state = state.copyWith(
         favorites: list,
         favoriteIds: list.map((p) => p.propertyId).toSet(),

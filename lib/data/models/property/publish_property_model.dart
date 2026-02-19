@@ -73,6 +73,9 @@ class PublishBasicServiceDto {
   final int? minHours;
   final double priceWeekday;
   final double priceWeekend;
+  /// Solo para cabaña y camping.
+  final int? minNights;
+  final int? maxNights;
 
   const PublishBasicServiceDto({
     required this.checkInTime,
@@ -81,6 +84,8 @@ class PublishBasicServiceDto {
     this.minHours,
     required this.priceWeekday,
     required this.priceWeekend,
+    this.minNights,
+    this.maxNights,
   });
 
   Map<String, dynamic> toJson() => {
@@ -90,6 +95,8 @@ class PublishBasicServiceDto {
         if (minHours != null) 'minHours': minHours,
         'priceWeekday': priceWeekday,
         'priceWeekend': priceWeekend,
+        if (minNights != null) 'minNights': minNights,
+        if (maxNights != null) 'maxNights': maxNights,
       };
 }
 
@@ -361,19 +368,42 @@ PublishPropertyBody buildPublishPropertyBody(
     formattedAddress: addr.toGeocodingString(),
   );
 
-  final basicService = PublishBasicServiceDto(
-    checkInTime: _timeToBackend(state.basicInfo.checkIn),
-    checkOutTime: _timeToBackend(state.basicInfo.checkOut),
-    priceWeekday: state.basicInfo.precioLunesJueves,
-    priceWeekend: state.basicInfo.precioViernesDomingo,
-  );
+  final checkIn = _timeToBackend(state.basicInfo.checkIn);
+  final checkOut = _timeToBackend(state.basicInfo.checkOut);
+  final weekday = state.basicInfo.precioLunesJueves;
+  final weekend = state.basicInfo.precioViernesDomingo;
 
   final basicInfo = PublishBasicInfoDto(
     propertyName: state.basicInfo.nombre,
     description: state.basicInfo.descripcion.isNotEmpty ? state.basicInfo.descripcion : null,
-    pool: hasPool ? basicService : null,
-    cabin: hasCabin ? basicService : null,
-    camping: hasCamping ? basicService : null,
+    pool: hasPool
+        ? PublishBasicServiceDto(
+            checkInTime: checkIn,
+            checkOutTime: checkOut,
+            priceWeekday: weekday,
+            priceWeekend: weekend,
+          )
+        : null,
+    cabin: hasCabin
+        ? PublishBasicServiceDto(
+            checkInTime: checkIn,
+            checkOutTime: checkOut,
+            priceWeekday: weekday,
+            priceWeekend: weekend,
+            minNights: state.basicInfo.minNights,
+            maxNights: state.basicInfo.maxNights,
+          )
+        : null,
+    camping: hasCamping
+        ? PublishBasicServiceDto(
+            checkInTime: checkIn,
+            checkOutTime: checkOut,
+            priceWeekday: weekday,
+            priceWeekend: weekend,
+            minNights: state.basicInfo.minNights,
+            maxNights: state.basicInfo.maxNights,
+          )
+        : null,
   );
 
   List<PublishAmenityItemDto> _items(List<String> names) {
