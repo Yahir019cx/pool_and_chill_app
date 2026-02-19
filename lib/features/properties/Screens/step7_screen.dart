@@ -23,7 +23,6 @@ class Step7Screen extends ConsumerStatefulWidget {
 class _Step7ScreenState extends ConsumerState<Step7Screen> {
   bool _isLoading = false;
   bool _verified = false;
-  bool _skipped = false;
   String? _statusMessage;
   static const Color mainColor = Color(0xFF3CA2A2);
 
@@ -217,9 +216,6 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
                     Center(
                       child: TextButton(
                         onPressed: () {
-                          setState(() {
-                            _skipped = true;
-                          });
                           widget.onNext();
                         },
                         child: Text(
