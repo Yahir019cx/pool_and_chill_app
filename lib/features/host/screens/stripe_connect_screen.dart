@@ -236,7 +236,13 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
                 duration: const Duration(milliseconds: 450),
                 offset: _visible ? Offset.zero : const Offset(0, 0.04),
                 curve: Curves.easeOut,
-                child: _buildBody(),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: KeyedSubtree(
+                    key: ValueKey(_state),
+                    child: _buildBody(),
+                  ),
+                ),
               ),
             ),
 
