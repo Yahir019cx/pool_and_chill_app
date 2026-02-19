@@ -4,6 +4,7 @@ import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/models/catalog_model.dart';
 import 'package:pool_and_chill_app/data/services/property_service.dart';
 import 'package:pool_and_chill_app/data/services/catalog_service.dart';
+import 'package:pool_and_chill_app/data/services/stripe_service.dart';
 
 /// Provider para el ApiClient (se sobreescribe en main.dart)
 final apiClientProvider = Provider<ApiClient>((ref) {
@@ -20,6 +21,12 @@ final propertyServiceProvider = Provider<PropertyService>((ref) {
 final catalogServiceProvider = Provider<CatalogService>((ref) {
   final apiClient = ref.read(apiClientProvider);
   return CatalogService(apiClient);
+});
+
+/// Provider para el servicio de Stripe Connect
+final stripeServiceProvider = Provider<StripeService>((ref) {
+  final apiClient = ref.read(apiClientProvider);
+  return StripeService(apiClient);
 });
 
 /// Catálogo de estados (GET /catalogs/states)

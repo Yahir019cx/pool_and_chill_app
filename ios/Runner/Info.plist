@@ -78,6 +78,15 @@
 				<string>com.googleusercontent.apps.395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi</string>
 			</array>
 		</dict>
+		<!-- Deep links – Stripe Connect callback (poolandchill://stripe/return|refresh) -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>poolandchill</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>poolandchill</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

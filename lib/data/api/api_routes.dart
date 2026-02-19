@@ -33,6 +33,10 @@ class ApiRoutes {
   // BOOKING
   static const bookingCalendar = '/booking/calendar';
 
+  // STRIPE CONNECT
+  static const stripeConnectCreateAccount = '/stripe/connect/create-account';
+  static const stripeAccountStatus = '/stripe/account-status';
+
   // KYC / Verificación (Didit)
   static const kycStart = '/kyc/start';
   static const kycStatus = '/kyc/status';
