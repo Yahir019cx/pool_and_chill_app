@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import '../widgets/card_espacio_host.dart';
+import 'host_property_detail_screen.dart';
+import 'host_property_edit_screen.dart';
 
 class MisEspaciosHostScreen extends StatelessWidget {
   const MisEspaciosHostScreen({super.key});
@@ -127,13 +129,28 @@ class MisEspaciosHostScreen extends StatelessWidget {
                                 isActivo: property.isActive,
                                 fotos: property.imageUrls,
                                 onTap: () {
-                                  // Navegar a detalle del espacio
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => HostPropertyDetailScreen(
+                                        propertyId: property.id,
+                                        initialIsActive: property.isActive,
+                                      ),
+                                    ),
+                                  ).then((_) => authProvider.fetchMyProperties());
                                 },
                                 onEdit: () {
-                                  // Navegar a editar espacio
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => HostPropertyEditScreen(
+                                        propertyId: property.id,
+                                      ),
+                                    ),
+                                  ).then((_) => authProvider.fetchMyProperties());
                                 },
-                                onToggleStatus: (newStatus) {
-                                  // TODO: implementar toggle de status en API
+                                onToggleStatus: (_) {
+                                  // El toggle de status se maneja desde HostPropertyDetailScreen
                                 },
                               );
                             },

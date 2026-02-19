@@ -114,4 +114,21 @@ class ApiClient {
       );
     });
   }
+
+  /// DELETE con body (necesario para endpoints que requieren body en DELETE).
+  Future<http.Response> deleteWithBody(
+    String path, {
+    dynamic body,
+    bool withAuth = true,
+  }) {
+    return _send(() async {
+      final request = http.Request('DELETE', Uri.parse('$baseUrl$path'));
+      request.headers.addAll(_headers(withAuth: withAuth));
+      if (body != null) {
+        request.body = jsonEncode(body);
+      }
+      final streamed = await request.send();
+      return http.Response.fromStream(streamed);
+    });
+  }
 }

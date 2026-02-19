@@ -211,6 +211,174 @@ class PropertyService {
     return AmenitiesByCategory.fromList(amenities);
   }
 
+  // ─── ACTUALIZACIÓN DE PROPIEDAD (HOST) ────────────────────────
+
+  /// Actualiza descripción y/o precios/horarios (PATCH /properties/update/basic-info).
+  /// [data] debe tener al menos un campo: description, pool, cabin o camping.
+  Future<UpdateResponse> updateBasicInfo(
+    String propertyId,
+    Map<String, dynamic> data,
+  ) async {
+    final response = await _apiClient.patch(
+      ApiRoutes.updateBasicInfo,
+      body: {'propertyId': propertyId, 'data': data},
+    );
+    return _parseUpdateResponse(response, 'Error al actualizar información básica');
+  }
+
+  /// Actualiza capacidad, temperatura y amenidades de la alberca.
+  Future<UpdateResponse> updatePoolAmenities({
+    required String propertyId,
+    required int maxPersons,
+    double? temperatureMin,
+    double? temperatureMax,
+    List<AmenityItemRequest>? items,
+  }) async {
+    final body = <String, dynamic>{
+      'propertyId': propertyId,
+      'maxPersons': maxPersons,
+      if (temperatureMin != null) 'temperatureMin': temperatureMin,
+      if (temperatureMax != null) 'temperatureMax': temperatureMax,
+      if (items != null) 'items': items.map((e) => e.toJson()).toList(),
+    };
+    final response = await _apiClient.patch(ApiRoutes.updatePoolAmenities, body: body);
+    return _parseUpdateResponse(response, 'Error al actualizar amenidades de alberca');
+  }
+
+  /// Actualiza capacidad, habitaciones, camas, baños y amenidades de cabaña.
+  Future<UpdateResponse> updateCabinAmenities({
+    required String propertyId,
+    required int maxGuests,
+    required int bedrooms,
+    required int singleBeds,
+    required int doubleBeds,
+    required int fullBathrooms,
+    int? halfBathrooms,
+    List<AmenityItemRequest>? items,
+  }) async {
+    final body = <String, dynamic>{
+      'propertyId': propertyId,
+      'maxGuests': maxGuests,
+      'bedrooms': bedrooms,
+      'singleBeds': singleBeds,
+      'doubleBeds': doubleBeds,
+      'fullBathrooms': fullBathrooms,
+      if (halfBathrooms != null) 'halfBathrooms': halfBathrooms,
+      if (items != null) 'items': items.map((e) => e.toJson()).toList(),
+    };
+    final response = await _apiClient.patch(ApiRoutes.updateCabinAmenities, body: body);
+    return _parseUpdateResponse(response, 'Error al actualizar amenidades de cabaña');
+  }
+
+  /// Actualiza capacidad, área, tiendas y amenidades del camping.
+  Future<UpdateResponse> updateCampingAmenities({
+    required String propertyId,
+    required int maxPersons,
+    required double areaSquareMeters,
+    required int approxTents,
+    List<AmenityItemRequest>? items,
+  }) async {
+    final body = <String, dynamic>{
+      'propertyId': propertyId,
+      'maxPersons': maxPersons,
+      'areaSquareMeters': areaSquareMeters,
+      'approxTents': approxTents,
+      if (items != null) 'items': items.map((e) => e.toJson()).toList(),
+    };
+    final response = await _apiClient.patch(ApiRoutes.updateCampingAmenities, body: body);
+    return _parseUpdateResponse(response, 'Error al actualizar amenidades de camping');
+  }
+
+  /// Reemplaza todas las reglas activas de la propiedad.
+  Future<UpdateResponse> updateRules({
+    required String propertyId,
+    required List<PropertyRuleRequest> rules,
+  }) async {
+    final response = await _apiClient.patch(
+      ApiRoutes.updateRules,
+      body: {
+        'propertyId': propertyId,
+        'rules': rules.map((r) => r.toJson()).toList(),
+      },
+    );
+    return _parseUpdateResponse(response, 'Error al actualizar reglas');
+  }
+
+  /// Agrega una imagen a la propiedad (POST /properties/update/images).
+  Future<AddImageResponse> addPropertyImage({
+    required String propertyId,
+    required String imageUrl,
+    bool isPrimary = false,
+  }) async {
+    final response = await _apiClient.post(
+      ApiRoutes.updateImages,
+      body: {
+        'propertyId': propertyId,
+        'imageUrl': imageUrl,
+        'isPrimary': isPrimary,
+      },
+    );
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return AddImageResponse.fromJson(json);
+    }
+    throw Exception(_extractMessage(response, 'Error al agregar imagen'));
+  }
+
+  /// Elimina una imagen de la propiedad (DELETE con body).
+  Future<void> deletePropertyImage({
+    required String propertyId,
+    required String propertyImageId,
+  }) async {
+    final response = await _apiClient.deleteWithBody(
+      ApiRoutes.updateImages,
+      body: {'propertyId': propertyId, 'propertyImageId': propertyImageId},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(_extractMessage(response, 'Error al eliminar imagen'));
+    }
+  }
+
+  /// Cambia el estado de la propiedad entre activa (3) y pausada (4).
+  Future<void> updatePropertyStatus({
+    required String propertyId,
+    required int status,
+  }) async {
+    final response = await _apiClient.post(
+      ApiRoutes.ownerStatus,
+      body: {'propertyId': propertyId, 'status': status},
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+          _extractMessage(response, 'Error al cambiar estado de la propiedad'));
+    }
+  }
+
+  // ─── Helpers privados ──────────────────────────────────────────
+
+  UpdateResponse _parseUpdateResponse(dynamic response, String fallback) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return UpdateResponse.fromJson(json);
+    }
+    throw Exception(_extractMessage(response, fallback));
+  }
+
+  String _extractMessage(dynamic response, String fallback) {
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        return json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    if (response.statusCode == 403) return 'No tienes permiso para editar esta propiedad';
+    if (response.statusCode == 401) return 'Sesión expirada. Por favor, inicia sesión de nuevo.';
+    return '$fallback (${response.statusCode})';
+  }
+
   /// Obtiene las propiedades del host autenticado
   Future<List<MyPropertyModel>> getMyProperties() async {
     final response = await _apiClient.get(ApiRoutes.myProperties);

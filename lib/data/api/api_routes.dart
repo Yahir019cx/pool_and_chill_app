@@ -33,6 +33,15 @@ class ApiRoutes {
   // BOOKING
   static const bookingCalendar = '/booking/calendar';
 
+  // UPDATE DE PROPIEDAD (host)
+  static const updateBasicInfo = '/properties/update/basic-info';
+  static const updatePoolAmenities = '/properties/update/pool-amenities';
+  static const updateCabinAmenities = '/properties/update/cabin-amenities';
+  static const updateCampingAmenities = '/properties/update/camping-amenities';
+  static const updateRules = '/properties/update/rules';
+  static const updateImages = '/properties/update/images';
+  static const ownerStatus = '/properties/owner/status';
+
   // STRIPE CONNECT
   static const stripeConnectCreateAccount = '/stripe/connect/create-account';
   static const stripeAccountStatus = '/stripe/account-status';
