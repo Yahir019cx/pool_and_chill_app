@@ -171,6 +171,9 @@ class BasicInfo {
   final String checkOut;
   final double precioLunesJueves;
   final double precioViernesDomingo;
+  /// Solo aplica a cabaña y camping. null = sin restricción.
+  final int? minNights;
+  final int? maxNights;
 
   const BasicInfo({
     this.nombre = '',
@@ -179,13 +182,16 @@ class BasicInfo {
     this.checkOut = '10:00 PM',
     this.precioLunesJueves = 0,
     this.precioViernesDomingo = 0,
+    this.minNights = 1,
+    this.maxNights = 1,
   });
 
   bool get isValid =>
       nombre.trim().isNotEmpty &&
       descripcion.trim().isNotEmpty &&
       precioLunesJueves > 0 &&
-      precioViernesDomingo > 0;
+      precioViernesDomingo > 0 &&
+      (minNights == null || maxNights == null || maxNights! >= minNights!);
 
   BasicInfo copyWith({
     String? nombre,
@@ -194,6 +200,10 @@ class BasicInfo {
     String? checkOut,
     double? precioLunesJueves,
     double? precioViernesDomingo,
+    int? minNights,
+    int? maxNights,
+    bool clearMinNights = false,
+    bool clearMaxNights = false,
   }) {
     return BasicInfo(
       nombre: nombre ?? this.nombre,
@@ -202,6 +212,8 @@ class BasicInfo {
       checkOut: checkOut ?? this.checkOut,
       precioLunesJueves: precioLunesJueves ?? this.precioLunesJueves,
       precioViernesDomingo: precioViernesDomingo ?? this.precioViernesDomingo,
+      minNights: clearMinNights ? null : (minNights ?? this.minNights),
+      maxNights: clearMaxNights ? null : (maxNights ?? this.maxNights),
     );
   }
 }

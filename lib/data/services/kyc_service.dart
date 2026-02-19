@@ -1,31 +1,29 @@
 import 'dart:convert';
 
 import 'package:pool_and_chill_app/data/api/index.dart';
-import 'package:pool_and_chill_app/data/services/didit_platform.dart';
 
-/// Respuesta de POST /kyc/start. Solo el backend tiene API key y workflow.
+/// Respuesta de POST /kyc/start.
 class KycStartResponse {
-  final String sessionToken;
-  final String? verificationUrl;
-  final String? sessionId;
+  final String sessionId;
+  final String verificationUrl;
 
   const KycStartResponse({
-    required this.sessionToken,
-    this.verificationUrl,
-    this.sessionId,
+    required this.sessionId,
+    required this.verificationUrl,
   });
 
   factory KycStartResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
     return KycStartResponse(
-      sessionToken: (data['sessionToken'] ?? data['session_token'])?.toString() ?? '',
-      verificationUrl: (data['verificationUrl'] ?? data['verification_url'])?.toString(),
-      sessionId: (data['sessionId'] ?? data['session_id'])?.toString(),
+      sessionId: (data['sessionId'] ?? data['session_id'])?.toString() ?? '',
+      verificationUrl:
+          (data['verificationUrl'] ?? data['verification_url'])?.toString() ??
+              '',
     );
   }
 }
 
-/// Respuesta de GET /kyc/status (o /verification/status).
+/// Respuesta de GET /kyc/status.
 class KycStatusResponse {
   final bool isVerified;
   final String verificationStatus;
@@ -53,21 +51,19 @@ class KycService {
 
   KycService(this.api);
 
-  /// Crea una sesión de KYC en el backend y devuelve sessionToken (y opcionalmente verificationUrl para web).
+  /// POST /kyc/start → devuelve sessionId + verificationUrl.
   /// Requiere usuario autenticado (JWT).
   Future<KycStartResponse> startKyc() async {
-    // ignore: avoid_print
-    print('[Didit] KycService: POST /kyc/start');
     final response = await api.post(ApiRoutes.kycStart);
-    // ignore: avoid_print
-    print('[Didit] KycService: respuesta status=${response.statusCode}');
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       try {
         final err = jsonDecode(response.body) as Map<String, dynamic>;
         final msg = err['message'];
         throw Exception(
-          msg is List ? msg.join('\n') : (msg ?? 'Error al iniciar verificación'),
+          msg is List
+              ? msg.join('\n')
+              : (msg ?? 'Error al iniciar verificación'),
         );
       } catch (e) {
         if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
@@ -76,13 +72,10 @@ class KycService {
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
-    final start = KycStartResponse.fromJson(data);
-    // ignore: avoid_print
-    print('[Didit] KycService: sessionToken length=${start.sessionToken.length}, sessionId=${start.sessionId ?? "null"}');
-    return start;
+    return KycStartResponse.fromJson(data);
   }
 
-  /// Consulta el estado de verificación del usuario (isVerified, verificationStatus, hasPendingSession).
+  /// GET /kyc/status → estado de verificación del usuario.
   Future<KycStatusResponse> getStatus() async {
     final response = await api.get(ApiRoutes.kycStatus);
 
@@ -92,24 +85,5 @@ class KycService {
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     return KycStatusResponse.fromJson(data);
-  }
-
-  /// Flujo móvil: inicia sesión en backend y abre el SDK nativo Didit con el sessionToken.
-  /// Retorna el status de verificación: "APPROVED", "CANCELLED", etc.
-  Future<String?> startDiditVerificationOnDevice() async {
-    // ignore: avoid_print
-    print('[Didit] KycService: startDiditVerificationOnDevice() - obteniendo sesión...');
-    final start = await startKyc();
-    if (start.sessionToken.isEmpty) {
-      // ignore: avoid_print
-      print('[Didit] KycService: ERROR - sessionToken vacío');
-      throw Exception('El servidor no devolvió sessionToken');
-    }
-    // ignore: avoid_print
-    print('[Didit] KycService: llamando DiditPlatform.startVerification()');
-    final status = await DiditPlatform.startVerification(start.sessionToken);
-    // ignore: avoid_print
-    print('[Didit] KycService: DiditPlatform.startVerification() retornó status=$status');
-    return status;
   }
 }

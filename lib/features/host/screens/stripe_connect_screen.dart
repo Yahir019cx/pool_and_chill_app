@@ -229,18 +229,20 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
             ),
 
             // Contenido central (cambia según el estado)
-            AnimatedOpacity(
-              duration: const Duration(milliseconds: 450),
-              opacity: _visible ? 1 : 0,
-              child: AnimatedSlide(
+            Positioned.fill(
+              child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 450),
-                offset: _visible ? Offset.zero : const Offset(0, 0.04),
-                curve: Curves.easeOut,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: KeyedSubtree(
-                    key: ValueKey(_state),
-                    child: _buildBody(),
+                opacity: _visible ? 1 : 0,
+                child: AnimatedSlide(
+                  duration: const Duration(milliseconds: 450),
+                  offset: _visible ? Offset.zero : const Offset(0, 0.04),
+                  curve: Curves.easeOut,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: KeyedSubtree(
+                      key: ValueKey(_state),
+                      child: _buildBody(),
+                    ),
                   ),
                 ),
               ),

@@ -22,8 +22,7 @@ class ApiRoutes {
   // FAVORITES
   static const favorites = '/properties/favorites';
   static const favoriteIds = '/properties/favorites/ids';
-  static String removeFavorite(String propertyId) =>
-      '/properties/favorites/$propertyId';
+  static const removeFavorite = '/properties/favorites';
 
   /// Catálogo de amenidades (GET /catalogs/amenities). Query: category=pool|cabin|camping (varios separados por coma).
   static const catalogAmenities = '/catalogs/amenities';

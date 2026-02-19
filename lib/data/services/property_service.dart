@@ -178,7 +178,8 @@ class PropertyService {
   /// Quita una propiedad de favoritos.
   Future<void> removeFavorite(String propertyId) async {
     final response = await _apiClient.delete(
-      ApiRoutes.removeFavorite(propertyId),
+      ApiRoutes.removeFavorite,
+      body: {'propertyId': propertyId},
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {

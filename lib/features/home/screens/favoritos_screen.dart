@@ -26,8 +26,19 @@ class _FavoritosScreenState extends ConsumerState<FavoritosScreen> {
     });
   }
 
-  void _onFavoriteToggle(String propertyId) {
-    ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);
+  void _onFavoriteToggle(String propertyId) async {
+    final ok = await ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(favoritesProvider).error ?? 'No se pudo actualizar el favorito',
+          ),
+          backgroundColor: Colors.red.shade700,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   @override

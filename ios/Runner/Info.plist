@@ -10,18 +10,13 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Necesitamos acceso para guardar fotos</string>
 
-	<!-- Permisos requeridos por Didit SDK para verificación de identidad -->
+	<!-- Micrófono y cámara requeridos por el WebView de verificación de identidad (Didit) -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>El micrófono es necesario para grabar video durante la verificación de vida (liveness)</string>
-	<key>NFCReaderUsageDescription</key>
-	<string>El NFC es necesario para leer el chip de tu documento de identidad</string>
-	<key>com.apple.developer.nfc.readersession.iso7816.select-identifiers</key>
-	<array>
-		<string>D23300000045737445494420763335</string>
-		<string>A0000002471001</string>
-		<string>A0000002472001</string>
-		<string>00000000000000</string>
-	</array>
+	<string>El micrófono es necesario para la verificación de identidad</string>
+
+	<!-- Permite reproducción de video inline en WebView (necesario para la cámara de Didit) -->
+	<key>WebKitMediaTypesRequiringUserActionForPlayback</key>
+	<array/>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
