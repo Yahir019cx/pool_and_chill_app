@@ -52,4 +52,8 @@ class ApiRoutes {
   // Catálogos (ubicación)
   static const catalogStates = '/catalogs/states';
   static String catalogCities(int stateId) => '/catalogs/cities/$stateId';
+
+  // TARIFAS ESPECIALES
+  static const specialRate = '/pricing/special-rate';
+  static const specialRateDeactivate = '/pricing/special-rate/deactivate';
 }

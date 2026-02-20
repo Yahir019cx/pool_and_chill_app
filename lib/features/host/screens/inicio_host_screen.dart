@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
+import 'package:pool_and_chill_app/features/host/screens/special_rates/select_property_screen.dart';
 
 class InicioHostScreen extends StatelessWidget {
   const InicioHostScreen({super.key});
@@ -166,9 +167,23 @@ class InicioHostScreen extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _QuickActionCard(
-                              icon: Icons.calendar_month_rounded,
-                              label: 'Ver calendario',
+                              icon: Icons.event_busy_rounded,
+                              label: 'Bloquear fechas',
                               onTap: () {},
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _QuickActionCard(
+                              icon: Icons.sell_rounded,
+                              label: 'Tarifas especiales',
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const SelectPropertyForRateScreen(),
+                                ),
+                              ),
                             ),
                           ),
                         ],
@@ -296,29 +311,32 @@ class _QuickActionCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.shade100),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: primary, size: 24),
+              child: Icon(icon, color: primary, size: 20),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               label,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: Colors.grey.shade700,
               ),
