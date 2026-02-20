@@ -10,9 +10,12 @@ import 'perfil/ayuda_screen.dart';
 import 'perfil/mis_reservas_screen.dart';
 import 'perfil/terminos_screen.dart';
 import 'perfil/editar_perfil.dart';
+import 'perfil/notificaciones_screen.dart';
+import 'perfil/seguridad_screen.dart';
 
 class PerfilScreen extends StatelessWidget {
-  const PerfilScreen({super.key});
+  final ValueChanged<int>? onNavigateToTab;
+  const PerfilScreen({super.key, this.onNavigateToTab});
 
   static const Color primary = Color(0xFF2D9D91);
 
@@ -126,7 +129,7 @@ class PerfilScreen extends StatelessWidget {
                   ),
                   _MenuItem(
                     icon: Icons.calendar_month_outlined,
-                    label: 'Mis reservas',
+                    label: 'Mis rentas',
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -137,7 +140,11 @@ class PerfilScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.favorite_outline,
                     label: 'Favoritos',
-                    onTap: () {},
+                    onTap: () {
+                      if (onNavigateToTab != null) {
+                        onNavigateToTab!(2);
+                      }
+                    },
                   ),
                 ],
               ),
@@ -150,12 +157,22 @@ class PerfilScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.notifications_outlined,
                     label: 'Notificaciones',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificacionesScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.lock_outline,
                     label: 'Seguridad',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SeguridadScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),

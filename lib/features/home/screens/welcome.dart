@@ -47,11 +47,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: SafeArea(
         child: IndexedStack(
           index: selectedNavIndex,
-          children: const [
-            InicioScreen(),
-            RentasScreen(),
-            FavoritosScreen(),
-            PerfilScreen(),
+          children: [
+            const InicioScreen(),
+            const RentasScreen(),
+            const FavoritosScreen(),
+            PerfilScreen(onNavigateToTab: _onNavTap),
           ],
         ),
       ),

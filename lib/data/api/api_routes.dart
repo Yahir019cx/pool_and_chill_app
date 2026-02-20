@@ -56,4 +56,7 @@ class ApiRoutes {
   // TARIFAS ESPECIALES
   static const specialRate = '/pricing/special-rate';
   static const specialRateDeactivate = '/pricing/special-rate/deactivate';
+
+  // BLOQUEO DE FECHAS
+  static const dateBlocks = '/pricing/date-blocks';
 }

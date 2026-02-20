@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
+import 'package:pool_and_chill_app/features/host/screens/date_blocks/select_property_for_block_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/special_rates/select_property_screen.dart';
 
 class InicioHostScreen extends StatelessWidget {
@@ -169,7 +170,13 @@ class InicioHostScreen extends StatelessWidget {
                             child: _QuickActionCard(
                               icon: Icons.event_busy_rounded,
                               label: 'Bloquear fechas',
-                              onTap: () {},
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const SelectPropertyForBlockScreen(),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),

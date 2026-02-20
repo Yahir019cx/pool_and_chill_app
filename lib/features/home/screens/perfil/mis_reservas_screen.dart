@@ -34,7 +34,7 @@ class _MisReservasScreenState extends State<MisReservasScreen>
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          'Mis Reservas',
+          'Mis Rentas',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.black87,

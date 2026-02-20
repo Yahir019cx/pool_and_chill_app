@@ -1,14 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 
 class FAQScreen extends StatelessWidget {
   const FAQScreen({super.key});
 
   static const _accentColor = Color(0xFF3CA2A2);
+  static const _supportEmail = 'team@poolandchill.com.mx';
+  static const _whatsappPhone = '524493629233';
+
+  Future<void> _launchEmail({String subject = '', String body = ''}) async {
+    final query = [
+      if (subject.isNotEmpty) 'subject=${Uri.encodeComponent(subject)}',
+      if (body.isNotEmpty) 'body=${Uri.encodeComponent(body)}',
+    ].join('&');
+
+    final uri =
+        Uri.parse('mailto:$_supportEmail${query.isNotEmpty ? '?$query' : ''}');
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
+  Future<void> _launchWhatsApp(String message) async {
+    final uri = Uri.parse(
+      'https://wa.me/$_whatsappPhone?text=${Uri.encodeComponent(message)}',
+    );
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profile = context.read<AuthProvider>().profile;
+    final userName = profile?.displayName ??
+        '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}'.trim();
+    final userEmail = profile?.email ?? '';
+
     final preguntas = [
       {
         'q': '¿Cómo puedo reservar?',
@@ -38,9 +70,9 @@ class FAQScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0.4,
         centerTitle: true,
-        title: Text(
+        title: const Text(
           'Preguntas frecuentes',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: Colors.black87,
@@ -69,29 +101,36 @@ class FAQScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: _accentColor,
-        icon: const Icon(Icons.support_agent_rounded, color: Colors.white),
-        label: Text(
+        icon: const Icon(Icons.headset_mic_rounded, color: Colors.white),
+        label: const Text(
           '¿Necesitas ayuda?',
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
         ),
-        onPressed: () => _mostrarModalAyuda(context),
+        onPressed: () => _mostrarModalAyuda(context, userName, userEmail),
       ),
     );
   }
 
   // ───────────────────────── MODAL DE AYUDA ─────────────────────────
 
-  void _mostrarModalAyuda(BuildContext context) {
+  void _mostrarModalAyuda(
+      BuildContext context, String userName, String userEmail) {
+    final emailBody = 'Hola equipo de Pool&Chill,\n\n'
+        'Necesito ayuda con la app.\n\n'
+        'Nombre: $userName\n'
+        'Correo de cuenta: $userEmail\n\n'
+        '[Describe aquí tu problema]\n\nGracias.';
+
+    final whatsAppMsg =
+        'Hola! Soy $userName ($userEmail) y necesito ayuda con Pool&Chill.';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) {
+      builder: (sheetCtx) {
         return Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
           child: Column(
@@ -109,12 +148,9 @@ class FAQScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
+              const Text(
                 '¿Cómo deseas contactarnos?',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 20),
               _ContactoItem(
@@ -122,14 +158,11 @@ class FAQScreen extends StatelessWidget {
                 color: Colors.teal,
                 label: 'Enviar correo a soporte',
                 onTap: () async {
-                  final uri = Uri(
-                    scheme: 'mailto',
-                    path: 'soporte@poolandchill.com',
-                    query: 'subject=Ayuda%20Pool%26Chill',
+                  Navigator.pop(sheetCtx);
+                  await _launchEmail(
+                    subject: 'Ayuda – Pool&Chill',
+                    body: emailBody,
                   );
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri);
-                  }
                 },
               ),
               const SizedBox(height: 12),
@@ -138,14 +171,8 @@ class FAQScreen extends StatelessWidget {
                 color: Colors.green,
                 label: 'Contactar por WhatsApp',
                 onTap: () async {
-                  const phone = '+5214491025278';
-                  final uri = Uri.parse(
-                    'https://wa.me/$phone?text=Hola!%20Necesito%20ayuda%20con%20Pool%26Chill',
-                  );
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri,
-                        mode: LaunchMode.externalApplication);
-                  }
+                  Navigator.pop(sheetCtx);
+                  await _launchWhatsApp(whatsAppMsg);
                 },
               ),
             ],
@@ -162,10 +189,7 @@ class _FAQCard extends StatelessWidget {
   final String pregunta;
   final String respuesta;
 
-  const _FAQCard({
-    required this.pregunta,
-    required this.respuesta,
-  });
+  const _FAQCard({required this.pregunta, required this.respuesta});
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +200,7 @@ class _FAQCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -197,8 +221,7 @@ class _FAQCard extends StatelessWidget {
           ),
           iconColor: const Color(0xFF3CA2A2),
           collapsedIconColor: Colors.grey,
-          childrenPadding:
-              const EdgeInsets.fromLTRB(20, 0, 20, 16),
+          childrenPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
           children: [
             Text(
               respuesta,
