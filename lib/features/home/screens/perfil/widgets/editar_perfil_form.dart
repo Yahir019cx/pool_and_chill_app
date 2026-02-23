@@ -282,27 +282,17 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   }
 
   Future<bool> _checkPermission(ImageSource source) async {
-    Permission permission;
+    // image_picker v1.x maneja permisos de galería internamente en Android
+    // (usa el system photo picker en Android 13+, sin permiso requerido).
+    // Solo verificamos permiso de cámara manualmente.
+    if (source == ImageSource.gallery) return true;
 
-    if (source == ImageSource.camera) {
-      permission = Permission.camera;
-    } else {
-      // Para galería en Android 13+
-      if (Platform.isAndroid) {
-        permission = Permission.photos;
-      } else {
-        permission = Permission.photos;
-      }
-    }
+    final status = await Permission.camera.status;
 
-    final status = await permission.status;
-
-    if (status.isGranted) {
-      return true;
-    }
+    if (status.isGranted) return true;
 
     if (status.isDenied) {
-      final result = await permission.request();
+      final result = await Permission.camera.request();
       return result.isGranted;
     }
 

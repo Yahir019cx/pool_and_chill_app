@@ -355,6 +355,13 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                       const SizedBox(height: 24),
                     ],
 
+                    // ─── Owner ────────────────────────────────
+                    if (prop.owner != null) ...[
+                      _divider(),
+                      _buildOwnerCard(prop.owner!),
+                      const SizedBox(height: 8),
+                    ],
+
                     SizedBox(height: 80 + bottomPadding),
                   ],
                 ),
@@ -549,6 +556,119 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       }
     }
     return specs;
+  }
+
+  Widget _buildOwnerCard(PropertyOwner owner) {
+    final memberSince = _formatMemberSince(owner.createdAt);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F6F8),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Avatar + badge verificado
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: kDetailPrimary.withValues(alpha: 0.15),
+                backgroundImage: (owner.profileImageUrl != null &&
+                        owner.profileImageUrl!.isNotEmpty)
+                    ? NetworkImage(owner.profileImageUrl!)
+                    : null,
+                child: (owner.profileImageUrl == null ||
+                        owner.profileImageUrl!.isEmpty)
+                    ? Text(
+                        owner.initials,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: kDetailPrimary,
+                        ),
+                      )
+                    : null,
+              ),
+              if (owner.isIdentityVerified)
+                Positioned(
+                  bottom: 0,
+                  right: -2,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.verified,
+                      size: 18,
+                      color: kDetailPrimary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  owner.displayName ?? 'Anfitrión',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: kDetailDark,
+                  ),
+                ),
+                if (owner.bio != null && owner.bio!.isNotEmpty) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    owner.bio!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: kDetailGrey,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                if (memberSince.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    memberSince,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: kDetailGreyLight,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatMemberSince(String? isoDate) {
+    if (isoDate == null) return '';
+    try {
+      final dt = DateTime.parse(isoDate);
+      const months = [
+        'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+        'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+      ];
+      return 'Miembro desde ${months[dt.month - 1]}. ${dt.year}';
+    } catch (_) {
+      return '';
+    }
   }
 
   List<InfoPair> _collectCheckTimes(PropertyDetailResponse data) {

@@ -16,7 +16,12 @@
       "Bash(find:*)",
       "Bash(flutter build:*)",
       "WebFetch(domain:docs.didit.me)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(flutter clean:*)",
+      "Bash(ADB=\"/c/Users/pyahi/AppData/Local/Android/Sdk/platform-tools/adb.exe\")",
+      "Bash(\"$ADB\" devices)",
+      "Bash(\"$ADB\" uninstall com.poolandchill.app)",
+      "Bash(\"$ADB\" shell pm clear com.poolandchill.app)"
     ]
   },
   "enableAllProjectMcpServers": true,

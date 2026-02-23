@@ -32,6 +32,7 @@ class _DateBlockCalendarScreenState
   static const _kPrimary = Color(0xFF2D9D91);
   static const _kDark = Color(0xFF1A1A2E);
   static const _kBlocked = Color(0xFFE07B2A);
+  static const _kSpecialRate = Color(0xFFD4A017);
 
   static const _typeLabels = {
     'pool': 'Alberca',
@@ -56,6 +57,7 @@ class _DateBlockCalendarScreenState
   bool _isLoading = true;
   String? _loadError;
   Map<DateTime, CalendarDayModel> _calendarMap = {};
+  int _calendarKey = 0; // Fuerza rebuild del TableCalendar al recargar datos
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _rangeStart;
@@ -85,11 +87,13 @@ class _DateBlockCalendarScreenState
 
   // ─── Calendar loading ──────────────────────────────────────────
 
-  Future<void> _loadCalendar() async {
-    setState(() {
-      _isLoading = true;
-      _loadError = null;
-    });
+  Future<void> _loadCalendar({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
     try {
       final service = ref.read(propertyServiceProvider);
       final response = await service.getBookingCalendar(widget.propertyId);
@@ -101,15 +105,38 @@ class _DateBlockCalendarScreenState
       if (!mounted) return;
       setState(() {
         _calendarMap = map;
-        _isLoading = false;
+        _calendarKey++;
+        if (!silent) _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _loadError = 'No se pudo cargar el calendario';
-        _isLoading = false;
-      });
+      if (!silent) {
+        setState(() {
+          _loadError = 'No se pudo cargar el calendario';
+          _isLoading = false;
+        });
+      }
     }
+  }
+
+  /// Actualiza [_calendarMap] para el rango [start]..[end] optimistamente.
+  void _applyOptimisticUpdate(
+    DateTime start,
+    DateTime end,
+    CalendarDayModel Function(CalendarDayModel existing) updater,
+  ) {
+    final updatedMap = Map<DateTime, CalendarDayModel>.from(_calendarMap);
+    var current = start;
+    while (!current.isAfter(end)) {
+      final key = DateTime.utc(current.year, current.month, current.day);
+      final existing = updatedMap[key];
+      if (existing != null) updatedMap[key] = updater(existing);
+      current = current.add(const Duration(days: 1));
+    }
+    setState(() {
+      _calendarMap = updatedMap;
+      _calendarKey++;
+    });
   }
 
   // ─── Day helpers ───────────────────────────────────────────────
@@ -168,6 +195,7 @@ class _DateBlockCalendarScreenState
   bool get _canUnblock =>
       _rangeStart != null && _rangeEnd != null;
 
+
   String _apiDate(DateTime d) =>
       '${d.year}-${d.month.toString().padLeft(2, '0')}'
       '-${d.day.toString().padLeft(2, '0')}';
@@ -185,25 +213,34 @@ class _DateBlockCalendarScreenState
   Future<void> _block() async {
     if (!_canBlock) return;
     setState(() => _saving = true);
+    final start = _rangeStart!;
+    final end = _rangeEnd!;
+    final reason = _selectedReason!;
     try {
       final service = ref.read(dateBlockServiceProvider);
       await service.createDateBlock(CreateDateBlockRequest(
         idProperty: widget.propertyId,
         propertyType: _selectedType,
-        startDate: _apiDate(_rangeStart!),
-        endDate: _apiDate(_rangeEnd!),
-        reason: _selectedReason!,
+        startDate: _apiDate(start),
+        endDate: _apiDate(end),
+        reason: reason,
         notes: _notesCtrl.text.trim(),
       ));
       if (!mounted) return;
       _snack('Fechas bloqueadas exitosamente', success: true);
+      // Actualización optimista: refleja el bloqueo de inmediato
+      _applyOptimisticUpdate(start, end, (d) => d.copyWith(
+        availabilityStatus: 'ownerBlocked',
+        blockReason: reason,
+      ));
       setState(() {
         _rangeStart = null;
         _rangeEnd = null;
         _selectedReason = null;
-        _notesCtrl.clear();
       });
-      await _loadCalendar();
+      _notesCtrl.clear();
+      // Sincroniza con el servidor en background sin mostrar loading
+      _loadCalendar(silent: true);
     } catch (e) {
       _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -214,27 +251,36 @@ class _DateBlockCalendarScreenState
   Future<void> _unblock() async {
     if (!_canUnblock) return;
     setState(() => _saving = true);
+    final start = _rangeStart!;
+    final end = _rangeEnd!;
     try {
       final service = ref.read(dateBlockServiceProvider);
       await service.deleteDateBlock(DeleteDateBlockRequest(
         idProperty: widget.propertyId,
         propertyType: _selectedType,
-        startDate: _apiDate(_rangeStart!),
-        endDate: _apiDate(_rangeEnd!),
+        startDate: _apiDate(start),
+        endDate: _apiDate(end),
       ));
       if (!mounted) return;
       _snack('Fechas desbloqueadas exitosamente', success: true);
+      // Actualización optimista: quita el bloqueo de inmediato
+      _applyOptimisticUpdate(start, end, (d) => d.copyWith(
+        availabilityStatus: 'available',
+        blockReason: null,
+      ));
       setState(() {
         _rangeStart = null;
         _rangeEnd = null;
       });
-      await _loadCalendar();
+      // Sincroniza con el servidor en background sin mostrar loading
+      _loadCalendar(silent: true);
     } catch (e) {
       _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
+
 
   void _snack(String msg, {bool success = false}) {
     if (!mounted) return;
@@ -425,6 +471,7 @@ class _DateBlockCalendarScreenState
       child: Column(
         children: [
           TableCalendar<void>(
+            key: ValueKey(_calendarKey),
             locale: 'es_ES',
             firstDay: firstDay,
             lastDay: lastDay,
@@ -523,6 +570,7 @@ class _DateBlockCalendarScreenState
   }) {
     final model = _dayModel(day);
     final isOwnerBlocked = model?.isOwnerBlocked ?? false;
+    final isSpecialRate = model?.isSpecialRate ?? false;
     final isEndpoint = isRangeStart || isRangeEnd;
 
     Color bgColor;
@@ -541,6 +589,10 @@ class _DateBlockCalendarScreenState
       bgColor = _kBlocked.withValues(alpha: 0.12);
       textColor = _kBlocked;
       subColor = _kBlocked;
+    } else if (isSpecialRate) {
+      bgColor = _kSpecialRate.withValues(alpha: 0.12);
+      textColor = _kSpecialRate;
+      subColor = _kSpecialRate;
     } else {
       bgColor = Colors.transparent;
       textColor = _kDark;
@@ -550,6 +602,8 @@ class _DateBlockCalendarScreenState
     String? subText;
     if (isOwnerBlocked && !isEndpoint && !isInRange) {
       subText = 'Bloq.';
+    } else if (isSpecialRate && !isEndpoint && !isInRange) {
+      subText = 'T.Esp.';
     }
 
     return Container(
@@ -563,7 +617,9 @@ class _DateBlockCalendarScreenState
             ? Border.all(color: _kPrimary, width: 1.5)
             : (isOwnerBlocked && !isEndpoint && !isInRange
                 ? Border.all(color: _kBlocked.withValues(alpha: 0.3))
-                : null),
+                : isSpecialRate && !isEndpoint && !isInRange
+                    ? Border.all(color: _kSpecialRate.withValues(alpha: 0.3))
+                    : null),
       ),
       alignment: Alignment.center,
       child: Column(
@@ -632,10 +688,13 @@ class _DateBlockCalendarScreenState
         children: [
           _legendItem(_kPrimary.withValues(alpha: 0.15), _kPrimary,
               'Seleccionado'),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           _legendItem(_kBlocked.withValues(alpha: 0.12), _kBlocked,
               'Bloqueado'),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
+          _legendItem(_kSpecialRate.withValues(alpha: 0.12), _kSpecialRate,
+              'T. especial'),
+          const SizedBox(width: 12),
           _legendItem(Colors.grey.shade200, Colors.grey.shade500,
               'Reservado'),
         ],
@@ -833,6 +892,7 @@ class _DateBlockCalendarScreenState
               ),
             ),
             const SizedBox(height: 12),
+
 
             // Action buttons
             Row(

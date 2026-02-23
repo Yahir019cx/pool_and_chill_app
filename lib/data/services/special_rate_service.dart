@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
@@ -23,6 +25,7 @@ class SpecialRateService {
   }
 
   Future<void> deactivateSpecialRate(String idSpecialRate) async {
+    debugPrint('[SpecialRate] Deactivating idSpecialRate: $idSpecialRate');
     final response = await _client.post(
       ApiRoutes.specialRateDeactivate,
       body: {'idSpecialRate': idSpecialRate},

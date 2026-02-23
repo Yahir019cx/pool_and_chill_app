@@ -27,6 +27,7 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
   bool _isLoading = true;
   String? _error;
   Map<DateTime, CalendarDayModel> _calendarMap = {};
+  int _calendarKey = 0;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -72,6 +73,7 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
       if (!mounted) return;
       setState(() {
         _calendarMap = map;
+        _calendarKey++;
         _isLoading = false;
       });
     } catch (e) {
@@ -349,6 +351,7 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
       controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: TableCalendar<void>(
+        key: ValueKey(_calendarKey),
         locale: 'es_ES',
         firstDay: firstDay,
         lastDay: lastDay,

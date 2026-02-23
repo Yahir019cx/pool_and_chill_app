@@ -125,6 +125,43 @@ class PropertyDetailResponse {
   }
 }
 
+// ─── Property Owner ────────────────────────────────────────────────
+
+class PropertyOwner {
+  final String? displayName;
+  final String? bio;
+  final String? profileImageUrl;
+  final bool isIdentityVerified;
+  final String? createdAt;
+
+  PropertyOwner({
+    this.displayName,
+    this.bio,
+    this.profileImageUrl,
+    this.isIdentityVerified = false,
+    this.createdAt,
+  });
+
+  factory PropertyOwner.fromJson(Map<String, dynamic> json) {
+    return PropertyOwner(
+      displayName: json['displayName'],
+      bio: json['bio'],
+      profileImageUrl: json['profileImageUrl'],
+      isIdentityVerified: json['isIdentityVerified'] == true,
+      createdAt: json['createdAt'],
+    );
+  }
+
+  String get initials {
+    if (displayName == null || displayName!.trim().isEmpty) return '?';
+    final parts = displayName!.trim().split(RegExp(r'\s+'));
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
+}
+
 // ─── Property (objeto principal) ───────────────────────────────────
 
 class PropertyDetailProperty {
@@ -142,6 +179,7 @@ class PropertyDetailProperty {
   final String? submittedAt;
   final String? approvedAt;
   final PropertyLocationDetail? location;
+  final PropertyOwner? owner;
 
   PropertyDetailProperty({
     required this.idProperty,
@@ -158,6 +196,7 @@ class PropertyDetailProperty {
     this.submittedAt,
     this.approvedAt,
     this.location,
+    this.owner,
   });
 
   factory PropertyDetailProperty.fromJson(Map<String, dynamic> json) {
@@ -181,6 +220,9 @@ class PropertyDetailProperty {
       location: json['location'] != null
           ? PropertyLocationDetail.fromJson(
               json['location'] as Map<String, dynamic>)
+          : null,
+      owner: json['owner'] != null
+          ? PropertyOwner.fromJson(json['owner'] as Map<String, dynamic>)
           : null,
     );
   }
