@@ -22,6 +22,9 @@ class AuthProvider extends ChangeNotifier {
   bool _loading = false;
   bool _bootstrapped = false;
   bool _loadingProperties = false;
+  // Cuando true, AuthGate muestra WelcomeScreen (modo huésped) aunque el
+  // usuario sea host. Se resetea al hacer logout o al volver a modo host.
+  bool _guestModeOverride = false;
 
   AuthProvider(this.apiClient)
     : _authService = AuthService(apiClient),
@@ -35,6 +38,21 @@ class AuthProvider extends ChangeNotifier {
   UserProfileModel? get profile => _profile;
   List<MyPropertyModel> get myProperties => _myProperties;
   bool get isLoadingProperties => _loadingProperties;
+  bool get isGuestModeOverride => _guestModeOverride;
+
+  // ===== MODO HUÉSPED / MODO HOST =====
+  /// Activa la vista de huésped para un usuario host (sin cerrar sesión).
+  /// AuthGate mostrará WelcomeScreen mientras este flag esté activo.
+  void switchToGuestMode() {
+    _guestModeOverride = true;
+    notifyListeners();
+  }
+
+  /// Vuelve a la vista de host. Útil desde la pantalla de perfil huésped.
+  void switchToHostMode() {
+    _guestModeOverride = false;
+    notifyListeners();
+  }
 
   // Expone el UserService para operaciones de perfil
   UserService get userService => _userService;
@@ -269,6 +287,7 @@ class AuthProvider extends ChangeNotifier {
 
     _profile = null;
     _myProperties = [];
+    _guestModeOverride = false;
     await SecureStorage.clear();
     apiClient.clearAccessToken();
     notifyListeners();

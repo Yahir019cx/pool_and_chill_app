@@ -7,7 +7,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
+import 'package:pool_and_chill_app/data/models/catalog_model.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/data/services/catalog_service.dart';
 import 'package:pool_and_chill_app/data/services/storage_service.dart';
 
 import 'avatar_perfil.dart';
@@ -25,8 +27,12 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   final _nombreCtrl = TextEditingController();
   final _apellidoCtrl = TextEditingController();
   final _telefonoCtrl = TextEditingController();
-  final _ubicacionCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+
+  // Ubicación: dropdown de estados del catálogo
+  List<StateCatalogItem> _states = [];
+  int? _selectedStateId;
+  bool _loadingStates = false;
 
   // Para manejo de imagen
   final StorageService _storageService = StorageService();
@@ -41,6 +47,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   void initState() {
     super.initState();
     _loadProfileData();
+    _loadStates();
   }
 
   void _loadProfileData() {
@@ -49,8 +56,39 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
       _nombreCtrl.text = profile.firstName;
       _apellidoCtrl.text = profile.lastName;
       _telefonoCtrl.text = profile.phoneNumber ?? '';
-      _ubicacionCtrl.text = profile.location ?? '';
       _bioCtrl.text = profile.bio ?? '';
+    }
+  }
+
+  Future<void> _loadStates() async {
+    setState(() => _loadingStates = true);
+    try {
+      final api = context.read<AuthProvider>().apiClient;
+      final states = await CatalogService(api).getStates();
+      if (!mounted) return;
+
+      // Pre-seleccionar si el perfil ya tiene una ubicación guardada
+      final currentLocation =
+          context.read<AuthProvider>().profile?.location ?? '';
+
+      int? matchedId;
+      if (currentLocation.isNotEmpty) {
+        for (final s in states) {
+          if (s.name.toLowerCase() == currentLocation.toLowerCase()) {
+            matchedId = s.id;
+            break;
+          }
+        }
+      }
+
+      setState(() {
+        _states = states;
+        _selectedStateId = matchedId;
+      });
+    } catch (_) {
+      // Si falla el catálogo el resto del formulario sigue funcionando
+    } finally {
+      if (mounted) setState(() => _loadingStates = false);
     }
   }
 
@@ -59,7 +97,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     _nombreCtrl.dispose();
     _apellidoCtrl.dispose();
     _telefonoCtrl.dispose();
-    _ubicacionCtrl.dispose();
     _bioCtrl.dispose();
     super.dispose();
   }
@@ -91,7 +128,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
             _telefonoCtrl,
             keyboard: TextInputType.phone,
           ),
-          _input('Ubicación', _ubicacionCtrl),
+          _locationDropdown(),
           _input('Biografía', _bioCtrl, maxLines: 3),
 
           const SizedBox(height: 32),
@@ -500,6 +537,56 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     );
   }
 
+  // ---------- DROPDOWN UBICACIÓN ----------
+
+  Widget _locationDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18),
+      child: DropdownButtonFormField<int>(
+        value: _selectedStateId,
+        isExpanded: true,
+        decoration: InputDecoration(
+          labelText: 'Estado',
+          filled: true,
+          fillColor: inputBg,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: primary, width: 1.5),
+          ),
+          suffixIcon: _loadingStates
+              ? const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primary,
+                    ),
+                  ),
+                )
+              : null,
+        ),
+        hint: const Text('Selecciona un estado'),
+        items: _states
+            .map(
+              (s) => DropdownMenuItem<int>(
+                value: s.id,
+                child: Text(s.name, overflow: TextOverflow.ellipsis),
+              ),
+            )
+            .toList(),
+        onChanged: _loadingStates
+            ? null
+            : (id) => setState(() => _selectedStateId = id),
+      ),
+    );
+  }
+
   Future<void> _guardar() async {
     FocusScope.of(context).unfocus();
 
@@ -519,11 +606,21 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
       // Construir displayName desde nombre y apellido
       final displayName = '${_nombreCtrl.text.trim()} ${_apellidoCtrl.text.trim()}'.trim();
 
+      // Obtener el nombre del estado seleccionado para enviarlo como location
+      String? locationName;
+      if (_selectedStateId != null) {
+        try {
+          locationName = _states
+              .firstWhere((s) => s.id == _selectedStateId)
+              .name;
+        } catch (_) {}
+      }
+
       await authProvider.updateProfile(
         displayName: displayName.isNotEmpty ? displayName : null,
         bio: _bioCtrl.text.trim().isNotEmpty ? _bioCtrl.text.trim() : null,
         phoneNumber: _telefonoCtrl.text.trim().isNotEmpty ? _telefonoCtrl.text.trim() : null,
-        location: _ubicacionCtrl.text.trim().isNotEmpty ? _ubicacionCtrl.text.trim() : null,
+        location: locationName,
       );
 
       _showSuccess('Cambios guardados');

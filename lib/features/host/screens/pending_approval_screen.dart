@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 import 'package:pool_and_chill_app/features/properties/screens/publish.dart';
 
 /// Pantalla que se muestra cuando el usuario tiene isHostOnboarded=0 y role=guest,
@@ -19,11 +18,7 @@ class PendingApprovalScreen extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black87),
           onPressed: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-              (_) => false,
-            );
+            Navigator.of(context).popUntil((route) => route.isFirst);
           },
         ),
       ),
@@ -99,11 +94,7 @@ class PendingApprovalScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-                    (_) => false,
-                  );
+                  Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 child: Text(
                   'Volver al inicio',

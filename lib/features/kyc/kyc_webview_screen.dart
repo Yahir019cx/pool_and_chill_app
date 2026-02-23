@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
@@ -26,12 +27,24 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
   void initState() {
     super.initState();
     _initController();
+    // Solicitar permisos al SO en el primer frame y luego cargar la URL.
+    // Sin esto, Android e iOS no permiten al WebView acceder a la cámara
+    // aunque los handlers internos del WebView los otorguen a su nivel.
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _requestPermissionsAndLoad(),
+    );
   }
 
   void _initController() {
-    // iOS: habilitar inline media playback para la cámara del WebView
+    final bool isIos = WebViewPlatform.instance is WebKitWebViewPlatform;
+
+    // ── iOS (WKWebView) ────────────────────────────────────────────────────
+    // allowsInlineMediaPlayback: permite que el video/cámara se muestre
+    //   dentro del WebView en lugar de pantalla completa nativa.
+    // mediaTypesRequiringUserAction vacío: evita que iOS bloquee la
+    //   reproducción automática de media (necesario para el flujo de Didit).
     PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
+    if (isIos) {
       params = WebKitWebViewControllerCreationParams(
         allowsInlineMediaPlayback: true,
         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
@@ -48,7 +61,6 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
           onPageFinished: (_) => setState(() => _isLoading = false),
           onWebResourceError: (_) => setState(() => _isLoading = false),
           onNavigationRequest: (request) {
-            // Interceptar el deeplink que Didit lanza al terminar
             if (request.url.startsWith(_kycDeeplinkPrefix)) {
               Navigator.of(context).pop(true);
               return NavigationDecision.prevent;
@@ -56,14 +68,39 @@ class _KycWebViewScreenState extends State<KycWebViewScreen> {
             return NavigationDecision.navigate;
           },
         ),
-      )
-      ..loadRequest(Uri.parse(widget.url));
+      );
 
-    // Android: conceder permisos de cámara/micrófono al WebView automáticamente
+    // ── iOS: conceder permisos de cámara/micrófono al WKWebView ───────────
+    // En iOS 15+, cuando el sitio web pide acceso a la cámara, el sistema
+    // llama al WKUIDelegate.requestMediaCapturePermissionFor. Sin este
+    // handler, el default es mostrar un diálogo del sistema (PermissionDecision.prompt).
+    // Con el handler lo otorgamos directamente (ya pedimos permiso al SO antes).
+    // webview_flutter_wkwebview 3.12+ expone setOnPlatformPermissionRequest.
+    if (_controller.platform is WebKitWebViewController) {
+      (_controller.platform as WebKitWebViewController)
+          .setOnPlatformPermissionRequest((request) => request.grant());
+    }
+
+    // ── Android: conceder permisos de cámara/micrófono al WebView ─────────
+    // Análogo al WKUIDelegate de iOS. Sin esto Android bloquea el acceso
+    // a la cámara aunque el app tenga el permiso del SO.
     if (_controller.platform is AndroidWebViewController) {
       (_controller.platform as AndroidWebViewController)
           .setOnPlatformPermissionRequest((request) => request.grant());
     }
+    // NOTA: loadRequest se llama en _requestPermissionsAndLoad, no aquí.
+  }
+
+  /// Solicita permisos de cámara y micrófono al SO (Android e iOS)
+  /// antes de cargar la URL del WebView.
+  ///
+  /// Los handlers de WebView (setOnPermissionRequest / setOnPlatformPermissionRequest)
+  /// solo funcionan si el app YA tiene el permiso del SO. Si no lo tiene,
+  /// Android e iOS bloquean el acceso a la cámara antes de llegar al handler.
+  Future<void> _requestPermissionsAndLoad() async {
+    await [Permission.camera, Permission.microphone].request();
+    if (!mounted) return;
+    await _controller.loadRequest(Uri.parse(widget.url));
   }
 
   @override

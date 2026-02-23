@@ -27,6 +27,11 @@ class AuthGate extends StatelessWidget {
 
     final profile = auth.profile!;
 
+    // Host en modo huésped forzado (cambió a vista de huésped sin cerrar sesión)
+    if (auth.isGuestModeOverride) {
+      return const WelcomeScreen();
+    }
+
     // Host en onboarding (isHostOnboarded == 1) → Bienvenida host
     if (profile.isHost && profile.isHostOnboarded == 1) {
       return const WelcomeAnfitrionScreen();

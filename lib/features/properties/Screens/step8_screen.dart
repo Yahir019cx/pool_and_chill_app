@@ -6,7 +6,6 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/services/storage_service.dart';
-import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 import '../widgets/step_navigation_buttons.dart';
 
 class Step8Screen extends ConsumerStatefulWidget {
@@ -154,13 +153,9 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                   ref.read(propertyRegistrationProvider.notifier).reset();
                   await auth.refreshProfile();
                   if (!mounted) return;
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const WelcomeScreen(),
-                    ),
-                    (_) => false,
-                  );
+                  // popUntil lleva al root (AuthGate) que ya tiene el perfil
+                  // actualizado via refreshProfile y muestra la pantalla correcta.
+                  Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: mainColor,

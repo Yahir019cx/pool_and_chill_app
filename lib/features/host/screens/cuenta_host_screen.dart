@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
-import 'package:pool_and_chill_app/features/home/screens/welcome.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/ayuda_screen.dart';
 class CuentaHostScreen extends StatelessWidget {
@@ -153,13 +152,11 @@ class CuentaHostScreen extends StatelessWidget {
                     icon: Icons.swap_horiz_rounded,
                     label: 'Cambiar a modo huésped',
                     onTap: () {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const WelcomeScreen(),
-                        ),
-                        (route) => false,
-                      );
+                      // Activa el modo huésped en AuthProvider para que AuthGate
+                      // muestre WelcomeScreen sin cerrar sesión ni eliminar AuthGate
+                      // del árbol (lo que rompería el logout y otros flujos).
+                      context.read<AuthProvider>().switchToGuestMode();
+                      Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     showBadge: true,
                   ),
