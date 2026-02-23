@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
-import 'package:pool_and_chill_app/features/auth/screens/login_screen.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/forgot_password_modal.dart';
 
 class SeguridadScreen extends StatelessWidget {
@@ -71,10 +70,7 @@ class SeguridadScreen extends StatelessWidget {
     if (confirm == true && context.mounted) {
       await context.read<AuthProvider>().logout();
       if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (_) => false,
-        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }

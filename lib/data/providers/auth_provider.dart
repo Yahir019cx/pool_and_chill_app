@@ -149,12 +149,26 @@ class AuthProvider extends ChangeNotifier {
         refreshToken: session.refreshToken,
       );
 
-      _profile = await _userService.getMe();
+      try {
+        _profile = await _userService.getMe();
+      } catch (e) {
+        // Si getMe() falla después de guardar tokens, limpiamos para evitar
+        // que un reload autentique al usuario sin haber completado el flujo.
+        await SecureStorage.clear();
+        apiClient.clearAccessToken();
+        rethrow;
+      }
+
       if (_profile != null && _profile!.isHost) {
-        await fetchMyProperties();
+        try {
+          _myProperties = await _propertyService.getMyProperties();
+        } catch (_) {
+          _myProperties = [];
+        }
       }
     } finally {
-      _setLoading(false);
+      _loading = false;
+      notifyListeners();
     }
   }
 
@@ -187,12 +201,24 @@ class AuthProvider extends ChangeNotifier {
         refreshToken: session.refreshToken,
       );
 
-      _profile = await _userService.getMe();
+      try {
+        _profile = await _userService.getMe();
+      } catch (e) {
+        await SecureStorage.clear();
+        apiClient.clearAccessToken();
+        rethrow;
+      }
+
       if (_profile != null && _profile!.isHost) {
-        await fetchMyProperties();
+        try {
+          _myProperties = await _propertyService.getMyProperties();
+        } catch (_) {
+          _myProperties = [];
+        }
       }
     } finally {
-      _setLoading(false);
+      _loading = false;
+      notifyListeners();
     }
   }
 
