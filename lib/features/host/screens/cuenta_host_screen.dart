@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
-import 'package:pool_and_chill_app/features/home/screens/perfil/ayuda_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/seguridad_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/notificaciones_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/terminos_screen.dart';
+import 'package:pool_and_chill_app/features/host/screens/ayuda_host_screen.dart';
 class CuentaHostScreen extends StatelessWidget {
   const CuentaHostScreen({super.key});
 
@@ -116,7 +119,12 @@ class CuentaHostScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.notifications_outlined,
                     label: 'Notificaciones',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NotificacionesScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -127,20 +135,30 @@ class CuentaHostScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.lock_outline,
                     label: 'Seguridad',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SeguridadScreen(),
+                      ),
+                    ),
                   ),
                   _MenuItem(
                     icon: Icons.help_outline,
                     label: 'Centro de ayuda',
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AyudaScreen()),
+                      MaterialPageRoute(builder: (_) => const AyudaHostScreen()),
                     ),
                   ),
                   _MenuItem(
                     icon: Icons.description_outlined,
                     label: 'Términos y condiciones',
-                    onTap: () {},
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TerminosCondicionesScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),

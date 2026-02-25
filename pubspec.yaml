@@ -58,6 +58,9 @@ dependencies:
   # Calendar
   table_calendar: ^3.1.2
 
+  # Stripe Payments
+  flutter_stripe: ^11.3.0
+
   # Deep links (Stripe Connect callback + KYC)
   app_links: ^6.4.0
 

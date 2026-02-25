@@ -32,6 +32,13 @@ class _ForgotPasswordModalState extends State<ForgotPasswordModal> {
   String _errorMessage = '';
 
   @override
+  void initState() {
+    super.initState();
+    final email = context.read<AuthProvider>().profile?.email ?? '';
+    if (email.isNotEmpty) _emailController.text = email;
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     super.dispose();

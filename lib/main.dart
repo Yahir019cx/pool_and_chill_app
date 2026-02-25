@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' hide ChangeNotifierProvider;
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +16,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   await Firebase.initializeApp();
+
+  Stripe.publishableKey =
+      'pk_test_51Suiwb1n9zmFHAn7FUZNOJZYdpzndQxY3CLtuEBTxdOg98v2kLbR38DLZP7EYUiHBMigeoTKwxLo6Uuhna3fNYXv00zgzZZczG';
+  await Stripe.instance.applySettings();
 
   final apiClient = ApiClient(
     baseUrl: dotenv.env['API_BASE_URL']!,

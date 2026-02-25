@@ -53,11 +53,15 @@ class _DateBlockCalendarScreenState
     'other': 'Otro',
   };
 
+  /// Mutaciones confirmadas por API que sobreviven navegación.
+  /// Se aplican encima de datos del servidor hasta que este los refleje.
+  static final Map<String, List<_DateOverride>> _pendingOverrides = {};
+
   // ─── Calendar state ────────────────────────────────────────────
   bool _isLoading = true;
   String? _loadError;
   Map<DateTime, CalendarDayModel> _calendarMap = {};
-  int _calendarKey = 0; // Fuerza rebuild del TableCalendar al recargar datos
+  int _calendarKey = 0;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _rangeStart;
@@ -87,13 +91,11 @@ class _DateBlockCalendarScreenState
 
   // ─── Calendar loading ──────────────────────────────────────────
 
-  Future<void> _loadCalendar({bool silent = false}) async {
-    if (!silent) {
-      setState(() {
-        _isLoading = true;
-        _loadError = null;
-      });
-    }
+  Future<void> _loadCalendar() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final service = ref.read(propertyServiceProvider);
       final response = await service.getBookingCalendar(widget.propertyId);
@@ -102,20 +104,54 @@ class _DateBlockCalendarScreenState
         final dt = DateTime.parse(day.date);
         map[DateTime.utc(dt.year, dt.month, dt.day)] = day;
       }
+      // Aplica mutaciones confirmadas que el servidor aún no refleja (caché backend)
+      _applyPendingOverrides(map);
       if (!mounted) return;
       setState(() {
         _calendarMap = map;
         _calendarKey++;
-        if (!silent) _isLoading = false;
+        _isLoading = false;
       });
     } catch (_) {
       if (!mounted) return;
-      if (!silent) {
-        setState(() {
-          _loadError = 'No se pudo cargar el calendario';
-          _isLoading = false;
-        });
+      setState(() {
+        _loadError = 'No se pudo cargar el calendario';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Aplica overrides pendientes sobre [map] y limpia los que ya caducaron
+  /// o que el servidor ya refleja correctamente.
+  void _applyPendingOverrides(Map<DateTime, CalendarDayModel> map) {
+    final overrides = _pendingOverrides[widget.propertyId];
+    if (overrides == null || overrides.isEmpty) return;
+
+    final now = DateTime.now();
+    overrides.removeWhere((o) => now.difference(o.createdAt).inMinutes > 10);
+
+    for (final override in overrides) {
+      final existing = map[override.dateKey];
+      if (existing != null) {
+        map[override.dateKey] = override.updater(existing);
       }
+    }
+  }
+
+  /// Guarda overrides para el rango [start]..[end] que sobreviven navegación.
+  void _storeOverrides(
+    DateTime start,
+    DateTime end,
+    CalendarDayModel Function(CalendarDayModel existing) updater,
+  ) {
+    final list = _pendingOverrides.putIfAbsent(widget.propertyId, () => []);
+    final now = DateTime.now();
+    var current = start;
+    while (!current.isAfter(end)) {
+      final key = DateTime.utc(current.year, current.month, current.day);
+      list.removeWhere((o) => o.dateKey == key);
+      list.add(_DateOverride(dateKey: key, updater: updater, createdAt: now));
+      current = current.add(const Duration(days: 1));
     }
   }
 
@@ -135,7 +171,6 @@ class _DateBlockCalendarScreenState
     }
     setState(() {
       _calendarMap = updatedMap;
-      _calendarKey++;
     });
   }
 
@@ -228,19 +263,18 @@ class _DateBlockCalendarScreenState
       ));
       if (!mounted) return;
       _snack('Fechas bloqueadas exitosamente', success: true);
-      // Actualización optimista: refleja el bloqueo de inmediato
-      _applyOptimisticUpdate(start, end, (d) => d.copyWith(
+      final blockUpdater = (CalendarDayModel d) => d.copyWith(
         availabilityStatus: 'ownerBlocked',
         blockReason: reason,
-      ));
+      );
+      _applyOptimisticUpdate(start, end, blockUpdater);
+      _storeOverrides(start, end, blockUpdater);
       setState(() {
         _rangeStart = null;
         _rangeEnd = null;
         _selectedReason = null;
       });
       _notesCtrl.clear();
-      // Sincroniza con el servidor en background sin mostrar loading
-      _loadCalendar(silent: true);
     } catch (e) {
       _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -263,17 +297,16 @@ class _DateBlockCalendarScreenState
       ));
       if (!mounted) return;
       _snack('Fechas desbloqueadas exitosamente', success: true);
-      // Actualización optimista: quita el bloqueo de inmediato
-      _applyOptimisticUpdate(start, end, (d) => d.copyWith(
+      final unblockUpdater = (CalendarDayModel d) => d.copyWith(
         availabilityStatus: 'available',
         blockReason: null,
-      ));
+      );
+      _applyOptimisticUpdate(start, end, unblockUpdater);
+      _storeOverrides(start, end, unblockUpdater);
       setState(() {
         _rangeStart = null;
         _rangeEnd = null;
       });
-      // Sincroniza con el servidor en background sin mostrar loading
-      _loadCalendar(silent: true);
     } catch (e) {
       _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -965,4 +998,16 @@ class _DateBlockCalendarScreenState
         child: Icon(Icons.villa_outlined,
             color: Colors.grey.shade300, size: 24),
       );
+}
+
+class _DateOverride {
+  final DateTime dateKey;
+  final CalendarDayModel Function(CalendarDayModel existing) updater;
+  final DateTime createdAt;
+
+  _DateOverride({
+    required this.dateKey,
+    required this.updater,
+    required this.createdAt,
+  });
 }

@@ -45,6 +45,9 @@ class _SpecialRateFormScreenState
     'camping': Icons.forest_rounded,
   };
 
+  /// Mutaciones confirmadas por API que sobreviven navegación.
+  static final Map<String, List<_SrDateOverride>> _pendingOverrides = {};
+
   String? _selectedType;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -81,13 +84,11 @@ class _SpecialRateFormScreenState
 
   // ─── Calendar ──────────────────────────────────────────────────
 
-  Future<void> _loadCalendar({bool silent = false}) async {
-    if (!silent) {
-      setState(() {
-        _isLoadingCalendar = true;
-        _calendarLoadError = null;
-      });
-    }
+  Future<void> _loadCalendar() async {
+    setState(() {
+      _isLoadingCalendar = true;
+      _calendarLoadError = null;
+    });
     try {
       final service = ref.read(propertyServiceProvider);
       final response = await service.getBookingCalendar(widget.propertyId);
@@ -96,24 +97,52 @@ class _SpecialRateFormScreenState
         final dt = DateTime.parse(day.date);
         map[DateTime.utc(dt.year, dt.month, dt.day)] = day;
       }
+      _applyPendingOverrides(map);
       if (!mounted) return;
       setState(() {
         _calendarMap = map;
         _calendarKey++;
-        if (!silent) {
-          _isLoadingCalendar = false;
-          _calendarLoadError = null;
-        }
+        _isLoadingCalendar = false;
+        _calendarLoadError = null;
       });
     } catch (e) {
       if (!mounted) return;
-      if (!silent) {
-        setState(() {
-          _isLoadingCalendar = false;
-          _calendarLoadError = 'No se pudo cargar el calendario';
-        });
-        _snack('No se pudo cargar el calendario. Toca reintentar.');
+      setState(() {
+        _isLoadingCalendar = false;
+        _calendarLoadError = 'No se pudo cargar el calendario';
+      });
+      _snack('No se pudo cargar el calendario. Toca reintentar.');
+    }
+  }
+
+  void _applyPendingOverrides(Map<DateTime, CalendarDayModel> map) {
+    final overrides = _pendingOverrides[widget.propertyId];
+    if (overrides == null || overrides.isEmpty) return;
+
+    final now = DateTime.now();
+    overrides.removeWhere((o) => now.difference(o.createdAt).inMinutes > 10);
+
+    for (final override in overrides) {
+      final existing = map[override.dateKey];
+      if (existing != null) {
+        map[override.dateKey] = override.updater(existing);
       }
+    }
+  }
+
+  void _storeOverrides(
+    DateTime start,
+    DateTime end,
+    CalendarDayModel Function(CalendarDayModel existing) updater,
+  ) {
+    final list = _pendingOverrides.putIfAbsent(widget.propertyId, () => []);
+    final now = DateTime.now();
+    var current = start;
+    while (!current.isAfter(end)) {
+      final key = DateTime.utc(current.year, current.month, current.day);
+      list.removeWhere((o) => o.dateKey == key);
+      list.add(_SrDateOverride(dateKey: key, updater: updater, createdAt: now));
+      current = current.add(const Duration(days: 1));
     }
   }
 
@@ -137,26 +166,29 @@ class _SpecialRateFormScreenState
 
       final service = ref.read(specialRateServiceProvider);
       for (final id in ids) {
-        await service.deactivateSpecialRate(id);
+        await service.deactivateSpecialRate(id, propertyId: widget.propertyId);
       }
 
       if (!mounted) return;
 
-      // Actualización optimista: quita el color de inmediato
+      final deactivateUpdater = (CalendarDayModel d) => d.copyWith(
+        priceSource: null,
+        idSpecialRate: null,
+        specialRateReason: null,
+      );
+
+      // Actualización optimista + guardar overrides para sobrevivir navegación
       final updated = Map<DateTime, CalendarDayModel>.from(_calendarMap);
       var current = from;
       while (!current.isAfter(to)) {
         final key = DateTime.utc(current.year, current.month, current.day);
         final model = updated[key];
         if (model != null && ids.contains(model.idSpecialRate)) {
-          updated[key] = model.copyWith(
-            priceSource: null,
-            idSpecialRate: null,
-            specialRateReason: null,
-          );
+          updated[key] = deactivateUpdater(model);
         }
         current = current.add(const Duration(days: 1));
       }
+      _storeOverrides(from, to, deactivateUpdater);
       setState(() {
         _calendarMap = updated;
         _calendarKey++;
@@ -165,8 +197,6 @@ class _SpecialRateFormScreenState
       });
 
       _snack('Tarifa especial desactivada', success: true);
-      // Sincronizar sin bloquear la UI
-      _loadCalendar(silent: true);
     } catch (e) {
       if (mounted) _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -190,22 +220,50 @@ class _SpecialRateFormScreenState
       return;
     }
 
+    final start = _startDate!;
+    final end = _endDate!;
     setState(() => _saving = true);
     try {
       final service = ref.read(specialRateServiceProvider);
       await service.createSpecialRate(CreateSpecialRateRequest(
         idProperty: widget.propertyId,
         propertyType: _selectedType!,
-        startDate: _apiDate(_startDate!),
-        endDate: _apiDate(_endDate!),
+        startDate: _apiDate(start),
+        endDate: _apiDate(end),
         specialPrice: price,
         reason: _reasonCtrl.text.trim(),
         description: _descCtrl.text.trim(),
       ));
-      if (mounted) {
-        _snack('Tarifa especial creada', success: true);
-        Navigator.pop(context);
+      if (!mounted) return;
+
+      final createUpdater = (CalendarDayModel d) => d.copyWith(
+        priceSource: 'specialRate',
+        price: price,
+      );
+
+      // Actualización optimista + guardar overrides para sobrevivir navegación
+      final updated = Map<DateTime, CalendarDayModel>.from(_calendarMap);
+      var current = start;
+      while (!current.isAfter(end)) {
+        final key = DateTime.utc(current.year, current.month, current.day);
+        final model = updated[key];
+        if (model != null) {
+          updated[key] = createUpdater(model);
+        }
+        current = current.add(const Duration(days: 1));
       }
+      _storeOverrides(start, end, createUpdater);
+      setState(() {
+        _calendarMap = updated;
+        _calendarKey++;
+        _startDate = null;
+        _endDate = null;
+      });
+      _priceCtrl.clear();
+      _reasonCtrl.clear();
+      _descCtrl.clear();
+
+      _snack('Tarifa especial creada', success: true);
     } catch (e) {
       _snack(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -591,4 +649,16 @@ class _SpecialRateFormScreenState
         child: Icon(Icons.villa_outlined,
             color: Colors.grey.shade300, size: 24),
       );
+}
+
+class _SrDateOverride {
+  final DateTime dateKey;
+  final CalendarDayModel Function(CalendarDayModel existing) updater;
+  final DateTime createdAt;
+
+  _SrDateOverride({
+    required this.dateKey,
+    required this.updater,
+    required this.createdAt,
+  });
 }

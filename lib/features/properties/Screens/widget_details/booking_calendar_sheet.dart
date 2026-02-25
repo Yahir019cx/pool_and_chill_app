@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+import 'package:pool_and_chill_app/data/models/booking/booking_model.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
+import 'package:pool_and_chill_app/features/properties/Screens/booking_review_screen.dart';
 import 'detail_constants.dart';
 
 /// Bottom sheet con calendario de disponibilidad para reservar.
@@ -25,6 +27,7 @@ class BookingCalendarSheet extends ConsumerStatefulWidget {
 
 class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
   bool _isLoading = true;
+  bool _isConfirming = false;
   String? _error;
   Map<DateTime, CalendarDayModel> _calendarMap = {};
   int _calendarKey = 0;
@@ -688,7 +691,7 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
-              onPressed: _canConfirm ? _onConfirm : null,
+              onPressed: _canConfirm && !_isConfirming ? _onConfirm : null,
               style: ElevatedButton.styleFrom(
                 backgroundColor: kDetailPrimary,
                 foregroundColor: Colors.white,
@@ -703,7 +706,16 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Continuar'),
+              child: _isConfirming
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Continuar'),
             ),
           ),
         ],
@@ -741,20 +753,63 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
     );
   }
 
-  void _onConfirm() {
-    // TODO: navegar al siguiente paso de reserva con los datos seleccionados.
-    Navigator.of(context).pop({
-      'propertyId': widget.propertyId,
-      'isPoolOnly': _isPoolOnly,
-      if (_isPoolOnly)
-        'selectedDate': _selectedDay?.toIso8601String(),
-      if (_isPoolOnly) 'price': _singleDayPrice,
-      if (!_isPoolOnly)
-        'checkIn': _rangeStart?.toIso8601String(),
-      if (!_isPoolOnly)
-        'checkOut': _rangeEnd?.toIso8601String(),
-      if (!_isPoolOnly) 'nights': _nightsCount,
-      if (!_isPoolOnly) 'totalPrice': _totalRangePrice,
-    });
+  Future<void> _onConfirm() async {
+    if (_isConfirming) return;
+    setState(() => _isConfirming = true);
+
+    try {
+      final service = ref.read(bookingServiceProvider);
+
+      final request = CreateBookingRequest(
+        propertyId: widget.propertyId,
+        bookingDate: _isPoolOnly
+            ? DateFormat('yyyy-MM-dd').format(_selectedDay!)
+            : null,
+        checkInDate: !_isPoolOnly
+            ? DateFormat('yyyy-MM-dd').format(_rangeStart!)
+            : null,
+        checkOutDate: !_isPoolOnly
+            ? DateFormat('yyyy-MM-dd').format(_rangeEnd!)
+            : null,
+      );
+
+      final response = await service.createBooking(request);
+      if (!mounted) return;
+
+      final String datesLabel;
+      if (_isPoolOnly) {
+        datesLabel =
+            DateFormat('d MMM yyyy', 'es_MX').format(_selectedDay!);
+      } else {
+        final checkIn =
+            DateFormat('d MMM', 'es_MX').format(_rangeStart!);
+        final checkOut =
+            DateFormat('d MMM yyyy', 'es_MX').format(_rangeEnd!);
+        datesLabel = '$checkIn – $checkOut · $_nightsCount noches';
+      }
+
+      final nav = Navigator.of(context);
+      nav.pop(); // cierra el bottom sheet
+      nav.push(
+        MaterialPageRoute(
+          builder: (_) => BookingReviewScreen(
+            bookingResponse: response,
+            propertyName: widget.propertyDetail.property.propertyName,
+            datesLabel: datesLabel,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isConfirming = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 }

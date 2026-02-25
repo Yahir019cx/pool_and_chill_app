@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
@@ -24,11 +22,16 @@ class SpecialRateService {
     }
   }
 
-  Future<void> deactivateSpecialRate(String idSpecialRate) async {
-    debugPrint('[SpecialRate] Deactivating idSpecialRate: $idSpecialRate');
+  Future<void> deactivateSpecialRate(
+    String idSpecialRate, {
+    String? propertyId,
+  }) async {
     final response = await _client.post(
       ApiRoutes.specialRateDeactivate,
-      body: {'idSpecialRate': idSpecialRate},
+      body: {
+        'idSpecialRate': idSpecialRate,
+        if (propertyId != null) 'propertyId': propertyId,
+      },
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(_msg(response, 'Error al desactivar la tarifa'));
