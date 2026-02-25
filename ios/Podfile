@@ -1,4 +1,3 @@
-# Didit SDK requiere iOS 13.0+
 platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
@@ -32,9 +31,6 @@ target 'Runner' do
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-
-  # Didit SDK para verificación de identidad (KYC)
-  pod 'DiditSDK'
 
   target 'RunnerTests' do
     inherit! :search_paths
