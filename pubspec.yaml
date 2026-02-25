@@ -19,6 +19,7 @@ dependencies:
 
   # Social Auth
   google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
   #formatting
   intl: ^0.20.2
 

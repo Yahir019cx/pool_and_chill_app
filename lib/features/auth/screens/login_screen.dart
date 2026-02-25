@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/auth_snackbar.dart';
@@ -27,6 +28,23 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleAppleLogin() async {
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      print("Apple User ID: ${credential.userIdentifier}");
+      print("Apple Email: ${credential.email}");
+      print("Apple Identity Token: ${credential.identityToken}");
+    } catch (e) {
+      print("Apple Sign-In failed: $e");
+    }
   }
 
   Future<void> _handleGoogleLogin() async {
@@ -286,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       _social(FontAwesomeIcons.google, Colors.red, _handleGoogleLogin),
                       const SizedBox(width: 15),
-                      _social(FontAwesomeIcons.apple, Colors.black, null),
+                      _social(FontAwesomeIcons.apple, Colors.black, _handleAppleLogin),
                     ],
                   ),
                 ],
