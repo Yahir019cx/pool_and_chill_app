@@ -78,6 +78,54 @@ class AuthService {
     throw Exception(message ?? 'Error al registrar');
   }
 
+  Future<AuthResponseModel> loginWithApple({
+    required String identityToken,
+    String? firstName,
+    String? lastName,
+  }) async {
+    final body = <String, dynamic>{'identityToken': identityToken};
+    if (firstName != null) body['firstName'] = firstName;
+    if (lastName != null) body['lastName'] = lastName;
+
+    final response = await api.post(
+      ApiRoutes.loginWithApple,
+      withAuth: false,
+      body: body,
+    );
+
+    if (response.statusCode == 401) {
+      throw Exception('Token de Apple inválido o expirado');
+    }
+    if (response.statusCode == 403) {
+      throw Exception('Cuenta suspendida o bloqueada');
+    }
+    if (response.statusCode == 400) {
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        final message = error['message'];
+        if (message is List) throw Exception(message.join('\n'));
+        throw Exception(message ?? 'Datos inválidos');
+      } catch (e) {
+        if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+        throw Exception('Datos inválidos');
+      }
+    }
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        final message = error['message'];
+        if (message is List) throw Exception(message.join('\n'));
+        throw Exception(message ?? 'Error al iniciar sesión con Apple');
+      } catch (e) {
+        if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+        throw Exception('Error al iniciar sesión con Apple');
+      }
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return AuthResponseModel.fromJson(data);
+  }
+
   Future<AuthResponseModel> loginWithGoogle(String idToken) async {
     final response = await api.post(
       ApiRoutes.loginWithGoogle,

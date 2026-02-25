@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart' show SignInWithAppleAuthorizationException, AuthorizationErrorCode;
 
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/auth_snackbar.dart';
@@ -31,19 +31,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleAppleLogin() async {
+    final auth = context.read<AuthProvider>();
     try {
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-
-      print("Apple User ID: ${credential.userIdentifier}");
-      print("Apple Email: ${credential.email}");
-      print("Apple Identity Token: ${credential.identityToken}");
+      await auth.loginWithApple();
+      if (!mounted) return;
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      if (!mounted) return;
+      AuthSnackbar.showError(context, 'Error al iniciar sesión con Apple');
     } catch (e) {
-      print("Apple Sign-In failed: $e");
+      if (!mounted) return;
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      AuthSnackbar.showError(context, msg);
     }
   }
 

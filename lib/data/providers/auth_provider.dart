@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/models/user/index.dart';
@@ -184,6 +185,58 @@ class AuthProvider extends ChangeNotifier {
           _myProperties = [];
         }
       }
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
+  }
+
+  // ===== LOGIN WITH APPLE =====
+  Future<void> loginWithApple() async {
+    _setLoading(true);
+
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      if (credential.identityToken == null) {
+        throw Exception('No se pudo obtener el token de Apple');
+      }
+
+      final session = await _authService.loginWithApple(
+        identityToken: credential.identityToken!,
+        firstName: credential.givenName,
+        lastName: credential.familyName,
+      );
+
+      apiClient.setAccessToken(session.accessToken);
+      await SecureStorage.saveTokens(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken,
+      );
+
+      try {
+        _profile = await _userService.getMe();
+      } catch (e) {
+        await SecureStorage.clear();
+        apiClient.clearAccessToken();
+        rethrow;
+      }
+
+      if (_profile != null && _profile!.isHost) {
+        try {
+          _myProperties = await _propertyService.getMyProperties();
+        } catch (_) {
+          _myProperties = [];
+        }
+      }
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      rethrow;
     } finally {
       _loading = false;
       notifyListeners();

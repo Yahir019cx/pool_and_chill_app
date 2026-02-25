@@ -5,12 +5,14 @@ class AuthResponseModel {
   final String refreshToken;
   final int expiresIn;
   final UserModel user;
+  final bool isNewUser;
 
   AuthResponseModel({
     required this.accessToken,
     required this.refreshToken,
     required this.expiresIn,
     required this.user,
+    this.isNewUser = false,
   });
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class AuthResponseModel {
       refreshToken: json['refreshToken'],
       expiresIn: json['expiresIn'],
       user: UserModel.fromJson(json['user']),
+      isNewUser: json['isNewUser'] == true,
     );
   }
 }
