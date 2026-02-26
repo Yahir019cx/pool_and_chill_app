@@ -47,10 +47,10 @@
               "client_type": 3
             },
             {
-              "client_id": "395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi.apps.googleusercontent.com",
+              "client_id": "395705090497-3rlqeqvuoc2oattpvuv10b5rqde9m1jp.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.poolandchill.app"
+                "bundle_id": "com.nextdevcode.poolandchill"
               }
             }
           ]
