@@ -28,7 +28,9 @@
       "Bash(/c/Users/pyahi/flutter/bin/dart pub global activate flutterfire_cli)",
       "Bash(export PATH=\"$PATH:/c/Users/pyahi/AppData/Local/Pub/Cache/bin\")",
       "Bash(flutterfire --version)",
-      "Bash(\"/c/Users/pyahi/AppData/Local/Pub/Cache/bin/flutterfire.bat\" --version)"
+      "Bash(\"/c/Users/pyahi/AppData/Local/Pub/Cache/bin/flutterfire.bat\" --version)",
+      "Bash(/c/Users/pyahi/flutter/bin/flutter pub get)",
+      "Bash(/c/Users/pyahi/flutter/bin/dart run flutter_launcher_icons)"
     ]
   },
   "enableAllProjectMcpServers": true,
