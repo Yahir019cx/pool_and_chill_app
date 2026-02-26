@@ -204,7 +204,7 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (credential.identityToken == null) {
-        throw Exception('No se pudo obtener el token de Apple');
+        return;
       }
 
       final session = await _authService.loginWithApple(

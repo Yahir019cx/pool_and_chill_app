@@ -35,6 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await auth.loginWithApple();
       if (!mounted) return;
+      if (!auth.isAuthenticated) {
+        AuthSnackbar.showError(context, 'Intenta de nuevo');
+        return;
+      }
       Navigator.of(context).popUntil((route) => route.isFirst);
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) return;
