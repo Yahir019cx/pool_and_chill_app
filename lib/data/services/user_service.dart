@@ -84,14 +84,40 @@ class UserService {
     );
 
     if (response.statusCode == 200) {
-      return; // Éxito - el perfil se refrescará después
+      return;
     } else if (response.statusCode == 400) {
       final error = jsonDecode(response.body);
-      throw Exception(error['message'] ?? 'Datos inválidos');
+      // NestJS puede retornar message como String o List<String>
+      final raw = error['message'];
+      final msg = raw is List ? raw.first.toString() : raw?.toString() ?? '';
+      throw Exception(_parsearErrorPerfil(msg));
     } else if (response.statusCode == 401) {
-      throw Exception('Sesión expirada. Por favor, inicia sesión de nuevo.');
+      throw Exception('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
     } else {
-      throw Exception('Error del servidor: ${response.statusCode}');
+      throw Exception('No pudimos guardar los cambios. Intenta de nuevo.');
     }
+  }
+
+  /// Traduce mensajes técnicos del backend a mensajes amigables para el usuario
+  static String _parsearErrorPerfil(String msg) {
+    final lower = msg.toLowerCase();
+
+    if (lower.contains('displayname')) {
+      return 'Usa tu nombre y apellido reales.';
+    }
+    if (lower.contains('phonenumber') || lower.contains('phone')) {
+      return 'El número de teléfono no es válido.';
+    }
+    if (lower.contains('bio')) {
+      return 'La biografía contiene caracteres no permitidos.';
+    }
+    if (lower.contains('location')) {
+      return 'La ubicación seleccionada no es válida.';
+    }
+    if (lower.contains('imagen') || lower.contains('image') || lower.contains('url')) {
+      return 'La imagen no pudo procesarse. Intenta con otra foto.';
+    }
+
+    return 'Verifica los datos e intenta de nuevo.';
   }
 }

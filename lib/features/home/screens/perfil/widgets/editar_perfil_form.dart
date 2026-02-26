@@ -121,8 +121,28 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
           const SizedBox(height: 32),
 
           /// ---------- INPUTS ----------
-          _input('Nombre', _nombreCtrl),
-          _input('Apellido', _apellidoCtrl),
+          _input(
+            'Nombre',
+            _nombreCtrl,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Ingresa tu nombre';
+              if (!RegExp(r"^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$").hasMatch(v.trim())) {
+                return 'El nombre solo puede contener letras';
+              }
+              return null;
+            },
+          ),
+          _input(
+            'Apellido',
+            _apellidoCtrl,
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Ingresa tu apellido';
+              if (!RegExp(r"^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s'-]+$").hasMatch(v.trim())) {
+                return 'El apellido solo puede contener letras';
+              }
+              return null;
+            },
+          ),
           _input(
             'Teléfono',
             _telefonoCtrl,
@@ -513,6 +533,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     TextEditingController controller, {
     int maxLines = 1,
     TextInputType keyboard = TextInputType.text,
+    String? Function(String?)? validator,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
@@ -520,6 +541,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboard,
+        validator: validator,
         decoration: InputDecoration(
           labelText: label,
           filled: true,
@@ -591,6 +613,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
     FocusScope.of(context).unfocus();
 
     if (_isSaving) return;
+    if (!(_formKey.currentState?.validate() ?? true)) return;
 
     setState(() => _isSaving = true);
 
@@ -625,7 +648,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
       _showSuccess('Cambios guardados');
     } catch (e) {
-      _showError('Error al guardar: $e');
+      _showError(_mensajeDeError(e));
     } finally {
       setState(() => _isSaving = false);
     }
@@ -641,6 +664,11 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
         backgroundColor: Colors.red,
       ),
     );
+  }
+
+  /// Extrae un mensaje limpio de una excepción, sin el prefijo "Exception: "
+  String _mensajeDeError(Object e) {
+    return e.toString().replaceFirst('Exception: ', '');
   }
 
   void _showSuccess(String message) {

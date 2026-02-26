@@ -16,7 +16,7 @@ class NavBottom extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
     return BottomAppBar(
       height: _kNavBarHeight + bottomPadding,
