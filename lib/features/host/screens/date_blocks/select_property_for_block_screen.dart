@@ -16,7 +16,9 @@ class SelectPropertyForBlockScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final properties = auth.myProperties;
+    // Solo propiedades activas (status 3 = ACTIVE)
+    final properties =
+        auth.myProperties.where((p) => p.isActive).toList();
     final isLoading = auth.isLoadingProperties;
 
     return Scaffold(

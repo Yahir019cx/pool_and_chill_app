@@ -121,7 +121,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 14),
                         _buildDetailRow(
-                          Icons.calendar_today_outlined,
+                          Icons.event_note_outlined,
                           'Fechas',
                           datesLabel,
                         ),

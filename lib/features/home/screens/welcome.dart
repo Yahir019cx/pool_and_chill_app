@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_pkg;
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
+import 'package:pool_and_chill_app/data/providers/rentas_provider.dart';
 import '../widgets/nav_bottom.dart';
 import 'inicio_screen.dart';
 import 'rentas_screen.dart';
@@ -23,14 +24,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _onNavTap(int i) {
     setState(() => selectedNavIndex = i);
 
+    final auth = provider_pkg.Provider.of<AuthProvider>(context, listen: false);
+    final container = ProviderScope.containerOf(context);
+
+    // Al entrar al tab de Rentas (índice 1), recargar siempre.
+    if (i == 1 && auth.isAuthenticated) {
+      container.read(rentasProvider.notifier).load();
+    }
+
     // Al entrar al tab de Favoritos (índice 2), recargar la lista.
-    if (i == 2) {
-      final auth = provider_pkg.Provider.of<AuthProvider>(context, listen: false);
-      if (auth.isAuthenticated) {
-        ProviderScope.containerOf(context)
-            .read(favoritesProvider.notifier)
-            .loadFavorites();
-      }
+    if (i == 2 && auth.isAuthenticated) {
+      container.read(favoritesProvider.notifier).loadFavorites();
     }
   }
 

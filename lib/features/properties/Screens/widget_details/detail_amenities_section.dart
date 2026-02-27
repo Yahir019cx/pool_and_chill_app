@@ -106,34 +106,40 @@ class _DetailAmenitiesSectionState extends State<DetailAmenitiesSection> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: items.asMap().entries.map((entry) {
         final a = entry.value;
-        return Padding(
-          padding: EdgeInsets.only(left: entry.key == 0 ? 0 : 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: kDetailPrimary.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: kDetailPrimary.withValues(alpha: 0.2)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  iconForAmenity(a.icon, a.amenityCode),
-                  size: 16,
-                  color: kDetailPrimary,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  a.amenityName ?? a.amenityCode ?? '',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: kDetailDark,
+        return Flexible(
+          child: Padding(
+            padding: EdgeInsets.only(left: entry.key == 0 ? 0 : 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: kDetailPrimary.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: kDetailPrimary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    iconForAmenity(a.icon, a.amenityCode),
+                    size: 16,
+                    color: kDetailPrimary,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      a.amenityName ?? a.amenityCode ?? '',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: kDetailDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

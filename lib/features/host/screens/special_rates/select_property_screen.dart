@@ -16,7 +16,9 @@ class SelectPropertyForRateScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final properties = auth.myProperties;
+    // Solo propiedades activas (status 3 = ACTIVE)
+    final properties =
+        auth.myProperties.where((p) => p.isActive).toList();
     final isLoading = auth.isLoadingProperties;
 
     return Scaffold(
@@ -158,7 +160,7 @@ class _PropertyCard extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: property.coverImageUrl,
                         fit: BoxFit.cover,
-                        errorWidget: (_, __, ___) => _placeholder(),
+                        errorWidget: (_, _, _) => _placeholder(),
                       )
                     : _placeholder(),
               ),

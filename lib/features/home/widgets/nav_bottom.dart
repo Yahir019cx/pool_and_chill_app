@@ -33,7 +33,7 @@ class NavBottom extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildItem(context, Icons.home_outlined, Icons.home, "Inicio", 0),
-            _buildItem(context, Icons.calendar_today_outlined, Icons.calendar_today, "Rentas", 1),
+            _buildItem(context, Icons.event_note_outlined, Icons.calendar_today, "Rentas", 1),
             const SizedBox(width: _kNotchGap),
             _buildItem(context, Icons.favorite_outline, Icons.favorite, "Favoritos", 2),
             _buildItem(context, Icons.person_outline, Icons.person, "Perfil", 3),

@@ -22,9 +22,26 @@ class AuthService {
       try {
         final error = jsonDecode(response.body) as Map<String, dynamic>;
         final message = error['message'];
+        final detail = error['error'];
+
+        // Priorizar mensajes específicos
         if (message is List) {
           throw Exception(message.join('\n'));
         }
+
+        // Si el backend envía un mensaje genérico como "Error al procesar login"
+        // pero el detalle real va en otra propiedad (por ejemplo `error`),
+        // usamos ese detalle para mostrar una razón más clara al usuario.
+        if (message is String &&
+            message.isNotEmpty &&
+            message != 'Error al procesar login') {
+          throw Exception(message);
+        }
+
+        if (detail is String && detail.isNotEmpty) {
+          throw Exception(detail);
+        }
+
         throw Exception(message ?? 'Error al iniciar sesión');
       } catch (e) {
         if (e is Exception && e.toString().startsWith('Exception:')) rethrow;

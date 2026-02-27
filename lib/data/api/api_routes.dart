@@ -33,6 +33,9 @@ class ApiRoutes {
   // BOOKING
   static const bookingCalendar = '/booking/calendar';
   static const bookingCreate = '/booking/create';
+  static const guestBookings = '/booking/guest/bookings';
+  static const hostBookings = '/booking/host/bookings';
+  static const bookingGuestReview = '/booking/guest/review';
 
   // UPDATE DE PROPIEDAD (host)
   static const updateBasicInfo = '/properties/update/basic-info';

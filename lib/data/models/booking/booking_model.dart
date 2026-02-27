@@ -146,3 +146,381 @@ class BookingPayment {
     );
   }
 }
+
+// ─── Guest Bookings (POST /booking/guest/bookings) ─────────────────
+
+class GuestBookingsResponse {
+  final bool success;
+  final GuestBookingsData data;
+
+  const GuestBookingsResponse({required this.success, required this.data});
+
+  factory GuestBookingsResponse.fromJson(Map<String, dynamic> json) {
+    return GuestBookingsResponse(
+      success: json['success'] as bool? ?? false,
+      data: GuestBookingsData.fromJson(json['data'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class GuestBookingsData {
+  final BookingsSummary summary;
+  final List<GuestBooking> bookings;
+
+  const GuestBookingsData({required this.summary, required this.bookings});
+
+  factory GuestBookingsData.fromJson(Map<String, dynamic> json) {
+    final rawBookings = json['bookings'] as List<dynamic>? ?? [];
+    return GuestBookingsData(
+      summary: BookingsSummary.fromJson(json['summary'] as Map<String, dynamic>),
+      bookings: rawBookings
+          .map((e) => GuestBooking.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class BookingsSummary {
+  final int totalBookings;
+  final int totalProximas;
+  final int totalPasadas;
+  final int totalCanceladas;
+  final int totalNoShow;
+
+  const BookingsSummary({
+    required this.totalBookings,
+    required this.totalProximas,
+    required this.totalPasadas,
+    required this.totalCanceladas,
+    required this.totalNoShow,
+  });
+
+  factory BookingsSummary.fromJson(Map<String, dynamic> json) {
+    return BookingsSummary(
+      totalBookings: json['totalBookings'] as int? ?? 0,
+      totalProximas: json['totalProximas'] as int? ?? 0,
+      totalPasadas: json['totalPasadas'] as int? ?? 0,
+      totalCanceladas: json['totalCanceladas'] as int? ?? 0,
+      totalNoShow: json['totalNoShow'] as int? ?? 0,
+    );
+  }
+}
+
+class GuestBooking {
+  final String bookingId;
+  final String bookingCode;
+  final String bookingType;
+  final String bookingDate;
+  final String bookingStartTime;
+  final String bookingEndTime;
+  final String checkInDate;
+  final String checkOutDate;
+  final int numberOfNights;
+  final String qrCodeData;
+  final String propertyId;
+  final String propertyName;
+  final String? propertyImageUrl;
+  final GuestBookingRating propertyRating;
+  final GuestBookingRating guestRating;
+  final GuestBookingHost host;
+  final double totalGuestPayment;
+  final GuestBookingStatus status;
+
+  const GuestBooking({
+    required this.bookingId,
+    required this.bookingCode,
+    required this.bookingType,
+    required this.bookingDate,
+    required this.bookingStartTime,
+    required this.bookingEndTime,
+    required this.checkInDate,
+    required this.checkOutDate,
+    required this.numberOfNights,
+    required this.qrCodeData,
+    required this.propertyId,
+    required this.propertyName,
+    this.propertyImageUrl,
+    required this.propertyRating,
+    required this.guestRating,
+    required this.host,
+    required this.totalGuestPayment,
+    required this.status,
+  });
+
+  factory GuestBooking.fromJson(Map<String, dynamic> json) {
+    return GuestBooking(
+      bookingId: json['bookingId'] as String? ?? '',
+      bookingCode: json['bookingCode'] as String? ?? '',
+      bookingType: json['bookingType'] as String? ?? '',
+      bookingDate: json['bookingDate'] as String? ?? '',
+      bookingStartTime: json['bookingStartTime'] as String? ?? '',
+      bookingEndTime: json['bookingEndTime'] as String? ?? '',
+      checkInDate: json['checkInDate'] as String? ?? '',
+      checkOutDate: json['checkOutDate'] as String? ?? '',
+      numberOfNights: json['numberOfNights'] as int? ?? 0,
+      qrCodeData: json['qrCodeData'] as String? ?? '',
+      propertyId: json['propertyId'] as String? ?? '',
+      propertyName: json['propertyName'] as String? ?? '',
+      propertyImageUrl: json['propertyImageUrl'] as String?,
+      propertyRating: GuestBookingRating.fromJson(
+          json['propertyRating'] as Map<String, dynamic>? ?? {}),
+      guestRating: GuestBookingRating.fromJson(
+          json['guestRating'] as Map<String, dynamic>? ?? {}),
+      host: GuestBookingHost.fromJson(
+          json['host'] as Map<String, dynamic>? ?? {}),
+      totalGuestPayment: (json['totalGuestPayment'] as num?)?.toDouble() ?? 0,
+      status: GuestBookingStatus.fromJson(
+          json['status'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+}
+
+class GuestBookingRating {
+  final double average;
+  final int totalReviews;
+
+  const GuestBookingRating({required this.average, required this.totalReviews});
+
+  factory GuestBookingRating.fromJson(Map<String, dynamic> json) {
+    return GuestBookingRating(
+      average: (json['average'] as num?)?.toDouble() ?? 0,
+      totalReviews: json['totalReviews'] as int? ?? 0,
+    );
+  }
+}
+
+class GuestBookingHost {
+  final String hostId;
+  final String displayName;
+  final String? profileImageUrl;
+  final bool isIdentityVerified;
+
+  const GuestBookingHost({
+    required this.hostId,
+    required this.displayName,
+    this.profileImageUrl,
+    required this.isIdentityVerified,
+  });
+
+  factory GuestBookingHost.fromJson(Map<String, dynamic> json) {
+    return GuestBookingHost(
+      hostId: json['hostId'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      profileImageUrl: json['profileImageUrl'] as String?,
+      isIdentityVerified: json['isIdentityVerified'] as bool? ?? false,
+    );
+  }
+}
+
+class GuestBookingStatus {
+  final int id;
+  final String name;
+
+  const GuestBookingStatus({required this.id, required this.name});
+
+  factory GuestBookingStatus.fromJson(Map<String, dynamic> json) {
+    return GuestBookingStatus(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+    );
+  }
+}
+
+// ─── Host Bookings (POST /booking/host/bookings) ───────────────────
+
+class HostBookingsResponse {
+  final bool success;
+  final HostBookingsData data;
+
+  const HostBookingsResponse({required this.success, required this.data});
+
+  factory HostBookingsResponse.fromJson(Map<String, dynamic> json) {
+    return HostBookingsResponse(
+      success: json['success'] as bool? ?? false,
+      data: HostBookingsData.fromJson(json['data'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class HostBookingsData {
+  final BookingsSummary summary;
+  final List<HostBooking> bookings;
+  final String? message;
+
+  const HostBookingsData({
+    required this.summary,
+    required this.bookings,
+    this.message,
+  });
+
+  factory HostBookingsData.fromJson(Map<String, dynamic> json) {
+    final raw = json['bookings'] as List<dynamic>? ?? [];
+    return HostBookingsData(
+      summary: BookingsSummary.fromJson(
+          json['summary'] as Map<String, dynamic>? ?? {}),
+      bookings: raw
+          .map((e) => HostBooking.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      message: json['message'] as String?,
+    );
+  }
+}
+
+class HostBooking {
+  final String bookingId;
+  final String bookingCode;
+  final String bookingType;
+  final String bookingDate;
+  final String bookingStartTime;
+  final String bookingEndTime;
+  final String checkInDate;
+  final String checkOutDate;
+  final int numberOfNights;
+  final String propertyId;
+  final String propertyName;
+  final String? propertyImageUrl;
+  final GuestBookingRating propertyRating;
+  final HostBookingGuest guest;
+  final double totalGuestPayment;
+  final GuestBookingStatus status;
+  final HostBookingPayout payout;
+  final GuestBookingRating hostRating;
+
+  const HostBooking({
+    required this.bookingId,
+    required this.bookingCode,
+    required this.bookingType,
+    required this.bookingDate,
+    required this.bookingStartTime,
+    required this.bookingEndTime,
+    required this.checkInDate,
+    required this.checkOutDate,
+    required this.numberOfNights,
+    required this.propertyId,
+    required this.propertyName,
+    this.propertyImageUrl,
+    required this.propertyRating,
+    required this.guest,
+    required this.totalGuestPayment,
+    required this.status,
+    required this.payout,
+    required this.hostRating,
+  });
+
+  factory HostBooking.fromJson(Map<String, dynamic> json) {
+    return HostBooking(
+      bookingId: json['bookingId'] as String? ?? '',
+      bookingCode: json['bookingCode'] as String? ?? '',
+      bookingType: json['bookingType'] as String? ?? '',
+      bookingDate: json['bookingDate'] as String? ?? '',
+      bookingStartTime: json['bookingStartTime'] as String? ?? '',
+      bookingEndTime: json['bookingEndTime'] as String? ?? '',
+      checkInDate: json['checkInDate'] as String? ?? '',
+      checkOutDate: json['checkOutDate'] as String? ?? '',
+      numberOfNights: json['numberOfNights'] as int? ?? 0,
+      propertyId: json['propertyId'] as String? ?? '',
+      propertyName: json['propertyName'] as String? ?? '',
+      propertyImageUrl: json['propertyImageUrl'] as String?,
+      propertyRating: GuestBookingRating.fromJson(
+          json['propertyRating'] as Map<String, dynamic>? ?? {}),
+      guest: HostBookingGuest.fromJson(
+          json['guest'] as Map<String, dynamic>? ?? {}),
+      totalGuestPayment: (json['totalGuestPayment'] as num?)?.toDouble() ?? 0,
+      status: GuestBookingStatus.fromJson(
+          json['status'] as Map<String, dynamic>? ?? {}),
+      payout: HostBookingPayout.fromJson(
+          json['payout'] as Map<String, dynamic>? ?? {}),
+      hostRating: GuestBookingRating.fromJson(
+          json['hostRating'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+
+  bool get isToday {
+    if (bookingDate.isEmpty) return false;
+    try {
+      final d = DateTime.parse(bookingDate);
+      final now = DateTime.now();
+      return d.year == now.year && d.month == now.month && d.day == now.day;
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
+class HostBookingGuest {
+  final String guestId;
+  final String displayName;
+  final String? profileImageUrl;
+  final GuestBookingRating rating;
+
+  const HostBookingGuest({
+    required this.guestId,
+    required this.displayName,
+    this.profileImageUrl,
+    required this.rating,
+  });
+
+  factory HostBookingGuest.fromJson(Map<String, dynamic> json) {
+    return HostBookingGuest(
+      guestId: json['guestId'] as String? ?? '',
+      displayName: json['displayName'] as String? ?? '',
+      profileImageUrl: json['profileImageUrl'] as String?,
+      rating: GuestBookingRating.fromJson(
+          json['rating'] as Map<String, dynamic>? ?? {}),
+    );
+  }
+}
+
+class HostBookingPayout {
+  final double hostPayout;
+  final String payoutStatus;
+
+  const HostBookingPayout({
+    required this.hostPayout,
+    required this.payoutStatus,
+  });
+
+  factory HostBookingPayout.fromJson(Map<String, dynamic> json) {
+    return HostBookingPayout(
+      hostPayout: (json['hostPayout'] as num?)?.toDouble() ?? 0,
+      payoutStatus: json['payoutStatus'] as String? ?? '',
+    );
+  }
+}
+
+// ─── Guest Review (POST /booking/guest/review) ────────────────────────────────
+
+class GuestReviewRequest {
+  final String bookingId;
+  final double rating;
+  final double cleanlinessRating;
+  final double communicationRating;
+  final double respectRulesRating;
+  final String? comment;
+  final bool wouldHostAgain;
+
+  const GuestReviewRequest({
+    required this.bookingId,
+    required this.rating,
+    required this.cleanlinessRating,
+    required this.communicationRating,
+    required this.respectRulesRating,
+    this.comment,
+    required this.wouldHostAgain,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'bookingId': bookingId,
+      'rating': rating,
+      'cleanlinessRating': cleanlinessRating,
+      'communicationRating': communicationRating,
+      'respectRulesRating': respectRulesRating,
+      'wouldHostAgain': wouldHostAgain,
+    };
+    if (comment != null && comment!.trim().isNotEmpty) {
+      map['comment'] = comment!.trim();
+    }
+    return map;
+  }
+}

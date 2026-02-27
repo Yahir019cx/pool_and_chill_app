@@ -113,7 +113,7 @@ class _BookingReviewScreenState extends State<BookingReviewScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today_outlined,
+                    const Icon(Icons.event_note_outlined,
                         size: 16, color: kDetailGreyLight),
                     const SizedBox(width: 6),
                     Text(

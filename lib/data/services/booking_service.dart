@@ -9,6 +9,48 @@ class BookingService {
 
   BookingService(this._apiClient);
 
+  /// POST /booking/host/bookings → retorna todas las reservas del host autenticado.
+  Future<HostBookingsResponse> getHostBookings() async {
+    final response = await _apiClient.post(ApiRoutes.hostBookings);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return HostBookingsResponse.fromJson(json);
+    }
+
+    String message = 'Error al obtener las reservas';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
+  /// POST /booking/guest/bookings → retorna todas las reservas del guest autenticado.
+  Future<GuestBookingsResponse> getGuestBookings() async {
+    final response = await _apiClient.post(ApiRoutes.guestBookings);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return GuestBookingsResponse.fromJson(json);
+    }
+
+    String message = 'Error al obtener tus rentas';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
   /// POST /booking/create → crea la reserva y retorna el clientSecret de Stripe.
   Future<CreateBookingResponse> createBooking(
       CreateBookingRequest request) async {
@@ -23,6 +65,29 @@ class BookingService {
     }
 
     String message = 'Error al crear la reserva';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
+  /// POST /booking/guest/review → el host califica al huésped.
+  Future<void> reviewGuest(GuestReviewRequest request) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingGuestReview,
+      body: request.toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    String message = 'Error al enviar la reseña del huésped';
     try {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       if (json['message'] != null) {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/data/providers/rentas_provider.dart';
 import 'package:pool_and_chill_app/features/host/screens/welcome_host.dart';
 import 'package:pool_and_chill_app/features/host/screens/pending_approval_screen.dart';
 import 'package:pool_and_chill_app/features/host/home_host.dart';
@@ -11,16 +13,26 @@ import 'perfil/editar_perfil.dart';
 import 'perfil/notificaciones_screen.dart';
 import 'perfil/seguridad_screen.dart';
 
-class PerfilScreen extends StatelessWidget {
+class PerfilScreen extends ConsumerWidget {
   final ValueChanged<int>? onNavigateToTab;
   const PerfilScreen({super.key, this.onNavigateToTab});
 
   static const Color primary = Color(0xFF2D9D91);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final auth = context.watch<AuthProvider>();
     final profile = auth.profile;
+    final rentasState = ref.watch(rentasProvider);
+    final totalReservas = rentasState.bookings.isEmpty && rentasState.isLoading
+        ? '–'
+        : rentasState.bookings.length.toString();
+    final guestRating = rentasState.guestRating;
+    final calificacion = rentasState.isLoading && guestRating == null
+        ? '–'
+        : (guestRating == null || guestRating.totalReviews == 0)
+            ? 'Nueva'
+            : guestRating.average.toStringAsFixed(1);
 
     final displayName = profile?.displayName ?? '';
     final bio = profile?.bio ?? '';
@@ -101,13 +113,13 @@ class PerfilScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _StatItem(value: '12', label: 'Reservas'),
+                    _StatItem(value: totalReservas, label: 'Reservas'),
                     Container(
                       width: 1,
                       height: 30,
                       color: Colors.grey.shade200,
                     ),
-                    _StatItem(value: '4.8', label: 'Calificación'),
+                    _StatItem(value: calificacion, label: 'Calificación'),
                   ],
                 ),
               ),

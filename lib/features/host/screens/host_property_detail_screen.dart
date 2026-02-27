@@ -104,7 +104,9 @@ class _HostPropertyDetailScreenState
       backgroundColor: Colors.white,
       body: asyncDetail.when(
         data: (data) => _buildContent(data),
-        loading: () => const Center(child: CircularProgressIndicator.adaptive()),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: Color(0xFF2D9D91)),
+        ),
         error: (err, _) => _buildError(err),
       ),
     );
@@ -163,6 +165,13 @@ class _HostPropertyDetailScreenState
         prop.status?.statusCode?.toUpperCase() == 'ACTIVA' ||
         prop.status?.idStatus == 3;
     final isActive = _isActive ?? serverActive;
+
+    // Status 5 = SUSPENDED, 6 = REJECTED → no mostrar botón de toggle
+    final isSuspended = prop.status?.idStatus == 5 ||
+        prop.status?.statusCode?.toUpperCase() == 'SUSPENDED';
+    final isRejected = prop.status?.idStatus == 6 ||
+        prop.status?.statusCode?.toUpperCase() == 'REJECTED';
+    final showToggleButton = !isSuspended && !isRejected;
 
     if (images.isNotEmpty && _carouselTimer == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -336,8 +345,8 @@ class _HostPropertyDetailScreenState
                       const SizedBox(height: 24),
                     ],
 
-                    // Espacio para el FAB
-                    SizedBox(height: 90 + bottomPadding),
+                    // Espacio para el FAB (solo si se muestra)
+                    SizedBox(height: showToggleButton ? 90 + bottomPadding : 24 + bottomPadding),
                   ],
                 ),
               ),
@@ -345,13 +354,14 @@ class _HostPropertyDetailScreenState
           ],
         ),
 
-        // ─── FAB Pause / Play ────────────────────────────────
-        Positioned(
-          left: 20,
-          right: 20,
-          bottom: 16 + bottomPadding,
-          child: _buildStatusButton(prop.idProperty, isActive),
-        ),
+        // ─── FAB Pause / Play (oculto en SUSPENDED / REJECTED) ──
+        if (showToggleButton)
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 16 + bottomPadding,
+            child: _buildStatusButton(prop.idProperty, isActive),
+          ),
       ],
     );
   }

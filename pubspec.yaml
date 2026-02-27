@@ -70,6 +70,12 @@ dependencies:
   webview_flutter_android: ^4.3.0
   webview_flutter_wkwebview: ^3.17.0
 
+  # QR Code generation
+  qr_flutter: ^4.1.0
+
+  # QR Code scanning (host camera reader)
+  mobile_scanner: ^5.2.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
