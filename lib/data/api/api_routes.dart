@@ -45,6 +45,7 @@ class ApiRoutes {
 
   // STRIPE CONNECT
   static const stripeConnectCreateAccount = '/stripe/connect/create-account';
+  static const stripeConnectAccountUpdateLink = '/stripe/connect/account-update-link';
   static const stripeAccountStatus = '/stripe/account-status';
 
   // KYC / Verificación (Didit)

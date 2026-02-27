@@ -61,6 +61,31 @@ class StripeService {
     return data['onboardingUrl'] as String;
   }
 
+  /// POST /stripe/connect/account-update-link → devuelve la updateUrl de un solo uso.
+  /// Permite al host actualizar sus datos bancarios/fiscales en Stripe.
+  /// Lanza Exception si el usuario no tiene cuenta Connect (400) o si hay error de red.
+  Future<String> getAccountUpdateLink() async {
+    final response = await api.post(
+      ApiRoutes.stripeConnectAccountUpdateLink,
+      body: {},
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final error = jsonDecode(response.body) as Map<String, dynamic>;
+        final message = error['message'];
+        if (message is List) throw Exception(message.join('\n'));
+        throw Exception(message ?? 'Error al obtener el enlace de actualización');
+      } catch (e) {
+        if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+        throw Exception('Error al conectar con Stripe');
+      }
+    }
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    return data['updateUrl'] as String;
+  }
+
   /// GET /stripe/account-status → estado actual de la cuenta Connect.
   /// El backend refresca el estado desde Stripe antes de responder.
   Future<StripeAccountStatus> getAccountStatus() async {

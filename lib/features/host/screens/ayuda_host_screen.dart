@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/features/host/screens/faq_host_screen.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/seguridad_screen.dart';
@@ -95,7 +95,7 @@ class AyudaHostScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _contactTile(
-              icon: Icons.chat_rounded,
+              icon: FontAwesomeIcons.whatsapp,
               color: const Color(0xFF25D366),
               label: 'WhatsApp',
               subtitle: 'Respuesta rápida · disponible 9–18 h',
@@ -169,7 +169,7 @@ class AyudaHostScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _contactTile(
-              icon: Icons.chat_rounded,
+              icon: FontAwesomeIcons.whatsapp,
               color: const Color(0xFF25D366),
               label: 'WhatsApp',
               subtitle: 'Respuesta rápida · disponible 9–18 h',
