@@ -7,6 +7,7 @@ import 'package:pool_and_chill_app/features/auth/widgets/register_header.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/auth_input.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/legal_checkbox.dart';
 import 'package:pool_and_chill_app/features/auth/widgets/auth_snackbar.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/terminos_screen.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -278,7 +279,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       value: _termsAccepted,
                       prefix: "Acepto los",
                       highlight: "Términos y Condiciones",
-                      legalContent: "Términos y condiciones...",
+                      legalContent: TerminosCondicionesScreen.terminosServicio,
                       onChanged: (v) => setState(() => _termsAccepted = v),
                     ),
                     const SizedBox(height: 4),
@@ -286,7 +287,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       value: _privacyAccepted,
                       prefix: "Acepto la",
                       highlight: "Política de Privacidad",
-                      legalContent: "Aviso de privacidad...",
+                      legalContent: TerminosCondicionesScreen.politicaPrivacidad,
                       onChanged: (v) => setState(() => _privacyAccepted = v),
                     ),
 

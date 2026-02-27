@@ -68,24 +68,12 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
       final states = await CatalogService(api).getStates();
       if (!mounted) return;
 
-      // Pre-seleccionar si el perfil ya tiene una ubicación guardada
-      final currentLocation =
-          context.read<AuthProvider>().profile?.location ?? '';
-
-      int? matchedId;
-      if (currentLocation.isNotEmpty) {
-        for (final s in states) {
-          if (s.name.toLowerCase() == currentLocation.toLowerCase()) {
-            matchedId = s.id;
-            break;
-          }
-        }
+      if (mounted) {
+        setState(() {
+          _states = states;
+          // No tocamos _selectedStateId aquí; si el usuario ya eligió algo, lo respetamos.
+        });
       }
-
-      setState(() {
-        _states = states;
-        _selectedStateId = matchedId;
-      });
     } catch (_) {
       // Si falla el catálogo el resto del formulario sigue funcionando
     } finally {
@@ -563,6 +551,9 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   // ---------- DROPDOWN UBICACIÓN ----------
 
   Widget _locationDropdown() {
+    final currentLocation =
+        context.read<AuthProvider>().profile?.location ?? '';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: DropdownButtonFormField<int>(
@@ -594,7 +585,12 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                 )
               : null,
         ),
-        hint: const Text('Selecciona un estado'),
+        hint: (_selectedStateId == null && currentLocation.isNotEmpty)
+            ? Text(
+                currentLocation,
+                overflow: TextOverflow.ellipsis,
+              )
+            : const Text('Selecciona un estado'),
         items: _states
             .map(
               (s) => DropdownMenuItem<int>(
