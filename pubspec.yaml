@@ -73,8 +73,8 @@ dependencies:
   # QR Code generation
   qr_flutter: ^4.1.0
 
-  # QR Code scanning (host camera reader)
-  mobile_scanner: ^5.2.3
+  # QR Code scanning (host camera reader) — 7.x uses AVFoundation on iOS (no ML Kit), evita conflicto con Firebase/CocoaPods
+  mobile_scanner: ^7.0.0
 
 dev_dependencies:
   flutter_test:
