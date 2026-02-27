@@ -6,7 +6,6 @@ import 'package:pool_and_chill_app/features/host/screens/pending_approval_screen
 import 'package:pool_and_chill_app/features/host/home_host.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import 'perfil/ayuda_screen.dart';
-import 'perfil/mis_reservas_screen.dart';
 import 'perfil/terminos_screen.dart';
 import 'perfil/editar_perfil.dart';
 import 'perfil/notificaciones_screen.dart';
@@ -129,12 +128,7 @@ class PerfilScreen extends StatelessWidget {
                   _MenuItem(
                     icon: Icons.calendar_month_outlined,
                     label: 'Mis rentas',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MisReservasScreen(),
-                      ),
-                    ),
+                    onTap: () => onNavigateToTab?.call(1),
                   ),
                   _MenuItem(
                     icon: Icons.favorite_outline,

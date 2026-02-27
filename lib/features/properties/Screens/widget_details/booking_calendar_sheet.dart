@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:pool_and_chill_app/data/models/booking/booking_model.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/booking_review_screen.dart';
 import 'detail_constants.dart';
 
@@ -802,14 +803,8 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isConfirming = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      final msg = e.toString().replaceFirst('Exception: ', '');
+      TopChip.showError(context, msg);
     }
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/models/date_block_model.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
@@ -317,12 +318,11 @@ class _DateBlockCalendarScreenState
 
   void _snack(String msg, {bool success = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: success ? _kPrimary : Colors.redAccent,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-    ));
+    if (success) {
+      TopChip.showSuccess(context, msg);
+    } else {
+      TopChip.showError(context, msg);
+    }
   }
 
   // ─── Build ─────────────────────────────────────────────────────

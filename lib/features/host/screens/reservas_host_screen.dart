@@ -284,7 +284,7 @@ class _ReservationDetailCard extends StatelessWidget {
                 TextButton(
                   onPressed: () {},
                   child: const Text(
-                    'Ver detalles',
+                    'Escanear QR',
                     style: TextStyle(
                       color: primary,
                       fontWeight: FontWeight.w600,

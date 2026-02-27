@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/features/host/home_host.dart';
@@ -173,12 +174,7 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _state = _StripeState.idle);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se pudo iniciar la configuración: $e'),
-          backgroundColor: Colors.red.shade700,
-        ),
-      );
+      TopChip.showError(context, 'No se pudo iniciar la configuración: $e');
     }
   }
 

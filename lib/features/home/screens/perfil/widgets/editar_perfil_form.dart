@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pool_and_chill_app/data/models/catalog_model.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/services/catalog_service.dart';
 import 'package:pool_and_chill_app/data/services/storage_service.dart';
@@ -658,12 +659,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
+    TopChip.showError(context, message);
   }
 
   /// Extrae un mensaje limpio de una excepción, sin el prefijo "Exception: "
@@ -673,29 +669,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
 
   void _showSuccess(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              message,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
-        backgroundColor: primary,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        margin: const EdgeInsets.only(bottom: 24, left: 60, right: 60),
-        duration: const Duration(milliseconds: 1500),
-        elevation: 2,
-      ),
-    );
+    TopChip.showSuccess(context, message);
   }
 }

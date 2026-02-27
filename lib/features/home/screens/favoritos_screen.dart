@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_pkg;
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/property_detail_screen.dart';
 import '../widgets/card_espacio.dart';
@@ -29,14 +30,9 @@ class _FavoritosScreenState extends ConsumerState<FavoritosScreen> {
   void _onFavoriteToggle(String propertyId) async {
     final ok = await ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(favoritesProvider).error ?? 'No se pudo actualizar el favorito',
-          ),
-          backgroundColor: Colors.red.shade700,
-          duration: const Duration(seconds: 3),
-        ),
+      TopChip.showError(
+        context,
+        ref.read(favoritesProvider).error ?? 'No se pudo actualizar el favorito',
       );
     }
   }

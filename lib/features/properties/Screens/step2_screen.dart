@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/models/catalog_model.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
 class Step2Screen extends ConsumerStatefulWidget {
@@ -186,15 +187,11 @@ class _Step2ScreenState extends ConsumerState<Step2Screen> {
           cityId: catalogMatch.cityId ?? current?.cityId,
         ));
         if (mounted && (catalogMatch.stateId == null || catalogMatch.cityId == null)) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                catalogMatch.stateId == null
-                    ? 'No se encontró el estado en el catálogo. Selecciónalo en "Ingresar o editar dirección".'
-                    : 'No se encontró la ciudad en el catálogo. Complétala en "Ingresar o editar dirección".',
-              ),
-              backgroundColor: Colors.orange.shade700,
-            ),
+          TopChip.showWarning(
+            context,
+            catalogMatch.stateId == null
+                ? 'No se encontró el estado en el catálogo. Selecciónalo en "Ingresar o editar dirección".'
+                : 'No se encontró la ciudad en el catálogo. Complétala en "Ingresar o editar dirección".',
           );
         }
       } else {
@@ -247,22 +244,14 @@ class _Step2ScreenState extends ConsumerState<Step2Screen> {
               _moveToLocation(LatLng(loc.latitude, loc.longitude));
             } else {
               notifier.setAddressData(data);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Dirección guardada, pero no se encontró en el mapa'),
-                ),
-              );
+              TopChip.showWarning(context, 'Dirección guardada, pero no se encontró en el mapa');
             }
           } catch (e) {
             debugPrint('Error buscando dirección: $e');
             if (!mounted) return;
 
             notifier.setAddressData(data);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No se pudo encontrar la dirección en el mapa'),
-              ),
-            );
+            TopChip.showWarning(context, 'No se pudo encontrar la dirección en el mapa');
           }
         },
       ),
@@ -437,12 +426,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   void _onConfirm() {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedState == null || _selectedCity == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona estado y ciudad del catálogo'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      TopChip.showWarning(context, 'Selecciona estado y ciudad del catálogo');
       return;
     }
     widget.onConfirm(

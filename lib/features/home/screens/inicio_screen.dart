@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_pkg;
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_search_provider.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chips_widget.dart';
@@ -97,12 +98,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     final auth =
         provider_pkg.Provider.of<AuthProvider>(context, listen: false);
     if (!auth.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Inicia sesión para guardar favoritos'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      TopChip.showInfo(context, 'Inicia sesión para guardar favoritos');
       return;
     }
     ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);

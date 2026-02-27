@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
@@ -30,14 +31,7 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
     final userId = auth.profile?.userId;
 
     if (userId == null || userId.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesión no válida. Inicia sesión de nuevo.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) TopChip.showError(context, 'Sesión no válida. Inicia sesión de nuevo.');
       return;
     }
 
@@ -81,22 +75,12 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
       if (response.success) {
         _showSuccessDialog(auth);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response.message),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        TopChip.showError(context, response.message);
       }
     } catch (e) {
       if (mounted) {
         final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : 'Error al enviar. Intenta de nuevo.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        TopChip.showError(context, message);
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);

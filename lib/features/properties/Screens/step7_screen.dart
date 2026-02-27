@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:provider/provider.dart';
@@ -86,12 +87,7 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
         setState(() {
           _statusMessage = e.toString().replaceFirst('Exception: ', '');
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_statusMessage ?? 'Error al iniciar verificación'),
-            backgroundColor: Colors.red.shade600,
-          ),
-        );
+        TopChip.showError(context, _statusMessage ?? 'Error al iniciar verificación');
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

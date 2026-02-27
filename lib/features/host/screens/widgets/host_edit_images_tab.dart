@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/widget_details/detail_constants.dart';
 
@@ -114,15 +115,9 @@ class HostEditImagesTab extends StatelessWidget {
                 ? null
                 : () {
                     if (!canDelete) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text(
-                              'No puedes eliminar la última imagen de la propiedad'),
-                          backgroundColor: Colors.redAccent,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
+                      TopChip.showError(
+                        context,
+                        'No puedes eliminar la última imagen de la propiedad',
                       );
                     } else {
                       onDeleteImage(image);

@@ -11,6 +11,7 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'widget_details/detail_constants.dart';
 import 'widget_details/detail_image_carousel.dart';
 import 'widget_details/detail_specs_section.dart';
@@ -70,9 +71,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo compartir')),
-        );
+        TopChip.showError(context, 'No se pudo compartir');
       }
     }
   }
@@ -81,12 +80,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     final auth =
         provider_pkg.Provider.of<AuthProvider>(context, listen: false);
     if (!auth.isAuthenticated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Inicia sesión para guardar favoritos'),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      TopChip.showInfo(context, 'Inicia sesión para guardar favoritos');
       return;
     }
     ref.read(favoritesProvider.notifier).toggleFavorite(propertyId);

@@ -3,6 +3,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:intl/intl.dart';
 
 import 'package:pool_and_chill_app/data/models/booking/booking_model.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/booking_confirmation_screen.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/widget_details/detail_constants.dart';
 
@@ -65,21 +66,11 @@ class _BookingReviewScreenState extends State<BookingReviewScreen> {
       final msg = e.error.localizedMessage ??
           e.error.message ??
           'El pago fue cancelado';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      TopChip.showError(context, msg);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isPaying = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ocurrió un error al procesar el pago'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      TopChip.showError(context, 'Ocurrió un error al procesar el pago');
     }
   }
 

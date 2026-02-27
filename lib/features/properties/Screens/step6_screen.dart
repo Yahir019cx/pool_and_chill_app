@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import '../widgets/step_navigation_buttons.dart';
 import '../widgets/photo_grid.dart';
@@ -104,12 +105,7 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade600,
-      ),
-    );
+    TopChip.showError(context, message);
   }
 
   void _showImageSourceDialog() {
