@@ -225,7 +225,7 @@ class _SpecialRateFormScreenState
     setState(() => _saving = true);
     try {
       final service = ref.read(specialRateServiceProvider);
-      await service.createSpecialRate(CreateSpecialRateRequest(
+      final newId = await service.createSpecialRate(CreateSpecialRateRequest(
         idProperty: widget.propertyId,
         propertyType: _selectedType!,
         startDate: _apiDate(start),
@@ -239,6 +239,7 @@ class _SpecialRateFormScreenState
       final createUpdater = (CalendarDayModel d) => d.copyWith(
         priceSource: 'specialRate',
         price: price,
+        idSpecialRate: newId,
       );
 
       // Actualización optimista + guardar overrides para sobrevivir navegación

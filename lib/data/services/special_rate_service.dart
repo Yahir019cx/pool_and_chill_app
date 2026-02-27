@@ -12,7 +12,9 @@ class SpecialRateService {
 
   SpecialRateService(this._client);
 
-  Future<void> createSpecialRate(CreateSpecialRateRequest req) async {
+  /// Crea una tarifa especial y devuelve el `idSpecialRate` generado por el
+  /// backend para poder desactivarla de inmediato sin esperar al calendario.
+  Future<String> createSpecialRate(CreateSpecialRateRequest req) async {
     final response = await _client.post(
       ApiRoutes.specialRate,
       body: req.toJson(),
@@ -20,6 +22,13 @@ class SpecialRateService {
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw Exception(_msg(response, 'Error al crear la tarifa especial'));
     }
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = json['data'] as Map<String, dynamic>?;
+    final id = data?['idSpecialRate'] as String?;
+    if (id == null || id.isEmpty) {
+      throw Exception('El backend no devolvió el ID de la tarifa creada');
+    }
+    return id;
   }
 
   Future<void> deactivateSpecialRate(
