@@ -27,6 +27,7 @@ class _ForgotPasswordModalState extends State<ForgotPasswordModal> {
 
   final _emailController = TextEditingController();
   bool _loading = false;
+  bool _emailLocked = false; // true solo cuando viene del perfil (usuario logueado)
   _ModalView _view = _ModalView.form; // form | success | error
 
   String _errorMessage = '';
@@ -35,7 +36,10 @@ class _ForgotPasswordModalState extends State<ForgotPasswordModal> {
   void initState() {
     super.initState();
     final email = context.read<AuthProvider>().profile?.email ?? '';
-    if (email.isNotEmpty) _emailController.text = email;
+    if (email.isNotEmpty) {
+      _emailController.text = email;
+      _emailLocked = true;
+    }
   }
 
   @override
@@ -157,29 +161,46 @@ class _ForgotPasswordModalState extends State<ForgotPasswordModal> {
         ),
         const SizedBox(height: 28),
 
-        // Email input
+        // Email input — solo lectura si viene del perfil, editable desde login
         TextField(
           controller: _emailController,
+          readOnly: _emailLocked,
           keyboardType: TextInputType.emailAddress,
-          style: GoogleFonts.openSans(fontSize: 16),
+          style: GoogleFonts.openSans(
+            fontSize: 16,
+            color: _emailLocked ? Colors.grey.shade700 : null,
+          ),
           decoration: InputDecoration(
             labelText: 'Correo electrónico',
             labelStyle: GoogleFonts.openSans(
               fontSize: 16,
-              color: Colors.grey.shade600,
+              color: _emailLocked ? Colors.grey.shade500 : Colors.grey.shade600,
             ),
             floatingLabelStyle: GoogleFonts.openSans(
-              color: _brand,
+              color: _emailLocked ? Colors.grey.shade500 : _brand,
               fontWeight: FontWeight.w500,
             ),
-            prefixIcon: Icon(Icons.email_outlined, color: _brand, size: 20),
+            filled: _emailLocked,
+            fillColor: Colors.grey.shade100,
+            prefixIcon: Icon(
+              Icons.email_outlined,
+              color: _emailLocked ? Colors.grey.shade400 : _brand,
+              size: 20,
+            ),
+            suffixIcon: _emailLocked
+                ? Icon(Icons.lock_outline, color: Colors.grey.shade400, size: 18)
+                : null,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.grey.shade300),
+              borderSide: BorderSide(
+                color: _emailLocked ? Colors.grey.shade200 : Colors.grey.shade300,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: _brand, width: 2),
+              borderSide: _emailLocked
+                  ? BorderSide(color: Colors.grey.shade200)
+                  : const BorderSide(color: _brand, width: 2),
             ),
           ),
         ),
