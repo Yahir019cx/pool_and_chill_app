@@ -488,6 +488,83 @@ class HostBookingPayout {
   }
 }
 
+// ─── Guest: evaluar propiedad (POST /booking/property/review) ────────────────
+
+class PropertyReviewRequest {
+  final String bookingId;
+  final double overallRating;
+  final double cleanlinessRating;
+  final double accuracyRating;
+  final double communicationRating;
+  final double locationRating;
+  final double valueRating;
+  final String? comment;
+
+  const PropertyReviewRequest({
+    required this.bookingId,
+    required this.overallRating,
+    required this.cleanlinessRating,
+    required this.accuracyRating,
+    required this.communicationRating,
+    required this.locationRating,
+    required this.valueRating,
+    this.comment,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'bookingId': bookingId,
+      'overallRating': overallRating,
+      'cleanlinessRating': cleanlinessRating,
+      'accuracyRating': accuracyRating,
+      'communicationRating': communicationRating,
+      'locationRating': locationRating,
+      'valueRating': valueRating,
+    };
+    if (comment != null && comment!.trim().isNotEmpty) {
+      map['comment'] = comment!.trim();
+    }
+    return map;
+  }
+}
+
+// ─── Guest: evaluar host (POST /booking/host/review) ─────────────────────────
+
+class HostReviewRequest {
+  final String bookingId;
+  final double overallRating;
+  final double communicationRating;
+  final double cleanlinessRating;
+  final double accuracyRating;
+  final double checkInRating;
+  final String? comment;
+
+  const HostReviewRequest({
+    required this.bookingId,
+    required this.overallRating,
+    required this.communicationRating,
+    required this.cleanlinessRating,
+    required this.accuracyRating,
+    required this.checkInRating,
+    this.comment,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'bookingId': bookingId,
+      'overallRating': overallRating,
+      'communicationRating': communicationRating,
+      'cleanlinessRating': cleanlinessRating,
+      'accuracyRating': accuracyRating,
+      'checkInRating': checkInRating,
+    };
+    if (comment != null && comment!.trim().isNotEmpty) {
+      map['comment'] = comment!.trim();
+    }
+    return map;
+  }
+}
+
 // ─── Guest Review (POST /booking/guest/review) ────────────────────────────────
 
 class GuestReviewRequest {

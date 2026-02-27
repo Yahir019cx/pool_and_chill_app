@@ -98,4 +98,50 @@ class BookingService {
     } catch (_) {}
     throw Exception(message);
   }
+
+  /// POST /booking/property/review → el guest califica la propiedad (reserva pasada).
+  Future<void> submitPropertyReview(PropertyReviewRequest request) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingPropertyReview,
+      body: request.toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    String message = 'Error al enviar la calificación de la propiedad';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
+  /// POST /booking/host/review → el guest califica al host (después de calificar propiedad).
+  Future<void> submitHostReview(HostReviewRequest request) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingHostReview,
+      body: request.toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return;
+    }
+
+    String message = 'Error al enviar la calificación del anfitrión';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
 }

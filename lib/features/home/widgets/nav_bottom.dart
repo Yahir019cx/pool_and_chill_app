@@ -10,7 +10,7 @@ class NavBottom extends StatelessWidget {
     required this.onNavTap,
   });
 
-  static const _kNavBarHeight = 57.0;
+  static const _kNavBarHeight = 52.0;
   static const _kNotchGap = 56.0;
 
   @override

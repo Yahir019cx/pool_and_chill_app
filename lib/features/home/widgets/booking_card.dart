@@ -6,14 +6,21 @@ import 'package:pool_and_chill_app/data/models/booking/booking_model.dart';
 class BookingCard extends StatelessWidget {
   final GuestBooking booking;
   final VoidCallback? onTap;
+  /// Si se pasa y la reserva es pasada (status 4), se muestra botón "Calificar".
+  final VoidCallback? onRateTap;
 
-  const BookingCard({super.key, required this.booking, this.onTap});
+  const BookingCard({
+    super.key,
+    required this.booking,
+    this.onTap,
+    this.onRateTap,
+  });
 
   static const _brandColor = Color(0xFF3CA2A2);
 
   @override
   Widget build(BuildContext context) {
-    final isTappable = booking.status.id == 2 && onTap != null;
+    final isTappable = (booking.status.id == 2 || booking.status.id == 4) && onTap != null;
 
     return GestureDetector(
       onTap: isTappable ? onTap : null,
@@ -151,6 +158,30 @@ class BookingCard extends StatelessWidget {
           ),
           // Host
           _buildHost(),
+          // Botón Calificar (solo reservas pasadas cuando se proporciona onRateTap)
+          if (booking.status.id == 4 && onRateTap != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onRateTap,
+                icon: const Icon(Icons.star_outline_rounded, size: 18),
+                label: const Text('Calificar propiedad y anfitrión'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _brandColor,
+                  side: const BorderSide(color: _brandColor),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -386,7 +417,7 @@ class BookingCard extends StatelessWidget {
             ],
           ),
         ),
-        if (booking.status.id == 2)
+        if (booking.status.id == 2 || booking.status.id == 4)
           Icon(
             Icons.arrow_forward_ios_rounded,
             size: 13,

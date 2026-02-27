@@ -216,8 +216,16 @@ class _EspacioCardState extends State<EspacioCard> {
     );
   }
 
+  /// Calificación para mostrar: "Nuevo" o un número con un decimal (ej. 4.0).
+  static String _formatRating(String rating) {
+    if (rating == 'Nuevo') return rating;
+    final value = double.tryParse(rating);
+    return value != null ? value.toStringAsFixed(1) : rating;
+  }
+
   Widget _buildInfo(String precio) {
     final prop = widget.property;
+    final ratingDisplay = _formatRating(prop.rating);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -279,21 +287,12 @@ class _EspacioCardState extends State<EspacioCard> {
                 ),
                 const SizedBox(width: 2),
                 Text(
-                  prop.rating,
+                  ratingDisplay,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                if (prop.reviewCount > 0) ...[
-                  Text(
-                    ' (${prop.reviewCount})',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

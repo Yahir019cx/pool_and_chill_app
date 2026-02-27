@@ -1,12 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/features/properties/screens/publish.dart';
 
 /// Pantalla que se muestra cuando el usuario tiene isHostOnboarded=0 y role=guest,
 /// es decir, ya envió una propiedad pero aún no ha sido aprobada.
-class PendingApprovalScreen extends StatelessWidget {
+/// Si la propiedad tiene ID_Status = 6 (rechazada), no se muestra esta pantalla
+/// y se redirige a Publicar.
+class PendingApprovalScreen extends ConsumerStatefulWidget {
   const PendingApprovalScreen({super.key});
 
+  @override
+  ConsumerState<PendingApprovalScreen> createState() =>
+      _PendingApprovalScreenState();
+}
+
+class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
   static const Color mainColor = Color(0xFF3CA2A2);
+
+  static const int _rejectedStatusId = 6;
+
+  bool _isChecking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkPropertyStatus());
+  }
+
+  Future<void> _checkPropertyStatus() async {
+    try {
+      final service = ref.read(propertyServiceProvider);
+      final properties = await service.getMyProperties();
+      final hasRejected = properties.any((p) => p.status.id == _rejectedStatusId);
+      if (!mounted) return;
+      if (hasRejected) {
+        Navigator.of(context).pop();
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const PublishScreen(),
+          ),
+        );
+        return;
+      }
+      setState(() => _isChecking = false);
+    } catch (_) {
+      if (mounted) setState(() => _isChecking = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +64,11 @@ class PendingApprovalScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: _isChecking
+            ? const Center(
+                child: CircularProgressIndicator(color: mainColor),
+              )
+            : Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,

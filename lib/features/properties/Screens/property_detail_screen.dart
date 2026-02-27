@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart' as provider_pkg;
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
@@ -97,6 +99,98 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
       ),
     );
     overlay.insert(entry);
+  }
+
+  /// Muestra un sheet para abrir la ubicación en Google Maps, Apple Maps, etc.
+  void _showOpenInMapsSheet(
+    BuildContext context, {
+    required double lat,
+    required double lng,
+    String? address,
+  }) {
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Abrir ubicación en',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (isIOS)
+                ListTile(
+                  leading: const Icon(Icons.map_outlined, color: kDetailPrimary),
+                  title: const Text('Apple Maps'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _launchMapUrl(
+                      'https://maps.apple.com/?q=$lat,$lng',
+                      'Apple Maps',
+                    );
+                  },
+                ),
+              ListTile(
+                leading: const Icon(Icons.map, color: kDetailPrimary),
+                title: const Text('Google Maps'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  final query = address != null && address.isNotEmpty
+                      ? Uri.encodeComponent(address)
+                      : '$lat,$lng';
+                  _launchMapUrl(
+                    'https://www.google.com/maps/search/?api=1&query=$query',
+                    'Google Maps',
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.directions_rounded, color: kDetailPrimary),
+                title: Text(isIOS ? 'Otra app de mapas' : 'Elegir app de mapas'),
+                subtitle: Text(
+                  isIOS ? 'Abre con la app por defecto' : 'Google Maps, Waze, etc.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _launchMapUrl('geo:$lat,$lng', 'Mapas');
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchMapUrl(String url, String appName) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) TopChip.showError(context, 'No se pudo abrir $appName');
+      }
+    } catch (e) {
+      if (mounted) {
+        TopChip.showError(context, 'No se pudo abrir la ubicación');
+      }
+    }
   }
 
   @override
@@ -318,32 +412,82 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                       const SizedBox(height: 12),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          height: 200,
-                          width: double.infinity,
-                          child: GoogleMap(
-                            initialCameraPosition: CameraPosition(
-                              target: LatLng(
-                                prop.location!.latitude!,
-                                prop.location!.longitude!,
+                        child: Stack(
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              width: double.infinity,
+                              child: GoogleMap(
+                                initialCameraPosition: CameraPosition(
+                                  target: LatLng(
+                                    prop.location!.latitude!,
+                                    prop.location!.longitude!,
+                                  ),
+                                  zoom: 15,
+                                ),
+                                markers: {
+                                  Marker(
+                                    markerId: const MarkerId('property'),
+                                    position: LatLng(
+                                      prop.location!.latitude!,
+                                      prop.location!.longitude!,
+                                    ),
+                                  ),
+                                },
+                                zoomControlsEnabled: false,
+                                scrollGesturesEnabled: false,
+                                rotateGesturesEnabled: false,
+                                tiltGesturesEnabled: false,
+                                myLocationButtonEnabled: false,
                               ),
-                              zoom: 15,
                             ),
-                            markers: {
-                              Marker(
-                                markerId: const MarkerId('property'),
-                                position: LatLng(
-                                  prop.location!.latitude!,
-                                  prop.location!.longitude!,
+                            Positioned(
+                              bottom: 12,
+                              left: 12,
+                              right: 12,
+                              child: Center(
+                                child: Material(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  elevation: 2,
+                                  child: InkWell(
+                                    onTap: () => _showOpenInMapsSheet(
+                                      context,
+                                      lat: prop.location!.latitude!,
+                                      lng: prop.location!.longitude!,
+                                      address: prop.location!.formattedAddress,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 10,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.open_in_new_rounded,
+                                            size: 18,
+                                            color: kDetailPrimary,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Abrir en mapas',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: kDetailPrimary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            },
-                            zoomControlsEnabled: false,
-                            scrollGesturesEnabled: false,
-                            rotateGesturesEnabled: false,
-                            tiltGesturesEnabled: false,
-                            myLocationButtonEnabled: false,
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),

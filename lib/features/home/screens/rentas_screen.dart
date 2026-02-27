@@ -5,6 +5,7 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/rentas_provider.dart';
 import 'package:pool_and_chill_app/features/home/widgets/booking_card.dart';
 import 'booking_detail_screen.dart';
+import 'guest_property_review_screen.dart';
 
 class RentasScreen extends ConsumerStatefulWidget {
   const RentasScreen({super.key});
@@ -131,6 +132,14 @@ class _RentasScreenState extends ConsumerState<RentasScreen> {
                 builder: (_) => BookingDetailScreen(booking: booking),
               ),
             ),
+            onRateTap: booking.status.id == 4
+                ? () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            GuestPropertyReviewScreen(booking: booking),
+                      ),
+                    )
+                : null,
           );
         },
       ),

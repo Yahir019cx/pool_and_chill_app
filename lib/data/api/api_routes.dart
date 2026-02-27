@@ -36,6 +36,10 @@ class ApiRoutes {
   static const guestBookings = '/booking/guest/bookings';
   static const hostBookings = '/booking/host/bookings';
   static const bookingGuestReview = '/booking/guest/review';
+  /// Guest califica la propiedad (reserva pasada).
+  static const bookingPropertyReview = '/booking/property/review';
+  /// Guest califica al host (después de calificar propiedad).
+  static const bookingHostReview = '/booking/host/review';
 
   // UPDATE DE PROPIEDAD (host)
   static const updateBasicInfo = '/properties/update/basic-info';
