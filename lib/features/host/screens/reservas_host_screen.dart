@@ -312,11 +312,13 @@ class _CardImage extends StatelessWidget {
   final String? imageUrl;
   final bool isToday;
   final bool showQr;
+  final bool showReviewHint;
 
   const _CardImage({
     this.imageUrl,
     required this.isToday,
     required this.showQr,
+    this.showReviewHint = false,
   });
 
   static const _primary = Color(0xFF2D9D91);
@@ -354,6 +356,26 @@ class _CardImage extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.qr_code_scanner_rounded, size: 16, color: _primary),
+              ),
+            ),
+          if (showReviewHint)
+            Positioned(
+              bottom: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Calificar huésped',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
         ],
@@ -486,6 +508,7 @@ class _HostReservaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isProxima = booking.status.id == 2;
+    final isPasada = booking.status.id == 4;
     final isCancelada = booking.status.id == 5 || booking.status.id == 6;
     final dateRaw = booking.bookingDate.isNotEmpty ? booking.bookingDate : booking.checkInDate;
     final timeRange = _timeRange(booking.bookingStartTime, booking.bookingEndTime);
@@ -503,7 +526,12 @@ class _HostReservaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _CardImage(imageUrl: booking.propertyImageUrl, isToday: booking.isToday, showQr: isProxima),
+            _CardImage(
+              imageUrl: booking.propertyImageUrl,
+              isToday: booking.isToday,
+              showQr: isProxima,
+              showReviewHint: isPasada,
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(
@@ -547,6 +575,30 @@ class _HostReservaCard extends StatelessWidget {
                   ],
                   const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Divider(height: 1)),
                   _GuestRow(guest: booking.guest),
+                  if (isProxima) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HostQrScannerScreen(booking: booking),
+                          ),
+                        ),
+                        icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
+                        label: const Text('Escanear QR'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
