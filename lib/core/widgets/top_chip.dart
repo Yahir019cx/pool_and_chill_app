@@ -143,56 +143,64 @@ class _TopChipOverlayState extends State<_TopChipOverlay>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8) +
                   EdgeInsets.only(top: topPadding > 0 ? 0 : 8),
-              child: Material(
-                color: Colors.transparent,
-                child: GestureDetector(
-                  onTap: () => _ctrl.reverse().then((_) => widget.onDismiss()),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: TopChip._borderColor(widget.type),
-                        width: 1.2,
+              child: Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: GestureDetector(
+                    onTap: () =>
+                        _ctrl.reverse().then((_) => widget.onDismiss()),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: TopChip._borderColor(widget.type),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          TopChip._icon(widget.type),
-                          color: TopChip._iconColor(widget.type),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            widget.message,
-                            style: GoogleFonts.openSans(
-                              fontSize: 13,
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w500,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            TopChip._icon(widget.type),
+                            color: TopChip._iconColor(widget.type),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              widget.message,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.openSans(
+                                fontSize: 13,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ),
-                        GestureDetector(
-                          onTap: () =>
-                              _ctrl.reverse().then((_) => widget.onDismiss()),
-                          child: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.black38,
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () =>
+                                _ctrl.reverse().then((_) => widget.onDismiss()),
+                            child: const Icon(
+                              Icons.close,
+                              size: 16,
+                              color: Colors.black38,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
