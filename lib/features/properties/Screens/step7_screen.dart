@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:pool_and_chill_app/data/services/kyc_service.dart';
 import 'package:pool_and_chill_app/features/kyc/kyc_webview_screen.dart';
 import '../widgets/step_navigation_buttons.dart';
@@ -68,6 +70,8 @@ class _Step7ScreenState extends ConsumerState<Step7Screen> {
 
       if (status.isVerified ||
           status.verificationStatus.toUpperCase() == 'APPROVED') {
+        await context.read<AuthProvider>().refreshProfile();
+        if (!mounted) return;
         setState(() {
           _verified = true;
           _statusMessage = 'Identidad verificada correctamente.';

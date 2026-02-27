@@ -312,7 +312,7 @@ class _Step8ScreenState extends ConsumerState<Step8Screen> {
                   // Verificación de identidad (Didit)
                   Builder(
                     builder: (context) {
-                      final auth = context.read<AuthProvider>();
+                      final auth = context.watch<AuthProvider>();
                       final verified = auth.profile?.isIdentityVerified ?? false;
                       return _SummarySection(
                         title: 'Verificación de identidad',
