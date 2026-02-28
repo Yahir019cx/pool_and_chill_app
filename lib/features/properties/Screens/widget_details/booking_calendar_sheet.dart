@@ -803,7 +803,10 @@ class _BookingCalendarSheetState extends ConsumerState<BookingCalendarSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isConfirming = false);
-      final msg = e.toString().replaceFirst('Exception: ', '');
+      final raw = e.toString().replaceFirst('Exception: ', '');
+      final msg = raw.contains('GuestPhone') || raw.contains('NULL')
+          ? 'Para reservar, ingresa tu número de teléfono en Perfil → Modificar mis datos'
+          : raw;
       TopChip.showError(context, msg);
     }
   }
