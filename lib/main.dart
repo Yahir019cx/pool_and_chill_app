@@ -25,8 +25,7 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  Stripe.publishableKey =
-      'pk_test_51Suiwb1n9zmFHAn7FUZNOJZYdpzndQxY3CLtuEBTxdOg98v2kLbR38DLZP7EYUiHBMigeoTKwxLo6Uuhna3fNYXv00zgzZZczG';
+  Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY']!;
   await Stripe.instance.applySettings();
 
   final apiClient = ApiClient(

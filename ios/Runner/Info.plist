@@ -8,7 +8,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Necesitamos acceso a tu galería para elegir fotos de perfil y subir documentos</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Necesitamos acceso para guardar fotos</string>
+	<string>Necesitamos guardar las fotos de tu propiedad en la galería</string>
 
 	<!-- Micrófono y cámara requeridos por el WebView de verificación de identidad (Didit) -->
 	<key>NSMicrophoneUsageDescription</key>
