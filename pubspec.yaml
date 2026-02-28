@@ -2,7 +2,7 @@ name: pool_and_chill_app
 description: "Pool & Chill Flutter App"
 publish_to: 'none'
 
-version: 1.0.0+12
+version: 1.0.0+13
 
 environment:
   sdk: ^3.10.7
