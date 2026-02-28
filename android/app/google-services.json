@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "395705090497-cm8suoofu1g45tmb7g9jk5o9so8mrcr5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poolandchill.app",
+            "certificate_hash": "02a024c1388c1f22ab6f961068dff923414553dd"
+          }
+        },
+        {
+          "client_id": "395705090497-p1um15vcfdivkv6751c6hsk09l3v8mp6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.poolandchill.app",
+            "certificate_hash": "2a86e401d0fb5e7b7f6613e23f087474b526f50b"
+          }
+        },
+        {
           "client_id": "395705090497-saltsbp3pge7i4ot0iofk8u0gvke5aep.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
