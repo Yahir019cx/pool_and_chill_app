@@ -14,10 +14,13 @@ class MisEspaciosHostScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    // Excluir propiedades rechazadas (REJECTED / id 6)
-    final properties = authProvider.myProperties
-        .where((p) => p.status.code.toUpperCase() != 'REJECTED')
-        .toList();
+    // Solo mostrar propiedades activas (status 3) y pausadas (status 4)
+    final properties = authProvider.myProperties.where((p) {
+      final id = p.status.id;
+      if (id != null) return id == 3 || id == 4;
+      final code = p.status.code.toUpperCase();
+      return code == 'ACTIVE' || code == 'PAUSED';
+    }).toList();
     final isLoading = authProvider.isLoadingProperties;
     final activos = properties.where((p) => p.isActive).length;
 
