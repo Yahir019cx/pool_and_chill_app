@@ -91,6 +91,7 @@ class PropertySearchState {
   final int currentPage;
   final int totalCount;
   final int pageSize;
+  final bool hasMore;
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
@@ -101,19 +102,19 @@ class PropertySearchState {
     this.currentPage = 1,
     this.totalCount = 0,
     this.pageSize = 20,
+    this.hasMore = false,
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
     this.filters = const PropertySearchFilters(),
   });
 
-  bool get hasMore => properties.length < totalCount;
-
   PropertySearchState copyWith({
     List<SearchPropertyModel>? properties,
     int? currentPage,
     int? totalCount,
     int? pageSize,
+    bool? hasMore,
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
@@ -125,6 +126,7 @@ class PropertySearchState {
       currentPage: currentPage ?? this.currentPage,
       totalCount: totalCount ?? this.totalCount,
       pageSize: pageSize ?? this.pageSize,
+      hasMore: hasMore ?? this.hasMore,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: clearError ? null : (error ?? this.error),
@@ -140,13 +142,14 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
 
   PropertySearchNotifier(this._service) : super(const PropertySearchState());
 
-  /// Ejecuta una búsqueda. Si [reset] es `true`, reinicia a página 1.
+  /// Primera carga o refresh: page=1, reemplaza la lista. Load more: siguiente página, concatena data.properties. Para cuando data.hasMore === false.
   Future<void> search({bool reset = true}) async {
     if (reset) {
       state = state.copyWith(
         isLoading: true,
         currentPage: 1,
         properties: [],
+        hasMore: false,
         clearError: true,
       );
     } else {
@@ -179,6 +182,7 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
             : [...state.properties, ...response.properties],
         currentPage: response.page,
         totalCount: response.totalCount,
+        hasMore: response.hasMore,
         isLoading: false,
         isLoadingMore: false,
       );
@@ -254,25 +258,48 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
     search();
   }
 
-  /// Actualiza solo los filtros avanzados (precio mín/máx).
+  /// Actualiza filtros avanzados: ubicación (stateId, cityId), precio (min/max) y orden (sortBy).
   void applyAdvancedFilters({
+    int? stateId,
+    int? cityId,
     double? minPrice,
     double? maxPrice,
+    String? sortBy,
   }) {
     final f = state.filters;
     final newFilters = PropertySearchFilters(
       hasPool: f.hasPool,
       hasCabin: f.hasCabin,
       hasCamping: f.hasCamping,
-      stateId: f.stateId,
-      cityId: f.cityId,
+      stateId: stateId,
+      cityId: cityId,
       minPrice: minPrice,
       maxPrice: maxPrice,
       search: f.search,
       amenities: f.amenities,
-      sortBy: f.sortBy,
+      sortBy: sortBy,
     );
     state = state.copyWith(filters: newFilters);
+    search();
+  }
+
+  /// Ordenar resultados: price_asc (más baratos), price_desc (más caros), rating (mejor rating).
+  void setSortBy(String? sortBy) {
+    final f = state.filters;
+    state = state.copyWith(
+      filters: PropertySearchFilters(
+        hasPool: f.hasPool,
+        hasCabin: f.hasCabin,
+        hasCamping: f.hasCamping,
+        stateId: f.stateId,
+        cityId: f.cityId,
+        minPrice: f.minPrice,
+        maxPrice: f.maxPrice,
+        search: f.search,
+        amenities: f.amenities,
+        sortBy: sortBy,
+      ),
+    );
     search();
   }
 

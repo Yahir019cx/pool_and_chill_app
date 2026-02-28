@@ -241,7 +241,7 @@ class _EspacioHostCardState extends State<EspacioHostCard> {
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Color(0xFF2D9D91),
+              color: const Color(0xFF2D9D91),
             ),
           ),
         ),

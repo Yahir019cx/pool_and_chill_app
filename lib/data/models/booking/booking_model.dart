@@ -166,16 +166,31 @@ class GuestBookingsResponse {
 class GuestBookingsData {
   final BookingsSummary summary;
   final List<GuestBooking> bookings;
+  final BookingsPagination pagination;
 
-  const GuestBookingsData({required this.summary, required this.bookings});
+  const GuestBookingsData({
+    required this.summary,
+    required this.bookings,
+    required this.pagination,
+  });
 
   factory GuestBookingsData.fromJson(Map<String, dynamic> json) {
     final rawBookings = json['bookings'] as List<dynamic>? ?? [];
+    final rawPagination = json['pagination'] as Map<String, dynamic>?;
     return GuestBookingsData(
-      summary: BookingsSummary.fromJson(json['summary'] as Map<String, dynamic>),
+      summary: BookingsSummary.fromJson(
+          json['summary'] as Map<String, dynamic>? ?? {}),
       bookings: rawBookings
           .map((e) => GuestBooking.fromJson(e as Map<String, dynamic>))
           .toList(),
+      pagination: rawPagination != null
+          ? BookingsPagination.fromJson(rawPagination)
+          : const BookingsPagination(
+              page: 1,
+              pageSize: 20,
+              totalCount: 0,
+              hasMore: false,
+            ),
     );
   }
 }
@@ -202,6 +217,30 @@ class BookingsSummary {
       totalPasadas: json['totalPasadas'] as int? ?? 0,
       totalCanceladas: json['totalCanceladas'] as int? ?? 0,
       totalNoShow: json['totalNoShow'] as int? ?? 0,
+    );
+  }
+}
+
+/// Paginación devuelta por POST /booking/guest/bookings y POST /booking/host/bookings.
+class BookingsPagination {
+  final int page;
+  final int pageSize;
+  final int totalCount;
+  final bool hasMore;
+
+  const BookingsPagination({
+    required this.page,
+    required this.pageSize,
+    required this.totalCount,
+    required this.hasMore,
+  });
+
+  factory BookingsPagination.fromJson(Map<String, dynamic> json) {
+    return BookingsPagination(
+      page: json['page'] as int? ?? 1,
+      pageSize: json['pageSize'] as int? ?? 20,
+      totalCount: json['totalCount'] as int? ?? 0,
+      hasMore: json['hasMore'] as bool? ?? false,
     );
   }
 }
@@ -345,22 +384,33 @@ class HostBookingsResponse {
 class HostBookingsData {
   final BookingsSummary summary;
   final List<HostBooking> bookings;
+  final BookingsPagination pagination;
   final String? message;
 
   const HostBookingsData({
     required this.summary,
     required this.bookings,
+    required this.pagination,
     this.message,
   });
 
   factory HostBookingsData.fromJson(Map<String, dynamic> json) {
     final raw = json['bookings'] as List<dynamic>? ?? [];
+    final rawPagination = json['pagination'] as Map<String, dynamic>?;
     return HostBookingsData(
       summary: BookingsSummary.fromJson(
           json['summary'] as Map<String, dynamic>? ?? {}),
       bookings: raw
           .map((e) => HostBooking.fromJson(e as Map<String, dynamic>))
           .toList(),
+      pagination: rawPagination != null
+          ? BookingsPagination.fromJson(rawPagination)
+          : const BookingsPagination(
+              page: 1,
+              pageSize: 20,
+              totalCount: 0,
+              hasMore: false,
+            ),
       message: json['message'] as String?,
     );
   }

@@ -15,10 +15,30 @@ class RentasScreen extends ConsumerStatefulWidget {
 }
 
 class _RentasScreenState extends ConsumerState<RentasScreen> {
+  static const _primary = Color(0xFF3CA2A2);
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final state = ref.read(rentasProvider);
+    if (!state.hasMore || state.isLoadingMore) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      ref.read(rentasProvider.notifier).loadMore();
+    }
   }
 
   void _load() {
@@ -64,7 +84,7 @@ class _RentasScreenState extends ConsumerState<RentasScreen> {
       );
     }
 
-    if (state.isLoading) {
+    if (state.isLoading && state.bookings.isEmpty) {
       return const Center(
         child: CircularProgressIndicator(
           color: Color(0xFF3CA2A2),
@@ -117,29 +137,50 @@ class _RentasScreenState extends ConsumerState<RentasScreen> {
       return _buildEmptyFilter(state.filter);
     }
 
+    final showLoadMore = state.hasMore && state.isLoadingMore;
+    final itemCount = filtered.length + (state.hasMore ? 1 : 0);
+
     return RefreshIndicator(
-      color: const Color(0xFF3CA2A2),
+      color: _primary,
       onRefresh: () => ref.read(rentasProvider.notifier).load(),
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.only(top: 4, bottom: 100),
-        itemCount: filtered.length,
+        itemCount: itemCount,
         itemBuilder: (_, i) {
-          final booking = filtered[i];
-          return BookingCard(
-            booking: booking,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => BookingDetailScreen(booking: booking),
+          if (i < filtered.length) {
+            final booking = filtered[i];
+            return BookingCard(
+              booking: booking,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => BookingDetailScreen(booking: booking),
+                ),
               ),
-            ),
-            onRateTap: booking.status.id == 4
-                ? () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            GuestPropertyReviewScreen(booking: booking),
+              onRateTap: booking.status.id == 4
+                  ? () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              GuestPropertyReviewScreen(booking: booking),
+                        ),
+                      )
+                  : null,
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: showLoadMore
+                  ? const SizedBox(
+                      height: 32,
+                      width: 32,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF3CA2A2),
+                        strokeWidth: 2.5,
                       ),
                     )
-                : null,
+                  : const SizedBox.shrink(),
+            ),
           );
         },
       ),

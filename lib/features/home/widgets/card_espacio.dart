@@ -157,7 +157,7 @@ class _EspacioCardState extends State<EspacioCard> {
                             height: 24,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Color(0xFF3CA2A2),
+                              color: const Color(0xFF3CA2A2),
                             ),
                           ),
                         ),

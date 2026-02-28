@@ -508,9 +508,15 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
                     validator: (v) => v == null ? 'Requerido' : null,
                   );
                 },
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                loading: () => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                    child: SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: _mainColor),
+                    ),
+                  ),
                 ),
                 error: (e, _) => Text('Error: $e', style: const TextStyle(color: Colors.red, fontSize: 12)),
               ),
@@ -556,9 +562,15 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
                           validator: (v) => v == null ? 'Requerido' : null,
                         );
                       },
-                      loading: () => const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Center(child: SizedBox(height: 24, width: 24, child: CircularProgressIndicator(strokeWidth: 2))),
+                      loading: () => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Center(
+                          child: SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: _mainColor),
+                          ),
+                        ),
                       ),
                       error: (e, _) => Text('Error: $e', style: const TextStyle(color: Colors.red, fontSize: 12)),
                     ),

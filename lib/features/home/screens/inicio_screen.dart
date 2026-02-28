@@ -71,11 +71,14 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     ref.read(propertySearchProvider.notifier).toggleChipFilter(index);
   }
 
-  /// Al aplicar filtros avanzados.
+  /// Al aplicar filtros avanzados (ubicación, precio, orden).
   void _onAdvancedFiltersApply(AdvancedFilterValues values) {
     ref.read(propertySearchProvider.notifier).applyAdvancedFilters(
+          stateId: values.stateId,
+          cityId: values.cityId,
           minPrice: values.minPrice,
           maxPrice: values.maxPrice,
+          sortBy: values.sortBy,
         );
   }
 
@@ -121,8 +124,11 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     }
 
     final advancedValues = AdvancedFilterValues(
+      stateId: filters.stateId,
+      cityId: filters.cityId,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
+      sortBy: filters.sortBy,
     );
 
     return Column(

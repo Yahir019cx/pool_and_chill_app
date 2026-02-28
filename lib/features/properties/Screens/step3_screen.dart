@@ -88,7 +88,9 @@ class Step3Screen extends ConsumerWidget {
           const SizedBox(height: 16),
           Expanded(
             child: amenitiesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: const Color(0xFF3CA2A2)),
+              ),
               error: (e, _) => _buildOfflineContent(ref, tipos),
               data: (amenities) => _buildContent(ref, tipos, amenities),
             ),

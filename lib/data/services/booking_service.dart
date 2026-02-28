@@ -9,9 +9,22 @@ class BookingService {
 
   BookingService(this._apiClient);
 
-  /// POST /booking/host/bookings → retorna todas las reservas del host autenticado.
-  Future<HostBookingsResponse> getHostBookings() async {
-    final response = await _apiClient.post(ApiRoutes.hostBookings);
+  static const int _defaultPageSize = 20;
+
+  /// POST /booking/host/bookings → reservas del host con paginación.
+  /// Body opcional: { "page": number, "pageSize": number }. Por defecto page=1, pageSize=20.
+  Future<HostBookingsResponse> getHostBookings({
+    int page = 1,
+    int pageSize = _defaultPageSize,
+  }) async {
+    final body = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize.clamp(1, 100),
+    };
+    final response = await _apiClient.post(
+      ApiRoutes.hostBookings,
+      body: body,
+    );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -30,9 +43,20 @@ class BookingService {
     throw Exception(message);
   }
 
-  /// POST /booking/guest/bookings → retorna todas las reservas del guest autenticado.
-  Future<GuestBookingsResponse> getGuestBookings() async {
-    final response = await _apiClient.post(ApiRoutes.guestBookings);
+  /// POST /booking/guest/bookings → reservas del guest con paginación.
+  /// Body opcional: { "page": number, "pageSize": number }. Por defecto page=1, pageSize=20.
+  Future<GuestBookingsResponse> getGuestBookings({
+    int page = 1,
+    int pageSize = _defaultPageSize,
+  }) async {
+    final body = <String, dynamic>{
+      'page': page,
+      'pageSize': pageSize.clamp(1, 100),
+    };
+    final response = await _apiClient.post(
+      ApiRoutes.guestBookings,
+      body: body,
+    );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;

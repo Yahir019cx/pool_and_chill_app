@@ -78,11 +78,13 @@ class SearchPropertyModel {
 }
 
 /// Respuesta paginada del endpoint GET /properties/search.
+/// Query: ?page=1&pageSize=20. data.hasMore indica si hay más páginas.
 class SearchPropertiesResponse {
   final bool success;
   final int totalCount;
   final int page;
   final int pageSize;
+  final bool hasMore;
   final List<SearchPropertyModel> properties;
 
   SearchPropertiesResponse({
@@ -90,6 +92,7 @@ class SearchPropertiesResponse {
     required this.totalCount,
     required this.page,
     required this.pageSize,
+    required this.hasMore,
     required this.properties,
   });
 
@@ -97,9 +100,10 @@ class SearchPropertiesResponse {
     final data = json['data'] as Map<String, dynamic>? ?? {};
     return SearchPropertiesResponse(
       success: json['success'] == true,
-      totalCount: data['totalCount'] ?? 0,
-      page: data['page'] ?? 1,
-      pageSize: data['pageSize'] ?? 20,
+      totalCount: data['totalCount'] as int? ?? 0,
+      page: data['page'] as int? ?? 1,
+      pageSize: data['pageSize'] as int? ?? 20,
+      hasMore: data['hasMore'] as bool? ?? false,
       properties: (data['properties'] as List<dynamic>?)
               ?.map((e) =>
                   SearchPropertyModel.fromJson(e as Map<String, dynamic>))

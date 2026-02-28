@@ -9,28 +9,40 @@ enum RentaFilter { proximas, pasadas, canceladas }
 
 class RentasState {
   final bool isLoading;
+  final bool isLoadingMore;
   final List<GuestBooking> bookings;
+  final BookingsSummary? summary;
   final String? error;
   final RentaFilter filter;
+  final bool hasMore;
 
   const RentasState({
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.bookings = const [],
+    this.summary,
     this.error,
     this.filter = RentaFilter.proximas,
+    this.hasMore = false,
   });
 
   RentasState copyWith({
     bool? isLoading,
+    bool? isLoadingMore,
     List<GuestBooking>? bookings,
+    BookingsSummary? summary,
     String? error,
+    bool? hasMore,
     bool clearError = false,
     RentaFilter? filter,
   }) {
     return RentasState(
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       bookings: bookings ?? this.bookings,
+      summary: summary ?? this.summary,
       error: clearError ? null : (error ?? this.error),
+      hasMore: hasMore ?? this.hasMore,
       filter: filter ?? this.filter,
     );
   }
@@ -60,17 +72,42 @@ class RentasState {
 // ─── Notifier ──────────────────────────────────────────────────────
 
 class RentasNotifier extends StateNotifier<RentasState> {
+  RentasNotifier(this._service) : super(const RentasState());
+
+  static const int _pageSize = 20;
   final BookingService _service;
 
-  RentasNotifier(this._service) : super(const RentasState());
+  int get _nextPage =>
+      (state.bookings.length / _pageSize).ceil() + 1;
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await _service.getGuestBookings();
-      state = state.copyWith(isLoading: false, bookings: result.data.bookings);
+      final result = await _service.getGuestBookings(page: 1);
+      state = state.copyWith(
+        isLoading: false,
+        bookings: result.data.bookings,
+        summary: result.data.summary,
+        hasMore: result.data.pagination.hasMore,
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      final result = await _service.getGuestBookings(page: _nextPage);
+      state = state.copyWith(
+        isLoadingMore: false,
+        bookings: [...state.bookings, ...result.data.bookings],
+        summary: result.data.summary,
+        hasMore: result.data.pagination.hasMore,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
   }
 

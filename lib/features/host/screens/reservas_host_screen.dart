@@ -22,6 +22,7 @@ class ReservasHostScreen extends ConsumerStatefulWidget {
 
 class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
   _HostFilter _filter = _HostFilter.proximas;
+  final ScrollController _scrollController = ScrollController();
 
   static const _primary = Color(0xFF2D9D91);
 
@@ -29,6 +30,23 @@ class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final state = ref.read(hostReservasProvider);
+    if (!state.hasMore || state.isLoadingMore) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      ref.read(hostReservasProvider.notifier).loadMore();
+    }
   }
 
   void _load() {
@@ -123,16 +141,39 @@ class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
 
     if (filtered.isEmpty) return _buildEmptyFilter();
 
+    final showLoadMore = state.hasMore && state.isLoadingMore;
+    final itemCount = filtered.length + (state.hasMore ? 1 : 0);
+
     return RefreshIndicator(
       color: _primary,
       onRefresh: () => ref.read(hostReservasProvider.notifier).load(),
       child: ListView.builder(
+        controller: _scrollController,
         padding: const EdgeInsets.only(top: 4, bottom: 100),
-        itemCount: filtered.length,
-        itemBuilder: (_, i) => _HostReservaCard(
-          booking: filtered[i],
-          onTap: () => _handleTap(filtered[i]),
-        ),
+        itemCount: itemCount,
+        itemBuilder: (_, i) {
+          if (i < filtered.length) {
+            return _HostReservaCard(
+              booking: filtered[i],
+              onTap: () => _handleTap(filtered[i]),
+            );
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: showLoadMore
+                  ? const SizedBox(
+                      height: 32,
+                      width: 32,
+                      child: CircularProgressIndicator(
+                        color: _primary,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          );
+        },
       ),
     );
   }

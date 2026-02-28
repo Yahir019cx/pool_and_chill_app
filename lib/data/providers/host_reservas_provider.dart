@@ -7,29 +7,37 @@ import 'package:pool_and_chill_app/data/services/booking_service.dart';
 
 class HostReservasState {
   final bool isLoading;
+  final bool isLoadingMore;
   final List<HostBooking> bookings;
   final BookingsSummary? summary;
   final String? error;
+  final bool hasMore;
 
   const HostReservasState({
     this.isLoading = false,
+    this.isLoadingMore = false,
     this.bookings = const [],
     this.summary,
     this.error,
+    this.hasMore = false,
   });
 
   HostReservasState copyWith({
     bool? isLoading,
+    bool? isLoadingMore,
     List<HostBooking>? bookings,
     BookingsSummary? summary,
     String? error,
+    bool? hasMore,
     bool clearError = false,
   }) {
     return HostReservasState(
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       bookings: bookings ?? this.bookings,
       summary: summary ?? this.summary,
       error: clearError ? null : (error ?? this.error),
+      hasMore: hasMore ?? this.hasMore,
     );
   }
 
@@ -55,21 +63,43 @@ class HostReservasState {
 // ─── Notifier ──────────────────────────────────────────────────────
 
 class HostReservasNotifier extends StateNotifier<HostReservasState> {
+  HostReservasNotifier(this._service) : super(const HostReservasState());
+
+  static const int _pageSize = 20;
   final BookingService _service;
 
-  HostReservasNotifier(this._service) : super(const HostReservasState());
+  int get _nextPage =>
+      (state.bookings.length / _pageSize).ceil() + 1;
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final result = await _service.getHostBookings();
+      final result = await _service.getHostBookings(page: 1);
       state = state.copyWith(
         isLoading: false,
         bookings: result.data.bookings,
         summary: result.data.summary,
+        hasMore: result.data.pagination.hasMore,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+    final nextPage = _nextPage;
+    state = state.copyWith(isLoadingMore: true);
+    try {
+      final result = await _service.getHostBookings(page: nextPage);
+      state = state.copyWith(
+        isLoadingMore: false,
+        bookings: [...state.bookings, ...result.data.bookings],
+        summary: result.data.summary,
+        hasMore: result.data.pagination.hasMore,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
   }
 }
