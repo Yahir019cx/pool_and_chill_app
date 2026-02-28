@@ -84,15 +84,26 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleLink(Uri uri) {
-    // Solo manejamos poolandchill://property/{id}
+    String? id;
+
+    // Universal/App Link: https://poolandchill.com.mx/property/{id}
+    if (uri.scheme == 'https' &&
+        uri.host == 'poolandchill.com.mx' &&
+        uri.pathSegments.length >= 2 &&
+        uri.pathSegments[0] == 'property') {
+      id = uri.pathSegments[1];
+    }
+    // Custom scheme fallback: poolandchill://property/{id}
     // (Stripe usa poolandchill://stripe/... y lo maneja StripeConnectScreen)
-    if (uri.scheme != 'poolandchill' || uri.host != 'property') return;
-    final id = uri.pathSegments.isEmpty ? null : uri.pathSegments.first;
+    else if (uri.scheme == 'poolandchill' && uri.host == 'property') {
+      id = uri.pathSegments.isEmpty ? null : uri.pathSegments.first;
+    }
+
     if (id == null || id.isEmpty) return;
 
     _navigatorKey.currentState?.push(
       MaterialPageRoute(
-        builder: (_) => PropertyDetailScreen(propertyId: id),
+        builder: (_) => PropertyDetailScreen(propertyId: id!),
       ),
     );
   }

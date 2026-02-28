@@ -6,5 +6,10 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!-- Universal Links – property deep links (poolandchill.com.mx/property/{id}) -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:poolandchill.com.mx</string>
+	</array>
 </dict>
 </plist>

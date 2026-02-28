@@ -66,7 +66,7 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   }
 
   Future<void> _onShare(String propertyName) async {
-    final link = 'poolandchill://property/${widget.propertyId}';
+    final link = 'https://poolandchill.com.mx/property/${widget.propertyId}';
     if (!mounted) return;
 
     showModalBottomSheet(
