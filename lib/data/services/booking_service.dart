@@ -100,6 +100,54 @@ class BookingService {
     throw Exception(message);
   }
 
+  /// POST /booking/check-in → el host registra la llegada del huésped escaneando su QR.
+  Future<CheckInResponse> checkIn(CheckInRequest request) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingCheckIn,
+      body: request.toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return CheckInResponse.fromJson(json);
+    }
+
+    String message = 'Error al registrar el check-in';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
+  /// POST /booking/check-out → el host registra la salida del huésped.
+  Future<CheckOutResponse> checkOut(CheckOutRequest request) async {
+    final response = await _apiClient.post(
+      ApiRoutes.bookingCheckOut,
+      body: request.toJson(),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return CheckOutResponse.fromJson(json);
+    }
+
+    String message = 'Error al registrar el check-out';
+    try {
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      if (json['message'] != null) {
+        message = json['message'] is List
+            ? (json['message'] as List).join('\n')
+            : json['message'].toString();
+      }
+    } catch (_) {}
+    throw Exception(message);
+  }
+
   /// POST /booking/guest/review → el host califica al huésped.
   Future<void> reviewGuest(GuestReviewRequest request) async {
     final response = await _apiClient.post(

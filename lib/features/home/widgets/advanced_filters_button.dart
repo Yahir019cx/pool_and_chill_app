@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:pool_and_chill_app/data/models/catalog_model.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
-/// Valores de los filtros avanzados: ubicación, precio y orden.
+/// Valores de los filtros avanzados: ubicación, precio, orden y fechas.
 class AdvancedFilterValues {
   final int? stateId;
   final int? cityId;
@@ -11,6 +12,10 @@ class AdvancedFilterValues {
   final double? maxPrice;
   /// sortBy: 'price_asc' | 'price_desc' | 'rating'
   final String? sortBy;
+  /// Fecha de entrada en formato YYYY-MM-DD (opcional).
+  final String? checkInDate;
+  /// Fecha de salida en formato YYYY-MM-DD (opcional).
+  final String? checkOutDate;
 
   const AdvancedFilterValues({
     this.stateId,
@@ -18,6 +23,8 @@ class AdvancedFilterValues {
     this.minPrice,
     this.maxPrice,
     this.sortBy,
+    this.checkInDate,
+    this.checkOutDate,
   });
 
   bool get hasActiveFilters =>
@@ -25,7 +32,9 @@ class AdvancedFilterValues {
       cityId != null ||
       minPrice != null ||
       maxPrice != null ||
-      (sortBy != null && sortBy!.isNotEmpty);
+      (sortBy != null && sortBy!.isNotEmpty) ||
+      (checkInDate != null && checkInDate!.isNotEmpty) ||
+      (checkOutDate != null && checkOutDate!.isNotEmpty);
 
   static const empty = AdvancedFilterValues();
 }
@@ -146,8 +155,15 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
   int? _selectedStateId;
   int? _selectedCityId;
   String? _sortBy;
+  /// Fechas en formato YYYY-MM-DD para mostrar en el sheet y enviar al API.
+  String? _checkInDate;
+  String? _checkOutDate;
 
   static const _primary = Color(0xFF3CA2A2);
+
+  static String _formatDate(DateTime d) {
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
 
   @override
   void initState() {
@@ -155,6 +171,8 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
     _selectedStateId = widget.currentFilters.stateId;
     _selectedCityId = widget.currentFilters.cityId;
     _sortBy = widget.currentFilters.sortBy;
+    _checkInDate = widget.currentFilters.checkInDate;
+    _checkOutDate = widget.currentFilters.checkOutDate;
     if (widget.currentFilters.minPrice != null) {
       _minPriceController.text =
           widget.currentFilters.minPrice!.toStringAsFixed(0);
@@ -177,20 +195,91 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
       _selectedCityId != null ||
       _minPriceController.text.isNotEmpty ||
       _maxPriceController.text.isNotEmpty ||
-      (_sortBy != null && _sortBy!.isNotEmpty);
+      (_sortBy != null && _sortBy!.isNotEmpty) ||
+      (_checkInDate != null && _checkInDate!.isNotEmpty) ||
+      (_checkOutDate != null && _checkOutDate!.isNotEmpty);
 
   void _clearAll() {
     setState(() {
       _selectedStateId = null;
       _selectedCityId = null;
       _sortBy = null;
+      _checkInDate = null;
+      _checkOutDate = null;
       _minPriceController.clear();
       _maxPriceController.clear();
     });
     widget.onClear();
   }
 
+  Future<void> _pickCheckIn() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final maxDate = today.add(const Duration(days: 180));
+    final initial = _checkInDate != null
+        ? DateTime.tryParse(_checkInDate!) ?? today
+        : today;
+    final picked = await showDialog<DateTime>(
+      context: context,
+      builder: (ctx) => _FilterDatePickerDialog(
+        title: 'Check-in',
+        initialDate: initial.isBefore(today) ? today : initial,
+        firstDate: today,
+        lastDate: maxDate,
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() {
+        _checkInDate = _formatDate(picked);
+        if (_checkOutDate != null) {
+          final out = DateTime.tryParse(_checkOutDate!);
+          if (out != null && !out.isAfter(picked)) _checkOutDate = null;
+        }
+      });
+    }
+  }
+
+  Future<void> _pickCheckOut() async {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final maxDate = today.add(const Duration(days: 180));
+    final checkIn = _checkInDate != null ? DateTime.tryParse(_checkInDate!) : null;
+    final dayAfterCheckIn = checkIn != null ? checkIn.add(const Duration(days: 1)) : today;
+    final firstDate = dayAfterCheckIn.isBefore(today) ? today : dayAfterCheckIn;
+    final lastDate = maxDate.isBefore(firstDate) ? firstDate : maxDate;
+    final initialRaw = _checkOutDate != null ? DateTime.tryParse(_checkOutDate!) : null;
+    final initial = (initialRaw != null &&
+            !initialRaw.isBefore(firstDate) &&
+            !initialRaw.isAfter(lastDate))
+        ? initialRaw
+        : firstDate;
+    final picked = await showDialog<DateTime>(
+      context: context,
+      builder: (ctx) => _FilterDatePickerDialog(
+        title: 'Check-out',
+        initialDate: initial,
+        firstDate: firstDate,
+        lastDate: lastDate,
+      ),
+    );
+    if (picked != null && mounted) {
+      setState(() => _checkOutDate = _formatDate(picked));
+    }
+  }
+
   void _apply() {
+    if (_checkInDate != null &&
+        _checkOutDate != null &&
+        _checkOutDate!.compareTo(_checkInDate!) <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'La fecha de salida debe ser posterior a la de entrada.',
+          ),
+          backgroundColor: Color(0xFF3CA2A2),
+        ),
+      );
+      return;
+    }
     final minPrice = double.tryParse(_minPriceController.text);
     final maxPrice = double.tryParse(_maxPriceController.text);
     widget.onApply(AdvancedFilterValues(
@@ -199,6 +288,8 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
       minPrice: minPrice,
       maxPrice: maxPrice,
       sortBy: _sortBy,
+      checkInDate: _checkInDate,
+      checkOutDate: _checkOutDate,
     ));
   }
 
@@ -391,6 +482,55 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
             ),
             const SizedBox(height: 20),
 
+            // ── Fechas (opcionales) ──
+            const Text(
+              'Fechas de estancia',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: _pickCheckIn,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InputDecorator(
+                      decoration: _inputDecoration(labelText: 'Check-in (opcional)'),
+                      child: Text(
+                        _checkInDate ?? 'Seleccionar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _checkInDate != null
+                              ? Colors.black87
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: _pickCheckOut,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InputDecorator(
+                      decoration: _inputDecoration(labelText: 'Check-out (opcional)'),
+                      child: Text(
+                        _checkOutDate ?? 'Seleccionar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: _checkOutDate != null
+                              ? Colors.black87
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
             // ── Rango de precios ──
             const Text(
               'Rango de precios',
@@ -475,6 +615,145 @@ class _FiltersSheetState extends ConsumerState<_FiltersSheet> {
       onSelected: (v) => setState(() => _sortBy = v ? value : null),
       selectedColor: _primary.withValues(alpha: 0.2),
       checkmarkColor: _primary,
+    );
+  }
+}
+
+// ─── Diálogo de calendario para filtros (cuadrados, estilo refinado) ─────
+
+class _FilterDatePickerDialog extends StatefulWidget {
+  final String title;
+  final DateTime initialDate;
+  final DateTime firstDate;
+  final DateTime lastDate;
+
+  const _FilterDatePickerDialog({
+    required this.title,
+    required this.initialDate,
+    required this.firstDate,
+    required this.lastDate,
+  });
+
+  @override
+  State<_FilterDatePickerDialog> createState() => _FilterDatePickerDialogState();
+}
+
+class _FilterDatePickerDialogState extends State<_FilterDatePickerDialog> {
+  static const _primary = Color(0xFF3CA2A2);
+  late DateTime _focusedDay;
+  DateTime? _selectedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedDay = widget.initialDate;
+    _selectedDay = widget.initialDate;
+  }
+
+  void _onDaySelected(DateTime selected, DateTime focused) {
+    setState(() {
+      _selectedDay = selected;
+      _focusedDay = focused;
+    });
+    Navigator.of(context).pop(DateTime(selected.year, selected.month, selected.day));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final first = DateTime(widget.firstDate.year, widget.firstDate.month, widget.firstDate.day);
+    final lastFixed = DateTime(widget.lastDate.year, widget.lastDate.month, widget.lastDate.day);
+
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            TableCalendar<void>(
+              locale: 'es_ES',
+              firstDay: first,
+              lastDay: lastFixed,
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
+              onDaySelected: _onDaySelected,
+              onPageChanged: (focused) => setState(() => _focusedDay = focused),
+              calendarFormat: CalendarFormat.month,
+              availableCalendarFormats: const {CalendarFormat.month: 'Mes'},
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              headerStyle: HeaderStyle(
+                titleCentered: true,
+                formatButtonVisible: false,
+                titleTextStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+                leftChevronIcon: const Icon(Icons.chevron_left, color: _primary),
+                rightChevronIcon: const Icon(Icons.chevron_right, color: _primary),
+              ),
+              daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+                weekendStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+              calendarStyle: CalendarStyle(
+                cellMargin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                defaultTextStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+                weekendTextStyle: const TextStyle(fontSize: 14, color: Colors.black87),
+                outsideTextStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+                selectedDecoration: BoxDecoration(
+                  color: _primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                selectedTextStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: _primary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                todayTextStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

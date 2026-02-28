@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
@@ -7,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart' hide ChangeNotifierProvi
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+
+import 'package:pool_and_chill_app/features/properties/Screens/property_detail_screen.dart';
 
 import 'package:pool_and_chill_app/data/api/api_client.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
@@ -44,12 +49,58 @@ Future<void> main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    final appLinks = AppLinks();
+
+    // Cold start: app abierta desde link externo
+    final initial = await appLinks.getInitialLink();
+    if (initial != null) _handleLink(initial);
+
+    // Foreground: app ya abierta y llega un link
+    _linkSub = appLinks.uriLinkStream.listen(_handleLink);
+  }
+
+  void _handleLink(Uri uri) {
+    // Solo manejamos poolandchill://property/{id}
+    // (Stripe usa poolandchill://stripe/... y lo maneja StripeConnectScreen)
+    if (uri.scheme != 'poolandchill' || uri.host != 'property') return;
+    final id = uri.pathSegments.isEmpty ? null : uri.pathSegments.first;
+    if (id == null || id.isEmpty) return;
+
+    _navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => PropertyDetailScreen(propertyId: id),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Pool & Chill',
       theme: ThemeData(

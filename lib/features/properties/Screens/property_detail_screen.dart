@@ -66,16 +66,76 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   }
 
   Future<void> _onShare(String propertyName) async {
-    try {
-      await Share.share(
-        '$propertyName - Pool & Chill\nhttps://poolandchill.app',
-        subject: propertyName,
-      );
-    } catch (e) {
-      if (mounted) {
-        TopChip.showError(context, 'No se pudo compartir');
-      }
-    }
+    final link = 'poolandchill://property/${widget.propertyId}';
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Compartir propiedad',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                link,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: link));
+                      Navigator.pop(ctx);
+                      TopChip.showSuccess(context, 'Enlace copiado');
+                    },
+                    icon: const Icon(Icons.copy_outlined),
+                    label: const Text('Copiar enlace'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await SharePlus.instance.share(
+                        ShareParams(
+                          text: '¡Mira "$propertyName" en Pool & Chill!\n\n$link',
+                          subject: propertyName,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.share_outlined),
+                    label: const Text('Compartir'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF41838F),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _onFavoriteTap(String propertyId, bool currentlyFavorite) {

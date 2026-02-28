@@ -8,9 +8,9 @@ import 'package:pool_and_chill_app/features/host/screens/pending_approval_screen
 import 'package:pool_and_chill_app/features/host/home_host.dart';
 import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import 'perfil/ayuda_screen.dart';
-import 'perfil/terminos_screen.dart';
+import 'perfil/legal_webview_screen.dart';
 import 'perfil/editar_perfil.dart';
-import 'perfil/notificaciones_screen.dart';
+// import 'perfil/notificaciones_screen.dart';
 import 'perfil/seguridad_screen.dart';
 
 class PerfilScreen extends ConsumerWidget {
@@ -159,16 +159,16 @@ class PerfilScreen extends ConsumerWidget {
               _MenuSection(
                 title: 'Configuración',
                 items: [
-                  _MenuItem(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notificaciones',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificacionesScreen(),
-                      ),
-                    ),
-                  ),
+                  // _MenuItem(
+                  //   icon: Icons.notifications_outlined,
+                  //   label: 'Notificaciones',
+                  //   onTap: () => Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => const NotificacionesScreen(),
+                  //     ),
+                  //   ),
+                  // ),
                   _MenuItem(
                     icon: Icons.lock_outline,
                     label: 'Seguridad',
@@ -196,12 +196,28 @@ class PerfilScreen extends ConsumerWidget {
                     ),
                   ),
                   _MenuItem(
-                    icon: Icons.description_outlined,
+                    icon: Icons.article_outlined,
                     label: 'Términos y condiciones',
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const TerminosCondicionesScreen(),
+                        builder: (_) => LegalWebViewScreen(
+                          url: LegalUrls.terminos,
+                          title: 'Términos y condiciones',
+                        ),
+                      ),
+                    ),
+                  ),
+                  _MenuItem(
+                    icon: Icons.lock_outline,
+                    label: 'Aviso de privacidad',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LegalWebViewScreen(
+                          url: LegalUrls.privacidad,
+                          title: 'Aviso de privacidad',
+                        ),
                       ),
                     ),
                   ),

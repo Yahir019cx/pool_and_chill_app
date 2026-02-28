@@ -538,6 +538,128 @@ class HostBookingPayout {
   }
 }
 
+// ─── Check-In (POST /booking/check-in) ───────────────────────────────────────
+
+class CheckInRequest {
+  final String bookingCode;
+  final String bookingId;
+  final String qrHash;
+
+  const CheckInRequest({
+    required this.bookingCode,
+    required this.bookingId,
+    required this.qrHash,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'bookingCode': bookingCode,
+        'bookingId': bookingId,
+        'qrHash': qrHash,
+      };
+}
+
+class CheckInResponse {
+  final bool success;
+  final CheckInData data;
+
+  const CheckInResponse({required this.success, required this.data});
+
+  factory CheckInResponse.fromJson(Map<String, dynamic> json) {
+    return CheckInResponse(
+      success: json['success'] as bool? ?? false,
+      data: CheckInData.fromJson(json['data'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class CheckInData {
+  final String bookingCode;
+  final String checkInDate;
+  final String checkInAt;
+  final String message;
+
+  const CheckInData({
+    required this.bookingCode,
+    required this.checkInDate,
+    required this.checkInAt,
+    required this.message,
+  });
+
+  factory CheckInData.fromJson(Map<String, dynamic> json) {
+    return CheckInData(
+      bookingCode: json['bookingCode'] as String? ?? '',
+      checkInDate: json['checkInDate'] as String? ?? '',
+      checkInAt: json['checkInAt'] as String? ?? '',
+      message: json['message'] as String? ?? '',
+    );
+  }
+}
+
+// ─── Check-Out (POST /booking/check-out) ─────────────────────────────────────
+
+class CheckOutRequest {
+  final String bookingId;
+  final String propertyCondition; // 'good' | 'damaged'
+  final String? hostNotes;
+
+  const CheckOutRequest({
+    required this.bookingId,
+    required this.propertyCondition,
+    this.hostNotes,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'bookingId': bookingId,
+      'propertyCondition': propertyCondition,
+    };
+    if (hostNotes != null && hostNotes!.isNotEmpty) {
+      map['hostNotes'] = hostNotes;
+    }
+    return map;
+  }
+}
+
+class CheckOutResponse {
+  final bool success;
+  final CheckOutData data;
+
+  const CheckOutResponse({required this.success, required this.data});
+
+  factory CheckOutResponse.fromJson(Map<String, dynamic> json) {
+    return CheckOutResponse(
+      success: json['success'] as bool? ?? false,
+      data: CheckOutData.fromJson(json['data'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class CheckOutData {
+  final String bookingCode;
+  final String propertyCondition;
+  final int newStatus;
+  final String checkOutTime;
+  final String message;
+
+  const CheckOutData({
+    required this.bookingCode,
+    required this.propertyCondition,
+    required this.newStatus,
+    required this.checkOutTime,
+    required this.message,
+  });
+
+  factory CheckOutData.fromJson(Map<String, dynamic> json) {
+    return CheckOutData(
+      bookingCode: json['bookingCode'] as String? ?? '',
+      propertyCondition: json['propertyCondition'] as String? ?? '',
+      newStatus: json['newStatus'] as int? ?? 0,
+      checkOutTime: json['checkOutTime'] as String? ?? '',
+      message: json['message'] as String? ?? '',
+    );
+  }
+}
+
 // ─── Guest: evaluar propiedad (POST /booking/property/review) ────────────────
 
 class PropertyReviewRequest {

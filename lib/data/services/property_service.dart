@@ -35,7 +35,9 @@ class PropertyService {
   }
 
   /// Busca propiedades con filtros y paginación.
+  /// checkInDate y checkOutDate en formato YYYY-MM-DD (opcionales).
   Future<SearchPropertiesResponse> searchProperties({
+    bool? popular,
     bool? hasPool,
     bool? hasCabin,
     bool? hasCamping,
@@ -46,6 +48,8 @@ class PropertyService {
     String? search,
     String? amenities,
     String? sortBy,
+    String? checkInDate,
+    String? checkOutDate,
     int page = 1,
     int pageSize = 20,
   }) async {
@@ -54,6 +58,7 @@ class PropertyService {
       'pageSize': pageSize.toString(),
     };
 
+    if (popular == true) params['popular'] = 'true';
     if (hasPool == true) params['hasPool'] = 'true';
     if (hasCabin == true) params['hasCabin'] = 'true';
     if (hasCamping == true) params['hasCamping'] = 'true';
@@ -69,6 +74,12 @@ class PropertyService {
     }
     if (sortBy != null && sortBy.isNotEmpty) {
       params['sortBy'] = sortBy;
+    }
+    if (checkInDate != null && checkInDate.isNotEmpty) {
+      params['checkInDate'] = checkInDate;
+    }
+    if (checkOutDate != null && checkOutDate.isNotEmpty) {
+      params['checkOutDate'] = checkOutDate;
     }
 
     final queryString = params.entries

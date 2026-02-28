@@ -9,6 +9,8 @@ class PropertySearchFilters {
   final bool? hasPool;
   final bool? hasCabin;
   final bool? hasCamping;
+  /// true cuando el usuario eligió el chip "Populares" (GET ...?popular=true).
+  final bool? popular;
   final int? stateId;
   final int? cityId;
   final double? minPrice;
@@ -16,11 +18,16 @@ class PropertySearchFilters {
   final String? search;
   final String? amenities;
   final String? sortBy;
+  /// Fecha de entrada YYYY-MM-DD (opcional).
+  final String? checkInDate;
+  /// Fecha de salida YYYY-MM-DD (opcional).
+  final String? checkOutDate;
 
   const PropertySearchFilters({
     this.hasPool,
     this.hasCabin,
     this.hasCamping,
+    this.popular,
     this.stateId,
     this.cityId,
     this.minPrice,
@@ -28,12 +35,15 @@ class PropertySearchFilters {
     this.search,
     this.amenities,
     this.sortBy,
+    this.checkInDate,
+    this.checkOutDate,
   });
 
   PropertySearchFilters copyWith({
     bool? hasPool,
     bool? hasCabin,
     bool? hasCamping,
+    bool? popular,
     int? stateId,
     int? cityId,
     double? minPrice,
@@ -41,9 +51,12 @@ class PropertySearchFilters {
     String? search,
     String? amenities,
     String? sortBy,
+    String? checkInDate,
+    String? checkOutDate,
     bool clearHasPool = false,
     bool clearHasCabin = false,
     bool clearHasCamping = false,
+    bool clearPopular = false,
     bool clearStateId = false,
     bool clearCityId = false,
     bool clearMinPrice = false,
@@ -51,11 +64,14 @@ class PropertySearchFilters {
     bool clearSearch = false,
     bool clearAmenities = false,
     bool clearSortBy = false,
+    bool clearCheckInDate = false,
+    bool clearCheckOutDate = false,
   }) {
     return PropertySearchFilters(
       hasPool: clearHasPool ? null : (hasPool ?? this.hasPool),
       hasCabin: clearHasCabin ? null : (hasCabin ?? this.hasCabin),
       hasCamping: clearHasCamping ? null : (hasCamping ?? this.hasCamping),
+      popular: clearPopular ? null : (popular ?? this.popular),
       stateId: clearStateId ? null : (stateId ?? this.stateId),
       cityId: clearCityId ? null : (cityId ?? this.cityId),
       minPrice: clearMinPrice ? null : (minPrice ?? this.minPrice),
@@ -63,23 +79,28 @@ class PropertySearchFilters {
       search: clearSearch ? null : (search ?? this.search),
       amenities: clearAmenities ? null : (amenities ?? this.amenities),
       sortBy: clearSortBy ? null : (sortBy ?? this.sortBy),
+      checkInDate: clearCheckInDate ? null : (checkInDate ?? this.checkInDate),
+      checkOutDate: clearCheckOutDate ? null : (checkOutDate ?? this.checkOutDate),
     );
   }
 
-  /// `true` si hay al menos un filtro avanzado activo (precio, orden, etc.).
+  /// `true` si hay al menos un filtro avanzado activo (precio, orden, fechas, etc.).
   bool get hasAdvancedFilters =>
       minPrice != null ||
       maxPrice != null ||
       sortBy != null ||
       stateId != null ||
       cityId != null ||
-      amenities != null;
+      amenities != null ||
+      (checkInDate != null && checkInDate!.isNotEmpty) ||
+      (checkOutDate != null && checkOutDate!.isNotEmpty);
 
-  /// `true` si hay cualquier filtro activo (chips, búsqueda, avanzados).
+  /// `true` si hay cualquier filtro activo (chips, búsqueda, avanzados, fechas).
   bool get hasAnyFilter =>
       hasPool != null ||
       hasCabin != null ||
       hasCamping != null ||
+      popular == true ||
       (search != null && search!.isNotEmpty) ||
       hasAdvancedFilters;
 }
@@ -162,6 +183,7 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
       final f = state.filters;
 
       final response = await _service.searchProperties(
+        popular: f.popular,
         hasPool: f.hasPool,
         hasCabin: f.hasCabin,
         hasCamping: f.hasCamping,
@@ -172,6 +194,8 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
         search: f.search,
         amenities: f.amenities,
         sortBy: f.sortBy,
+        checkInDate: f.checkInDate,
+        checkOutDate: f.checkOutDate,
         page: page,
         pageSize: state.pageSize,
       );
@@ -212,6 +236,7 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
             hasPool: state.filters.hasPool,
             hasCabin: state.filters.hasCabin,
             hasCamping: state.filters.hasCamping,
+            popular: state.filters.popular,
             stateId: state.filters.stateId,
             cityId: state.filters.cityId,
             minPrice: state.filters.minPrice,
@@ -219,6 +244,8 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
             search: query,
             amenities: state.filters.amenities,
             sortBy: state.filters.sortBy,
+            checkInDate: state.filters.checkInDate,
+            checkOutDate: state.filters.checkOutDate,
           );
     state = state.copyWith(filters: newFilters);
     search();
@@ -226,25 +253,23 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
 
   /// Alterna un chip de tipo (selección individual: uno a la vez).
   /// Si el chip ya estaba seleccionado, lo deselecciona.
+  /// Índice 3 = Populares → envía popular=true en la búsqueda.
   void toggleChipFilter(int chipIndex) {
     final f = state.filters;
 
-    // Determinar si el chip actual ya está activo.
     final isActive = switch (chipIndex) {
       0 => f.hasCabin == true,
       1 => f.hasPool == true,
       2 => f.hasCamping == true,
+      3 => f.popular == true,
       _ => false,
     };
 
-    // Populares — sin lógica de backend por ahora.
-    if (chipIndex == 3) return;
-
-    // Si ya estaba activo → deseleccionar; si no → seleccionar solo este.
     final newFilters = PropertySearchFilters(
       hasPool: (!isActive && chipIndex == 1) ? true : null,
       hasCabin: (!isActive && chipIndex == 0) ? true : null,
       hasCamping: (!isActive && chipIndex == 2) ? true : null,
+      popular: (!isActive && chipIndex == 3) ? true : null,
       stateId: f.stateId,
       cityId: f.cityId,
       minPrice: f.minPrice,
@@ -252,25 +277,30 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
       search: f.search,
       amenities: f.amenities,
       sortBy: f.sortBy,
+      checkInDate: f.checkInDate,
+      checkOutDate: f.checkOutDate,
     );
 
     state = state.copyWith(filters: newFilters);
     search();
   }
 
-  /// Actualiza filtros avanzados: ubicación (stateId, cityId), precio (min/max) y orden (sortBy).
+  /// Actualiza filtros avanzados: ubicación, precio, orden y fechas (check-in/check-out).
   void applyAdvancedFilters({
     int? stateId,
     int? cityId,
     double? minPrice,
     double? maxPrice,
     String? sortBy,
+    String? checkInDate,
+    String? checkOutDate,
   }) {
     final f = state.filters;
     final newFilters = PropertySearchFilters(
       hasPool: f.hasPool,
       hasCabin: f.hasCabin,
       hasCamping: f.hasCamping,
+      popular: f.popular,
       stateId: stateId,
       cityId: cityId,
       minPrice: minPrice,
@@ -278,6 +308,8 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
       search: f.search,
       amenities: f.amenities,
       sortBy: sortBy,
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
     );
     state = state.copyWith(filters: newFilters);
     search();
@@ -291,6 +323,7 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
         hasPool: f.hasPool,
         hasCabin: f.hasCabin,
         hasCamping: f.hasCamping,
+        popular: f.popular,
         stateId: f.stateId,
         cityId: f.cityId,
         minPrice: f.minPrice,
@@ -298,6 +331,8 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
         search: f.search,
         amenities: f.amenities,
         sortBy: sortBy,
+        checkInDate: f.checkInDate,
+        checkOutDate: f.checkOutDate,
       ),
     );
     search();

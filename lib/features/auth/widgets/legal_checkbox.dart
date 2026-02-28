@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:pool_and_chill_app/features/home/screens/perfil/legal_webview_screen.dart';
+
 class LegalCheckbox extends StatelessWidget {
   /// Texto gris antes del link, ej: "Acepto los"
   final String prefix;
 
-  /// Texto en color brand que abre el modal, ej: "Términos y Condiciones"
+  /// Texto en color brand que abre el modal o WebView, ej: "Términos y Condiciones"
   final String highlight;
 
   final bool value;
-  final String legalContent;
+  /// Contenido legal en texto (si se usa, se muestra en diálogo).
+  final String? legalContent;
+  /// URL del documento en la web (recomendado para App Store). Abre WebView.
+  final String? legalUrl;
   final ValueChanged<bool> onChanged;
 
   const LegalCheckbox({
@@ -17,27 +22,43 @@ class LegalCheckbox extends StatelessWidget {
     required this.prefix,
     required this.highlight,
     required this.value,
-    required this.legalContent,
+    this.legalContent,
+    this.legalUrl,
     required this.onChanged,
-  });
+  }) : assert(legalContent != null || legalUrl != null,
+            'Debe indicar legalContent o legalUrl');
 
   static const _brandColor = Color(0xFF41838F);
 
-  void _showLegalDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(highlight, style: GoogleFonts.openSans(fontWeight: FontWeight.w600)),
-        content: SingleChildScrollView(child: Text(legalContent)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cerrar", style: TextStyle(color: _brandColor)),
+  void _onLegalTap(BuildContext context) {
+    if (legalUrl != null && legalUrl!.isNotEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => LegalWebViewScreen(
+            url: legalUrl!,
+            title: highlight,
           ),
-        ],
-      ),
-    );
+        ),
+      );
+      return;
+    }
+    if (legalContent != null) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(highlight, style: GoogleFonts.openSans(fontWeight: FontWeight.w600)),
+          content: SingleChildScrollView(child: Text(legalContent!)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cerrar", style: TextStyle(color: _brandColor)),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -63,7 +84,7 @@ class LegalCheckbox extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: GestureDetector(
-                onTap: () => _showLegalDialog(context),
+                onTap: () => _onLegalTap(context),
                 child: RichText(
                   text: TextSpan(
                     style: GoogleFonts.openSans(fontSize: 13, color: Colors.grey.shade600),

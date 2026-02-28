@@ -71,7 +71,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     ref.read(propertySearchProvider.notifier).toggleChipFilter(index);
   }
 
-  /// Al aplicar filtros avanzados (ubicación, precio, orden).
+  /// Al aplicar filtros avanzados (ubicación, precio, orden, fechas).
   void _onAdvancedFiltersApply(AdvancedFilterValues values) {
     ref.read(propertySearchProvider.notifier).applyAdvancedFilters(
           stateId: values.stateId,
@@ -79,6 +79,8 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
           minPrice: values.minPrice,
           maxPrice: values.maxPrice,
           sortBy: values.sortBy,
+          checkInDate: values.checkInDate,
+          checkOutDate: values.checkOutDate,
         );
   }
 
@@ -121,6 +123,8 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
       selectedChip = 1;
     } else if (filters.hasCamping == true) {
       selectedChip = 2;
+    } else if (filters.popular == true) {
+      selectedChip = 3;
     }
 
     final advancedValues = AdvancedFilterValues(
@@ -129,6 +133,8 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
       sortBy: filters.sortBy,
+      checkInDate: filters.checkInDate,
+      checkOutDate: filters.checkOutDate,
     );
 
     return Column(

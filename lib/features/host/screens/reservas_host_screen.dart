@@ -9,9 +9,10 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/host_reservas_provider.dart';
 
 import 'guest_review_screen.dart';
+import 'host_checkout_screen.dart';
 import 'host_qr_scanner_screen.dart';
 
-enum _HostFilter { proximas, pasadas, canceladas }
+enum _HostFilter { proximas, enCurso, pasadas, canceladas }
 
 class ReservasHostScreen extends ConsumerStatefulWidget {
   const ReservasHostScreen({super.key});
@@ -57,8 +58,12 @@ class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
   }
 
   List<HostBooking> _filtered(List<HostBooking> bookings) => switch (_filter) {
-        _HostFilter.proximas => bookings.where((b) => b.status.id == 2).toList(),
-        _HostFilter.pasadas => bookings.where((b) => b.status.id == 4).toList(),
+        _HostFilter.proximas =>
+          bookings.where((b) => b.status.id == 2).toList(),
+        _HostFilter.enCurso =>
+          bookings.where((b) => b.status.id == 3).toList(),
+        _HostFilter.pasadas =>
+          bookings.where((b) => b.status.id == 4).toList(),
         _HostFilter.canceladas =>
           bookings.where((b) => b.status.id == 5 || b.status.id == 6).toList(),
       };
@@ -178,18 +183,26 @@ class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
     );
   }
 
-  void _handleTap(HostBooking booking) {
+  Future<void> _handleTap(HostBooking booking) async {
     if (booking.status.id == 2) {
-      Navigator.push(
+      final success = await Navigator.push<bool>(
         context,
         MaterialPageRoute(builder: (_) => HostQrScannerScreen(booking: booking)),
       );
+      if (success == true && mounted) {
+        ref.read(hostReservasProvider.notifier).load();
+      }
     } else {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
-        builder: (_) => _DetailSheet(booking: booking),
+        builder: (_) => _DetailSheet(
+          booking: booking,
+          onCheckOutSuccess: () {
+            if (mounted) ref.read(hostReservasProvider.notifier).load();
+          },
+        ),
       );
     }
   }
@@ -200,6 +213,11 @@ class _ReservasHostScreenState extends ConsumerState<ReservasHostScreen> {
           Icons.event_note_outlined,
           'Sin reservas próximas',
           'Cuando recibas una reserva confirmada aparecerá aquí.',
+        ),
+      _HostFilter.enCurso => (
+          Icons.pool_outlined,
+          'Sin reservas en curso',
+          'Las reservas con check-in registrado aparecerán aquí.',
         ),
       _HostFilter.pasadas => (
           Icons.history_rounded,
@@ -266,6 +284,7 @@ class _FilterToggle extends StatelessWidget {
         child: Row(
           children: [
             _tab('Próximas', _HostFilter.proximas),
+            _tab('En curso', _HostFilter.enCurso),
             _tab('Pasadas', _HostFilter.pasadas),
             _tab('Canceladas', _HostFilter.canceladas),
           ],
@@ -300,7 +319,7 @@ class _FilterToggle extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               color: isActive ? Colors.white : Colors.grey.shade600,
             ),
@@ -353,12 +372,14 @@ class _CardImage extends StatelessWidget {
   final String? imageUrl;
   final bool isToday;
   final bool showQr;
+  final bool showCheckIn;
   final bool showReviewHint;
 
   const _CardImage({
     this.imageUrl,
     required this.isToday,
     required this.showQr,
+    this.showCheckIn = false,
     this.showReviewHint = false,
   });
 
@@ -398,6 +419,11 @@ class _CardImage extends StatelessWidget {
                 ),
                 child: const Icon(Icons.qr_code_scanner_rounded, size: 16, color: _primary),
               ),
+            ),
+          if (showCheckIn)
+            Positioned(
+              top: 12, right: 12,
+              child: _Chip(label: 'En curso', color: Colors.orange.shade600),
             ),
           if (showReviewHint)
             Positioned(
@@ -549,6 +575,7 @@ class _HostReservaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isProxima = booking.status.id == 2;
+    final isEnCurso = booking.status.id == 3;
     final isPasada = booking.status.id == 4;
     final isCancelada = booking.status.id == 5 || booking.status.id == 6;
     final dateRaw = booking.bookingDate.isNotEmpty ? booking.bookingDate : booking.checkInDate;
@@ -571,6 +598,7 @@ class _HostReservaCard extends StatelessWidget {
               imageUrl: booking.propertyImageUrl,
               isToday: booking.isToday,
               showQr: isProxima,
+              showCheckIn: isEnCurso,
               showReviewHint: isPasada,
             ),
             Padding(
@@ -621,14 +649,28 @@ class _HostReservaCard extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => HostQrScannerScreen(booking: booking),
-                          ),
-                        ),
+                        onPressed: onTap,
                         icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
                         label: const Text('Escanear QR'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (isEnCurso) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: onTap,
+                        icon: const Icon(Icons.logout_rounded, size: 20),
+                        label: const Text('Hacer check-out'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _primary,
                           foregroundColor: Colors.white,
@@ -654,13 +696,15 @@ class _HostReservaCard extends StatelessWidget {
 
 class _DetailSheet extends StatelessWidget {
   final HostBooking booking;
+  final VoidCallback? onCheckOutSuccess;
 
-  const _DetailSheet({required this.booking});
+  const _DetailSheet({required this.booking, this.onCheckOutSuccess});
 
   static const _primary = Color(0xFF2D9D91);
 
   @override
   Widget build(BuildContext context) {
+    final isEnCurso = booking.status.id == 3;
     final isPasada = booking.status.id == 4;
     final fmt = NumberFormat.currency(locale: 'es_MX', symbol: '\$', decimalDigits: 0);
     final dateRaw = booking.bookingDate.isNotEmpty ? booking.bookingDate : booking.checkInDate;
@@ -724,6 +768,33 @@ class _DetailSheet extends StatelessWidget {
                     _DetailRow(label: 'Ganancia', value: '${fmt.format(booking.payout.hostPayout)} MXN', valueColor: _primary),
                   ],
                   const SizedBox(height: 24),
+                  if (isEnCurso)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final success = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (_) => HostCheckOutScreen(booking: booking),
+                            ),
+                          );
+                          if (success == true && context.mounted) {
+                            Navigator.of(context).pop();
+                            onCheckOutSuccess?.call();
+                          }
+                        },
+                        icon: const Icon(Icons.logout_rounded, size: 18),
+                        label: const Text('Hacer check-out'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
                   if (isPasada)
                     SizedBox(
                       width: double.infinity,

@@ -31,7 +31,8 @@
       "Bash(\"/c/Users/pyahi/AppData/Local/Pub/Cache/bin/flutterfire.bat\" --version)",
       "Bash(/c/Users/pyahi/flutter/bin/flutter pub get)",
       "Bash(/c/Users/pyahi/flutter/bin/dart run flutter_launcher_icons)",
-      "Bash(xargs grep -l \"class.*Color\\\\|const.*primary\\\\|const.*secondary\")"
+      "Bash(xargs grep -l \"class.*Color\\\\|const.*primary\\\\|const.*secondary\")",
+      "WebFetch(domain:poolandchill.com.mx)"
     ]
   },
   "enableAllProjectMcpServers": true,

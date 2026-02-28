@@ -5,8 +5,8 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/seguridad_screen.dart';
-import 'package:pool_and_chill_app/features/home/screens/perfil/notificaciones_screen.dart';
-import 'package:pool_and_chill_app/features/home/screens/perfil/terminos_screen.dart';
+// import 'package:pool_and_chill_app/features/home/screens/perfil/notificaciones_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/legal_webview_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/ayuda_host_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/stripe_update_webview_screen.dart';
 
@@ -231,16 +231,16 @@ class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
                     label: 'Datos bancarios',
                     onTap: _openDatosBancarios,
                   ),
-                  _MenuItem(
-                    icon: Icons.notifications_outlined,
-                    label: 'Notificaciones',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const NotificacionesScreen(),
-                      ),
-                    ),
-                  ),
+                  // _MenuItem(
+                  //   icon: Icons.notifications_outlined,
+                  //   label: 'Notificaciones',
+                  //   onTap: () => Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => const NotificacionesScreen(),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               const SizedBox(height: 24),
@@ -266,12 +266,28 @@ class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
                     ),
                   ),
                   _MenuItem(
-                    icon: Icons.description_outlined,
+                    icon: Icons.article_outlined,
                     label: 'Términos y condiciones',
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const TerminosCondicionesScreen(),
+                        builder: (_) => LegalWebViewScreen(
+                          url: LegalUrls.terminos,
+                          title: 'Términos y condiciones',
+                        ),
+                      ),
+                    ),
+                  ),
+                  _MenuItem(
+                    icon: Icons.lock_outline,
+                    label: 'Aviso de privacidad',
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LegalWebViewScreen(
+                          url: LegalUrls.privacidad,
+                          title: 'Aviso de privacidad',
+                        ),
                       ),
                     ),
                   ),
