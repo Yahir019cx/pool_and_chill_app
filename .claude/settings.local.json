@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(xargs grep -l \"class.*Model\")"
+      "Bash(xargs grep -l \"class.*Model\")",
+      "Bash(flutter --version)",
+      "Read(//c/Users/pyahi/flutter/packages/flutter_tools/gradle/**)",
+      "Read(//c/Users/pyahi/flutter/**)",
+      "Bash(flutter pub describe flutter)"
     ]
   }
 }
