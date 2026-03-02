@@ -66,10 +66,10 @@ class UserProfileModel {
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
     return UserProfileModel(
-      userId: json['userId'],
-      email: json['email'],
+      userId: json['userId'] as String? ?? '',
+      email: json['email'] as String? ?? '',
 
-      phoneNumber: json['phoneNumber'],
+      phoneNumber: json['phoneNumber'] as String?,
 
       isEmailVerified: json['isEmailVerified'] == true,
       isPhoneVerified: json['isPhoneVerified'] == true,
@@ -78,14 +78,14 @@ class UserProfileModel {
 
       accountStatus: json['accountStatus'] ?? 0,
 
-      createdAt: DateTime.parse(json['createdAt']),
-      lastLoginAt: DateTime.parse(json['lastLoginAt']),
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      lastLoginAt: DateTime.parse(json['lastLoginAt'] ?? DateTime.now().toIso8601String()),
 
-      profileId: json['profileId'],
+      profileId: json['profileId'] as String? ?? '',
 
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      displayName: json['displayName'],
+      firstName: json['firstName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
+      displayName: json['displayName'] as String?,
 
       bio: json['bio'],
       profileImageUrl: json['profileImageUrl'],

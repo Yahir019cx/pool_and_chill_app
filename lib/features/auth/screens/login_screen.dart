@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -308,7 +310,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       _social(FontAwesomeIcons.google, Colors.red, _handleGoogleLogin),
                       const SizedBox(width: 15),
-                      _social(FontAwesomeIcons.apple, Colors.black, _handleAppleLogin),
+                      _social(
+                        FontAwesomeIcons.apple,
+                        Platform.isIOS ? Colors.black : Colors.grey.shade400,
+                        Platform.isIOS
+                            ? _handleAppleLogin
+                            : () => AuthSnackbar.showWarning(
+                                  context,
+                                  'Inicio con Apple solo está disponible en iOS',
+                                ),
+                      ),
                     ],
                   ),
                 ],

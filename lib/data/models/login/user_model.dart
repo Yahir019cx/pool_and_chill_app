@@ -39,13 +39,13 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      userId: json['userId'],
-      email: json['email'],
-      phoneNumber: json['phoneNumber'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      displayName: json['displayName'],
-      profileImageUrl: json['profileImageUrl'],
+      userId: json['userId'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phoneNumber: json['phoneNumber'] as String?,
+      firstName: json['firstName'] as String? ?? '',
+      lastName: json['lastName'] as String? ?? '',
+      displayName: json['displayName'] as String?,
+      profileImageUrl: json['profileImageUrl'] as String?,
       roles: List<String>.from(json['roles'] ?? []),
 
       isEmailVerified: _toBool(json['isEmailVerified']),
@@ -55,7 +55,7 @@ class UserModel {
       isHost: _toBool(json['isHost']),
       isStaff: _toBool(json['isStaff']),
 
-      accountStatus: json['accountStatus'],
+      accountStatus: json['accountStatus'] ?? 0,
     );
   }
 }

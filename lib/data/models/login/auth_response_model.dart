@@ -17,10 +17,10 @@ class AuthResponseModel {
 
   factory AuthResponseModel.fromJson(Map<String, dynamic> json) {
     return AuthResponseModel(
-      accessToken: json['accessToken'],
-      refreshToken: json['refreshToken'],
-      expiresIn: json['expiresIn'],
-      user: UserModel.fromJson(json['user']),
+      accessToken: json['accessToken'] as String? ?? '',
+      refreshToken: json['refreshToken'] as String? ?? '',
+      expiresIn: json['expiresIn'] ?? 0,
+      user: UserModel.fromJson(json['user'] ?? {}),
       isNewUser: json['isNewUser'] == true,
     );
   }
