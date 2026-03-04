@@ -10,6 +10,7 @@ import 'package:pool_and_chill_app/features/properties/Screens/Publish.dart';
 import 'perfil/ayuda_screen.dart';
 import 'perfil/legal_webview_screen.dart';
 import 'perfil/editar_perfil.dart';
+import 'perfil/delete_account.dart';
 // import 'perfil/notificaciones_screen.dart';
 import 'perfil/seguridad_screen.dart';
 
@@ -320,6 +321,17 @@ class PerfilScreen extends ConsumerWidget {
                         }
                       }
                     },
+                  ),
+                  _MenuItem(
+                    icon: Icons.person_off_rounded,
+                    label: 'Eliminar cuenta',
+                    isDestructive: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DeleteAccountScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),

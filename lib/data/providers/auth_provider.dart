@@ -338,6 +338,12 @@ class AuthProvider extends ChangeNotifier {
       // Si falla el endpoint, igual limpiamos localmente
     }
 
+    await clearSessionLocally();
+  }
+
+  /// Limpia sesión solo en el dispositivo (perfil, tokens, API).
+  /// No llama al backend. Útil tras eliminar cuenta (DELETE /users/me).
+  Future<void> clearSessionLocally() async {
     _profile = null;
     _myProperties = [];
     _guestModeOverride = false;

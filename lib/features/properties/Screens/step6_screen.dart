@@ -1,9 +1,11 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import '../widgets/step_navigation_buttons.dart';
@@ -45,8 +47,68 @@ class _Step6ScreenState extends ConsumerState<Step6Screen> {
     }
   }
 
+  Future<bool> _checkCameraPermission() async {
+    final status = await Permission.camera.status;
+    if (status.isGranted) return true;
+    if (status.isDenied) {
+      final result = await Permission.camera.request();
+      return result.isGranted;
+    }
+    if (status.isPermanentlyDenied && mounted) {
+      _showCameraPermissionDialog();
+    }
+    return false;
+  }
+
+  void _showCameraPermissionDialog() {
+    final dialog = Platform.isIOS
+        ? CupertinoAlertDialog(
+            title: const Text('Permiso necesario'),
+            content: const Text(
+                'Necesitamos acceso a tu cámara para tomar fotos del espacio.'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                child: const Text('Abrir configuración'),
+              ),
+            ],
+          )
+        : AlertDialog(
+            title: const Text('Permiso necesario'),
+            content: const Text(
+                'Necesitamos acceso a tu cámara para tomar fotos del espacio.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                child: const Text('Abrir configuración'),
+              ),
+            ],
+          );
+    showDialog(context: context, builder: (_) => dialog);
+  }
+
   Future<void> _pickImages(ImageSource source) async {
     try {
+      if (source == ImageSource.camera) {
+        final hasPermission = await _checkCameraPermission();
+        if (!hasPermission) return;
+      }
+
       setState(() => _isLoading = true);
 
       if (source == ImageSource.gallery) {
