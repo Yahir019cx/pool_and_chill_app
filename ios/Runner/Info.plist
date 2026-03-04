@@ -69,7 +69,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi</string>
+				<string>com.googleusercontent.apps.395705090497-3rlqeqvuoc2oattpvuv10b5rqde9m1jp</string>
 			</array>
 		</dict>
 		<!-- Deep links – Stripe Connect callback (poolandchill://stripe/return|refresh) -->

@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi.apps.googleusercontent.com</string>
+	<string>395705090497-3rlqeqvuoc2oattpvuv10b5rqde9m1jp.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.395705090497-birvaeic6bqrgf1ci06rfndfjo62tlvi</string>
+	<string>com.googleusercontent.apps.395705090497-3rlqeqvuoc2oattpvuv10b5rqde9m1jp</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>395705090497-lbmk3720mgq5fhq22qh4i3v0qhne96i6.apps.googleusercontent.com</string>
+	<string>395705090497-be0gg5jibi9gisjkmtdtep0o7qtrfcnt.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAEiuVzr4kQcju-LB2TpGBUCZoY__HG09A</string>
 	<key>GCM_SENDER_ID</key>
@@ -15,7 +15,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.poolandchill.app</string>
+	<string>com.nextdevcode.poolandchill</string>
 	<key>PROJECT_ID</key>
 	<string>poolandchillapp</string>
 	<key>STORAGE_BUCKET</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:395705090497:ios:30713314b87e7bd365ef40</string>
+	<string>1:395705090497:ios:cfb86d786b2585dd65ef40</string>
 </dict>
 </plist>
