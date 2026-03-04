@@ -202,14 +202,14 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
               Navigator.pop(context);
               _pickImage(ImageSource.camera);
             },
-            child: const Text('Tomar foto'),
+            child: const Text('Tomar foto', style: TextStyle(color: Colors.black87)),
           ),
           CupertinoActionSheetAction(
             onPressed: () {
               Navigator.pop(context);
               _pickImage(ImageSource.gallery);
             },
-            child: const Text('Elegir de galería'),
+            child: const Text('Elegir de galería', style: TextStyle(color: Colors.black87)),
           ),
           if (hasImage)
             CupertinoActionSheetAction(
@@ -223,7 +223,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+          child: const Text('Cancelar', style: TextStyle(color: Colors.black54)),
         ),
       ),
     );
