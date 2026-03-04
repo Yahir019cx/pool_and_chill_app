@@ -46,7 +46,7 @@ class _DeleteAccountScreenState extends State<DeleteAccountScreen> {
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(
               foregroundColor: Colors.red.shade600,
-              fontWeight: FontWeight.w600,
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
             child: const Text('Sí, eliminar mi cuenta'),
           ),
