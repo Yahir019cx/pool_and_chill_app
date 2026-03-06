@@ -41,7 +41,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   bool _isUploadingImage = false;
   bool _isSaving = false;
 
-  static const Color primary = Color(0xFF3CA2A2);
+  static const Color primary = Color(0xFF2D9D91);
   static const Color inputBg = Color(0xFFF4F6F8);
 
   @override
@@ -94,9 +94,17 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
   Widget build(BuildContext context) {
     final profile = context.watch<AuthProvider>().profile;
 
-    return Form(
-      key: _formKey,
-      child: ListView(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        colorScheme: Theme.of(context).colorScheme.copyWith(primary: primary),
+        inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
+          focusColor: primary,
+          cursorColor: primary,
+        ),
+      ),
+      child: Form(
+        key: _formKey,
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
         children: [
           /// ---------- AVATAR ----------
@@ -173,6 +181,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                   ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -295,7 +304,8 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
+                child: const Text('Cancelar'),
               ),
             ],
           ),
@@ -387,6 +397,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
               child: const Text('Cancelar'),
             ),
             TextButton(
@@ -394,6 +405,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
                 Navigator.pop(context);
                 openAppSettings();
               },
+              style: TextButton.styleFrom(foregroundColor: primary),
               child: const Text('Abrir configuración'),
             ),
           ],
@@ -470,6 +482,7 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey.shade700),
               child: const Text('Cancelar'),
             ),
             TextButton(
