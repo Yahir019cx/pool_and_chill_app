@@ -367,7 +367,7 @@ class PerfilScreen extends ConsumerWidget {
 
               // Acciones
               _MenuSection(
-                title: '',
+                title: 'Acciones',
                 items: [
                   _MenuItem(
                     icon: Icons.swap_horiz_rounded,
