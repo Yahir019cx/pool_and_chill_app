@@ -99,7 +99,6 @@ class _EditarPerfilFormState extends State<EditarPerfilForm> {
         colorScheme: Theme.of(context).colorScheme.copyWith(primary: primary),
         inputDecorationTheme: Theme.of(context).inputDecorationTheme.copyWith(
           focusColor: primary,
-          cursorColor: primary,
         ),
       ),
       child: Form(
