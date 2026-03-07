@@ -249,6 +249,8 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final googleSignIn = GoogleSignIn(
+        clientId:
+            '395705090497-3rlqeqvuoc2oattpvuv10b5rqde9m1jp.apps.googleusercontent.com',
         serverClientId:
             '395705090497-7n4m477hvgf5un5kiv0ajcfk58tvi9o2.apps.googleusercontent.com',
         scopes: ['email', 'profile'],
@@ -338,6 +340,12 @@ class AuthProvider extends ChangeNotifier {
       // Si falla el endpoint, igual limpiamos localmente
     }
 
+    await clearSessionLocally();
+  }
+
+  /// Limpia sesión solo en el dispositivo (perfil, tokens, API).
+  /// No llama al backend. Útil tras eliminar cuenta (DELETE /users/me).
+  Future<void> clearSessionLocally() async {
     _profile = null;
     _myProperties = [];
     _guestModeOverride = false;

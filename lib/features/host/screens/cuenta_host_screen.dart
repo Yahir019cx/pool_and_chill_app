@@ -5,10 +5,13 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/editar_perfil.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/seguridad_screen.dart';
+import 'package:pool_and_chill_app/features/home/screens/perfil/delete_account.dart';
 // import 'package:pool_and_chill_app/features/home/screens/perfil/notificaciones_screen.dart';
 import 'package:pool_and_chill_app/features/home/screens/perfil/legal_webview_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/ayuda_host_screen.dart';
 import 'package:pool_and_chill_app/features/host/screens/stripe_update_webview_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class CuentaHostScreen extends ConsumerStatefulWidget {
   const CuentaHostScreen({super.key});
@@ -19,7 +22,139 @@ class CuentaHostScreen extends ConsumerStatefulWidget {
 
 class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
   static const Color primary = Color(0xFF2D9D91);
+  static const _supportEmail = 'team@poolandchill.com.mx';
+  static const _whatsappPhone = '524493629233';
   bool _loadingStripe = false;
+
+  void _showReportSheet(BuildContext context, AuthProvider auth) {
+    final profile = auth.profile;
+    final userName = profile?.displayName ??
+        '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}'.trim();
+    final userEmail = profile?.email ?? '';
+
+    final emailBody = 'Hola equipo de Pool&Chill,\n\n'
+        'Quiero reportar un problema.\n\n'
+        'Nombre: $userName\n'
+        'Correo de cuenta: $userEmail\n\n'
+        '[Describe aquí el problema]\n\nGracias.';
+
+    final whatsAppMsg =
+        'Hola! Soy $userName ($userEmail) y quiero reportar un problema en Pool&Chill.';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const Text(
+              'Reportar un problema',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Elige cómo prefieres enviarnos tu reporte.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+            ),
+            const SizedBox(height: 20),
+            _reportTile(
+              icon: Icons.email_outlined,
+              color: primary,
+              label: 'Correo electrónico',
+              subtitle: _supportEmail,
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                final query = [
+                  'subject=${Uri.encodeComponent('Reporte de problema – Pool&Chill')}',
+                  'body=${Uri.encodeComponent(emailBody)}',
+                ].join('&');
+                final uri = Uri.parse('mailto:$_supportEmail?$query');
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {}
+              },
+            ),
+            const SizedBox(height: 12),
+            _reportTile(
+              icon: FontAwesomeIcons.whatsapp,
+              color: const Color(0xFF25D366),
+              label: 'WhatsApp',
+              subtitle: 'Respuesta rápida · disponible 9–18 h',
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                final uri = Uri.parse(
+                  'https://wa.me/$_whatsappPhone?text=${Uri.encodeComponent(whatsAppMsg)}',
+                );
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {}
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _reportTile({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.grey.shade50,
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 1),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey.shade500)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 13, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showTopChip(String msg, {bool success = false}) {
     late OverlayEntry entry;
@@ -266,6 +401,11 @@ class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
                     ),
                   ),
                   _MenuItem(
+                    icon: Icons.report_problem_outlined,
+                    label: 'Reportar un problema',
+                    onTap: () => _showReportSheet(context, context.read<AuthProvider>()),
+                  ),
+                  _MenuItem(
                     icon: Icons.article_outlined,
                     label: 'Términos y condiciones',
                     onTap: () => Navigator.push(
@@ -295,7 +435,7 @@ class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
               ),
               const SizedBox(height: 24),
               _MenuSection(
-                title: '',
+                title: 'Acciones',
                 items: [
                   _MenuItem(
                     icon: Icons.swap_horiz_rounded,
@@ -347,6 +487,17 @@ class _CuentaHostScreenState extends ConsumerState<CuentaHostScreen> {
                       }
                     },
                     isDestructive: true,
+                  ),
+                  _MenuItem(
+                    icon: Icons.person_off_rounded,
+                    label: 'Eliminar cuenta',
+                    isDestructive: true,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DeleteAccountScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),

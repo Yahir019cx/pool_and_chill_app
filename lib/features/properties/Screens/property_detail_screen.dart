@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart' as provider_pkg;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -132,6 +133,144 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                 ),
               ],
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const _supportEmail = 'team@poolandchill.com.mx';
+  static const _whatsappPhone = '524493629233';
+
+  void _onReport(String propertyName) {
+    final auth =
+        provider_pkg.Provider.of<AuthProvider>(context, listen: false);
+    final profile = auth.profile;
+    final userName = profile?.displayName ??
+        '${profile?.firstName ?? ''} ${profile?.lastName ?? ''}'.trim();
+    final userEmail = profile?.email ?? '';
+    final link = 'https://poolandchill.com.mx/property/${widget.propertyId}';
+
+    final emailBody = 'Hola equipo de Pool&Chill,\n\n'
+        'Quiero reportar un contenido inapropiado.\n\n'
+        'Propiedad: $propertyName\n'
+        'Enlace: $link\n\n'
+        'Nombre: $userName\n'
+        'Correo de cuenta: $userEmail\n\n'
+        '[Describe aquí el problema]\n\nGracias.';
+
+    final whatsAppMsg =
+        'Hola! Soy $userName ($userEmail) y quiero reportar contenido inapropiado en la propiedad "$propertyName". Enlace: $link';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            const Text(
+              'Reportar contenido inapropiado',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Si consideras que esta publicación incumple nuestras normas de comunidad, puedes reportarla.',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+            ),
+            const SizedBox(height: 20),
+            _reportContactTile(
+              icon: Icons.email_outlined,
+              color: kDetailPrimary,
+              label: 'Correo electrónico',
+              subtitle: _supportEmail,
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                final query = [
+                  'subject=${Uri.encodeComponent('Reporte de contenido – Pool&Chill')}',
+                  'body=${Uri.encodeComponent(emailBody)}',
+                ].join('&');
+                final uri = Uri.parse('mailto:$_supportEmail?$query');
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {}
+              },
+            ),
+            const SizedBox(height: 12),
+            _reportContactTile(
+              icon: FontAwesomeIcons.whatsapp,
+              color: const Color(0xFF25D366),
+              label: 'WhatsApp',
+              subtitle: 'Respuesta rápida',
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                final uri = Uri.parse(
+                  'https://wa.me/$_whatsappPhone?text=${Uri.encodeComponent(whatsAppMsg)}',
+                );
+                try {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } catch (_) {}
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reportContactTile({
+    required IconData icon,
+    required Color color,
+    required String label,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.grey.shade50,
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 1),
+                  Text(subtitle,
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey.shade500)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 13, color: Colors.grey.shade400),
           ],
         ),
       ),
@@ -557,8 +696,13 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                     if (prop.owner != null) ...[
                       _divider(),
                       _buildOwnerCard(prop.owner!),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                     ],
+
+                    // ─── Report ───────────────────────────────
+                    _divider(),
+                    _buildReportButton(prop.propertyName),
+                    const SizedBox(height: 8),
 
                     SizedBox(height: 80 + bottomPadding),
                   ],
@@ -851,6 +995,29 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildReportButton(String propertyName) {
+    return GestureDetector(
+      onTap: () => _onReport(propertyName),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(Icons.flag_outlined, size: 20, color: Colors.grey.shade500),
+            const SizedBox(width: 8),
+            Text(
+              'Reportar este anuncio',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade500,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -98,6 +98,36 @@ class UserService {
     }
   }
 
+  /// Desactiva la cuenta del usuario (DELETE /users/me).
+  /// No envía body; solo Authorization: Bearer {accessToken}.
+  /// En 200 el backend devuelve userId, message y deactivatedAt.
+  Future<void> deleteAccount() async {
+    final response = await api.delete(
+      ApiRoutes.me,
+      withAuth: true,
+    );
+
+    if (response.statusCode == 200) {
+      return;
+    }
+
+    if (response.statusCode == 401) {
+      throw Exception('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    }
+
+    try {
+      final error = jsonDecode(response.body) as Map<String, dynamic>;
+      final message = error['message'];
+      final msg = message is List
+          ? (message.isNotEmpty ? message.first.toString() : 'Error al eliminar la cuenta')
+          : message?.toString() ?? 'Error al eliminar la cuenta';
+      throw Exception(msg);
+    } catch (e) {
+      if (e is Exception && e.toString().startsWith('Exception:')) rethrow;
+      throw Exception('No se pudo eliminar la cuenta. Intenta de nuevo.');
+    }
+  }
+
   /// Traduce mensajes técnicos del backend a mensajes amigables para el usuario
   static String _parsearErrorPerfil(String msg) {
     final lower = msg.toLowerCase();
