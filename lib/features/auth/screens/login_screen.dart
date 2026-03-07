@@ -142,187 +142,190 @@ class _LoginScreenState extends State<LoginScreen> {
             top: height * 0.27,
             left: 0,
             right: 0,
+            bottom: 0,
             child: Container(
-              height: height * 0.6,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(70)),
               ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 50),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 30),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 50),
 
-                  /// Toggle
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 248, 248, 248),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 5,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: ToggleButtons(
-                      borderRadius: BorderRadius.circular(20),
-                      borderColor: Colors.transparent,
-                      selectedBorderColor: Colors.transparent,
-                      fillColor: const Color.fromARGB(255, 236, 242, 243),
-                      selectedColor: const Color.fromARGB(255, 69, 145, 155),
-                      color: const Color.fromARGB(255, 19, 19, 19),
-                      constraints: const BoxConstraints(
-                        minHeight: 50,
-                        minWidth: 120,
+                    /// Toggle
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 248, 248, 248),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 5,
+                            offset: Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      isSelected: [
-                        _selectedIndex == 0,
-                        _selectedIndex == 1,
-                      ],
-                      onPressed: (index) {
-                        setState(() => _selectedIndex = index);
-                        if (index == 1) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterScreen(),
-                            ),
-                          );
-                        }
-                      },
-                      children: [
-                        Text(
-                          'Log In',
-                          style: GoogleFonts.lilitaOne(fontSize: 16),
+                      child: ToggleButtons(
+                        borderRadius: BorderRadius.circular(20),
+                        borderColor: Colors.transparent,
+                        selectedBorderColor: Colors.transparent,
+                        fillColor: const Color.fromARGB(255, 236, 242, 243),
+                        selectedColor: const Color.fromARGB(255, 69, 145, 155),
+                        color: const Color.fromARGB(255, 19, 19, 19),
+                        constraints: const BoxConstraints(
+                          minHeight: 50,
+                          minWidth: 120,
                         ),
-                        Text(
-                          'Sign In',
-                          style: GoogleFonts.lilitaOne(fontSize: 16),
-                        ),
-                      ],
+                        isSelected: [
+                          _selectedIndex == 0,
+                          _selectedIndex == 1,
+                        ],
+                        onPressed: (index) {
+                          setState(() => _selectedIndex = index);
+                          if (index == 1) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const RegisterScreen(),
+                              ),
+                            );
+                          }
+                        },
+                        children: [
+                          Text(
+                            'Log In',
+                            style: GoogleFonts.lilitaOne(fontSize: 16),
+                          ),
+                          Text(
+                            'Sign In',
+                            style: GoogleFonts.lilitaOne(fontSize: 16),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 50),
+                    const SizedBox(height: 50),
 
-                  _buildInput(
-                    controller: _emailController,
-                    label: 'Correo electrónico',
-                  ),
+                    _buildInput(
+                      controller: _emailController,
+                      label: 'Correo electrónico',
+                    ),
 
-                  const SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                  _buildPasswordInput(),
+                    _buildPasswordInput(),
 
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                  // Forgot password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 40),
-                      child: TextButton(
-                        onPressed: () => ForgotPasswordModal.show(context),
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 32),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: GoogleFonts.openSans(
-                            fontSize: 13,
-                            color: const Color.fromARGB(255, 69, 145, 155),
-                            fontWeight: FontWeight.w600,
+                    // Forgot password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 40),
+                        child: TextButton(
+                          onPressed: () => ForgotPasswordModal.show(context),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 32),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            '¿Olvidaste tu contraseña?',
+                            style: GoogleFonts.openSans(
+                              fontSize: 13,
+                              color: const Color.fromARGB(255, 69, 145, 155),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  ElevatedButton(
-                    onPressed: auth.isLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 80,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        side: const BorderSide(
-                          color: Color.fromARGB(255, 69, 145, 155),
-                          width: 2,
+                    ElevatedButton(
+                      onPressed: auth.isLoading ? null : _handleLogin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 80,
+                          vertical: 15,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          side: const BorderSide(
+                            color: Color.fromARGB(255, 69, 145, 155),
+                            width: 2,
+                          ),
                         ),
                       ),
-                    ),
-                    child: auth.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Color.fromARGB(255, 69, 145, 155),
+                      child: auth.isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color.fromARGB(255, 69, 145, 155),
+                                ),
+                              ),
+                            )
+                          : Text(
+                              'Log In',
+                              style: GoogleFonts.lilitaOne(
+                                fontSize: 16,
+                                color: const Color.fromARGB(255, 69, 145, 155),
                               ),
                             ),
-                          )
-                        : Text(
-                            'Log In',
-                            style: GoogleFonts.lilitaOne(
-                              fontSize: 16,
-                              color: const Color.fromARGB(255, 69, 145, 155),
-                            ),
+                    ),
+
+                    const SizedBox(height: 60),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            color: Color.fromARGB(255, 62, 131, 140),
+                            thickness: 2,
+                            indent: 40,
+                            endIndent: 10,
                           ),
-                  ),
-
-                  const SizedBox(height: 60),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          color: Color.fromARGB(255, 62, 131, 140),
-                          thickness: 2,
-                          indent: 40,
-                          endIndent: 10,
                         ),
-                      ),
-                      Text("o bien", style: GoogleFonts.openSans(fontSize: 14)),
-                      Expanded(
-                        child: Divider(
-                          color: Color.fromARGB(255, 69, 145, 155),
-                          thickness: 2,
-                          indent: 10,
-                          endIndent: 40,
+                        Text("o bien", style: GoogleFonts.openSans(fontSize: 14)),
+                        Expanded(
+                          child: Divider(
+                            color: Color.fromARGB(255, 69, 145, 155),
+                            thickness: 2,
+                            indent: 10,
+                            endIndent: 40,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
 
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _social(FontAwesomeIcons.google, Colors.red, _handleGoogleLogin),
-                      const SizedBox(width: 15),
-                      _social(
-                        FontAwesomeIcons.apple,
-                        Platform.isIOS ? Colors.black : Colors.grey.shade400,
-                        Platform.isIOS
-                            ? _handleAppleLogin
-                            : () => AuthSnackbar.showWarning(
-                                  context,
-                                  'Inicio con Apple solo está disponible en iOS',
-                                ),
-                      ),
-                    ],
-                  ),
-                ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _social(FontAwesomeIcons.google, Colors.red, _handleGoogleLogin),
+                        const SizedBox(width: 15),
+                        _social(
+                          FontAwesomeIcons.apple,
+                          Platform.isIOS ? Colors.black : Colors.grey.shade400,
+                          Platform.isIOS
+                              ? _handleAppleLogin
+                              : () => AuthSnackbar.showWarning(
+                                    context,
+                                    'Inicio con Apple solo está disponible en iOS',
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
