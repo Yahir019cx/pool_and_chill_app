@@ -44,6 +44,7 @@ class _BookingReviewScreenState extends State<BookingReviewScreen> {
               widget.bookingResponse.data.payment.clientSecret,
           merchantDisplayName: 'Pool & Chill',
           style: ThemeMode.system,
+          returnURL: 'poolandchill://stripe-redirect',
         ),
       );
 
