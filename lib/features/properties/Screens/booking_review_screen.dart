@@ -62,13 +62,16 @@ class _BookingReviewScreenState extends State<BookingReviewScreen> {
         ),
       );
     } on StripeException catch (e) {
+      debugPrint('⚠️ StripeException: code=${e.error.code}, message=${e.error.message}, localizedMessage=${e.error.localizedMessage}, declineCode=${e.error.declineCode}');
       if (!mounted) return;
       setState(() => _isPaying = false);
       final msg = e.error.localizedMessage ??
           e.error.message ??
           'El pago fue cancelado';
       TopChip.showError(context, msg);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('⚠️ Payment error: $e');
+      debugPrint('⚠️ Stacktrace: $st');
       if (!mounted) return;
       setState(() => _isPaying = false);
       TopChip.showError(context, 'Ocurrió un error al procesar el pago');
