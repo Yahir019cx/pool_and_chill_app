@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/models/catalog_model.dart';
 import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
@@ -23,7 +22,7 @@ class Step2Screen extends ConsumerStatefulWidget {
 
 class _Step2ScreenState extends ConsumerState<Step2Screen> {
   GoogleMapController? _mapController;
-  LatLng _center = const LatLng(21.9944, -102.2826);
+  LatLng _center = const LatLng(21.8818, -102.2916);
   LatLng? _selectedLocation;
 
   @override
@@ -50,170 +49,17 @@ class _Step2ScreenState extends ConsumerState<Step2Screen> {
     );
   }
 
-  /// Normaliza texto para comparar con el catálogo (minúsculas, sin acentos).
-  static String _normalize(String s) {
-    const withAccents = 'áéíóúñüÁÉÍÓÚÑÜ';
-    const withoutAccents = 'aeiounuAEIOUNU';
-    var t = s.trim().toLowerCase();
-    for (var i = 0; i < withAccents.length; i++) {
-      t = t.replaceAll(withAccents[i], withoutAccents[i].toLowerCase());
-    }
-    return t;
-  }
-
-  /// Quita prefijos típicos de estado/municipio para mejorar el match con el catálogo.
-  static String _cleanForMatch(String s) {
-    var t = s.trim();
-    const prefixes = [
-      'Estado de ',
-      'Estado ',
-      'Edo. de ',
-      'Edo. ',
-      'Edo de ',
-      'Municipio de ',
-      'Municipio ',
-      'Ciudad de ',
-      'Cd. ',
-      'Cd ',
-    ];
-    for (final prefix in prefixes) {
-      if (t.toLowerCase().startsWith(prefix.toLowerCase())) {
-        t = t.substring(prefix.length).trim();
-        break;
-      }
-    }
-    return t;
-  }
-
-  static bool _namesMatch(String catalogName, String placemarkName) {
-    final a = _normalize(_cleanForMatch(catalogName));
-    final b = _normalize(_cleanForMatch(placemarkName));
-    if (a.isEmpty || b.isEmpty) return false;
-    return a == b || a.contains(b) || b.contains(a);
-  }
-
-  /// Compara el placemark con el catálogo. En México: administrativeArea = estado,
-  /// locality o subAdministrativeArea = ciudad/municipio. Prueba varios campos.
-  Future<({int? stateId, int? cityId, String? stateName, String? cityName})> _matchCatalog(
-    Placemark p,
-  ) async {
-    // Estado: en MX suele venir en administrativeArea; a veces en subAdministrativeArea
-    final estadoCandidates = [
-      p.administrativeArea,
-      p.subAdministrativeArea,
-    ].where((e) => e != null && e.toString().trim().isNotEmpty).map((e) => e!.trim()).toList();
-    if (estadoCandidates.isEmpty) return (stateId: null, cityId: null, stateName: null, cityName: null);
-
-    final states = await ref.read(statesCatalogProvider.future);
-    StateCatalogItem? matchedState;
-    for (final estadoStr in estadoCandidates) {
-      for (final s in states) {
-        if (_namesMatch(s.name, estadoStr)) {
-          matchedState = s;
-          break;
-        }
-      }
-      if (matchedState != null) break;
-    }
-    if (matchedState == null) return (stateId: null, cityId: null, stateName: null, cityName: null);
-
-    final cities = await ref.read(citiesCatalogProvider(matchedState.id).future);
-    // Ciudad/municipio: locality = ciudad; subAdministrativeArea = municipio en MX; subLocality = colonia
-    final ciudadCandidates = [
-      p.locality,
-      p.subAdministrativeArea,
-      p.subLocality,
-    ].where((c) => c != null && c.toString().trim().isNotEmpty).map((c) => c!.trim()).toList();
-    CityCatalogItem? matchedCity;
-    for (final ciudadStr in ciudadCandidates) {
-      if (cities.isEmpty) break;
-      for (final c in cities) {
-        if (_namesMatch(c.name, ciudadStr)) {
-          matchedCity = c;
-          break;
-        }
-      }
-      if (matchedCity != null) break;
-    }
-    return (
-      stateId: matchedState.id,
-      cityId: matchedCity?.id,
-      stateName: matchedState.name,
-      cityName: matchedCity?.name,
-    );
-  }
-
-  Future<void> _onTapMap(LatLng location) async {
+  void _onTapMap(LatLng location) {
     _moveToLocation(location);
     final notifier = ref.read(propertyRegistrationProvider.notifier);
+    final current = ref.read(propertyRegistrationProvider).addressData;
 
+    // Solo guardar coordenadas, sin tocar los datos de dirección del formulario
     notifier.setLocation(location.latitude, location.longitude);
-
-    try {
-      final placemarks = await placemarkFromCoordinates(
-        location.latitude,
-        location.longitude,
-      );
-
-      if (!mounted) return;
-
-      // Probar cada placemark hasta que uno coincida con el catálogo (estado)
-      ({int? stateId, int? cityId, String? stateName, String? cityName}) catalogMatch =
-          (stateId: null, cityId: null, stateName: null, cityName: null);
-      Placemark p = placemarks.first;
-      for (final pm in placemarks) {
-        final match = await _matchCatalog(pm);
-        if (match.stateId != null) {
-          catalogMatch = match;
-          p = pm;
-          break;
-        }
-      }
-
-      if (!mounted) return;
-
-      final current = ref.read(propertyRegistrationProvider).addressData;
-      if (placemarks.isNotEmpty) {
-        notifier.setAddressData(AddressData(
-          calle: p.thoroughfare ?? '',
-          numero: p.subThoroughfare ?? '',
-          colonia: p.subLocality ?? '',
-          cp: p.postalCode ?? '',
-          ciudad: catalogMatch.cityName ?? p.locality ?? p.subAdministrativeArea ?? '',
-          estado: catalogMatch.stateName ?? p.administrativeArea ?? p.subAdministrativeArea ?? '',
-          lat: location.latitude,
-          lng: location.longitude,
-          stateId: catalogMatch.stateId ?? current?.stateId,
-          cityId: catalogMatch.cityId ?? current?.cityId,
-        ));
-        if (mounted && (catalogMatch.stateId == null || catalogMatch.cityId == null)) {
-          TopChip.showWarning(
-            context,
-            catalogMatch.stateId == null
-                ? 'No se encontró el estado en el catálogo. Selecciónalo en "Ingresar o editar dirección".'
-                : 'No se encontró la ciudad en el catálogo. Complétala en "Ingresar o editar dirección".',
-          );
-        }
-      } else {
-        notifier.setAddressData(AddressData(
-          lat: location.latitude,
-          lng: location.longitude,
-          stateId: current?.stateId,
-          cityId: current?.cityId,
-        ));
-      }
-    } catch (e) {
-      debugPrint('Error geocoding: $e');
-      if (mounted) {
-        final current = ref.read(propertyRegistrationProvider).addressData;
-        notifier.setAddressData(AddressData(
-          lat: location.latitude,
-          lng: location.longitude,
-          stateId: current?.stateId,
-          cityId: current?.cityId,
-        ));
-      }
-    }
+    notifier.setAddressData((current ?? const AddressData()).copyWith(
+      lat: location.latitude,
+      lng: location.longitude,
+    ));
   }
 
   void _openAddressSheet() {
@@ -227,32 +73,14 @@ class _Step2ScreenState extends ConsumerState<Step2Screen> {
       ),
       builder: (_) => _AddressForm(
         initialData: currentData,
-        onConfirm: (data) async {
+        onConfirm: (data) {
           final notifier = ref.read(propertyRegistrationProvider.notifier);
-
-          try {
-            final results = await locationFromAddress(data.toGeocodingString());
-
-            if (!mounted) return;
-
-            if (results.isNotEmpty) {
-              final loc = results.first;
-              notifier.setAddressData(data.copyWith(
-                lat: loc.latitude,
-                lng: loc.longitude,
-              ));
-              _moveToLocation(LatLng(loc.latitude, loc.longitude));
-            } else {
-              notifier.setAddressData(data);
-              TopChip.showWarning(context, 'Dirección guardada, pero no se encontró en el mapa');
-            }
-          } catch (e) {
-            debugPrint('Error buscando dirección: $e');
-            if (!mounted) return;
-
-            notifier.setAddressData(data);
-            TopChip.showWarning(context, 'No se pudo encontrar la dirección en el mapa');
-          }
+          // Guardar dirección conservando las coordenadas actuales del pin
+          final current = ref.read(propertyRegistrationProvider).addressData;
+          notifier.setAddressData(data.copyWith(
+            lat: current?.lat,
+            lng: current?.lng,
+          ));
         },
       ),
     );
@@ -280,7 +108,13 @@ class _Step2ScreenState extends ConsumerState<Step2Screen> {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
+          const Text(
+            'Si tu propiedad está en un lugar remoto, usa el pin del mapa para ubicarla y completa solo estado y ciudad.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Colors.black38),
+          ),
+          const SizedBox(height: 14),
           InkWell(
             borderRadius: BorderRadius.circular(14),
             onTap: _openAddressSheet,
@@ -442,6 +276,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       ),
     );
     Navigator.pop(context);
+    TopChip.showSuccess(context, 'Dirección guardada');
   }
 
   @override
@@ -469,10 +304,10 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              _field(_calleCtrl, 'Calle'),
-              _field(_numeroCtrl, 'Número', isNumber: true),
-              _field(_coloniaCtrl, 'Colonia'),
-              _field(_cpCtrl, 'Código Postal', isNumber: true),
+              _field(_calleCtrl, 'Calle (opcional)', required: false),
+              _field(_numeroCtrl, 'Número (opcional)', isNumber: true, required: false),
+              _field(_coloniaCtrl, 'Colonia (opcional)', required: false),
+              _field(_cpCtrl, 'Código Postal (opcional)', isNumber: true, required: false),
               const SizedBox(height: 8),
               const Text('Estado', style: TextStyle(fontSize: 12, color: Colors.black54)),
               const SizedBox(height: 4),
@@ -587,7 +422,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
                     ),
                   ),
                   child: const Text(
-                    'Buscar en el mapa',
+                    'Guardar dirección',
                     style: TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
                   ),
                 ),
@@ -614,13 +449,14 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
     TextEditingController controller,
     String label, {
     bool isNumber = false,
+    bool required = true,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
         controller: controller,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        validator: (v) => v == null || v.toString().trim().isEmpty ? 'Requerido' : null,
+        validator: required ? (v) => v == null || v.toString().trim().isEmpty ? 'Requerido' : null : null,
         decoration: InputDecoration(
           labelText: label,
           filled: true,

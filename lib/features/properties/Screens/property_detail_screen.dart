@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,7 +35,6 @@ class PropertyDetailScreen extends ConsumerStatefulWidget {
 
 class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
   late final PageController _carouselController;
-  Timer? _carouselTimer;
   int _carouselIndex = 0;
 
   @override
@@ -47,24 +45,10 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
 
   @override
   void dispose() {
-    _carouselTimer?.cancel();
     _carouselController.dispose();
     super.dispose();
   }
 
-  void _startCarouselTimer(int length) {
-    if (length <= 1) return;
-    _carouselTimer?.cancel();
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (_) {
-      if (!_carouselController.hasClients) return;
-      final next = (_carouselIndex + 1) % length;
-      _carouselController.animateToPage(
-        next,
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
-      );
-    });
-  }
 
   Future<void> _onShare(String propertyName) async {
     final link = 'https://poolandchill.com.mx/property/${widget.propertyId}';
@@ -456,12 +440,6 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
     final favState = ref.watch(favoritesProvider);
     final isFavorite = favState.isFavorite(prop.idProperty);
 
-    if (images.isNotEmpty && _carouselTimer == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _startCarouselTimer(images.length);
-      });
-    }
-
     final priceRange = data.priceRange;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final topPadding = MediaQuery.of(context).padding.top;
@@ -481,6 +459,9 @@ class _PropertyDetailScreenState extends ConsumerState<PropertyDetailScreen> {
                 images: images,
                 controller: _carouselController,
                 currentIndex: _carouselIndex,
+                onPageChanged: (index) {
+                  setState(() => _carouselIndex = index);
+                },
                 overlayButtons: Stack(
                   children: [
                     Positioned(

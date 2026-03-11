@@ -2,7 +2,7 @@ name: pool_and_chill_app
 description: "Pool & Chill Flutter App"
 publish_to: 'none'
 
-version: 1.0.0+19
+version: 1.0.0+20
 environment:
   sdk: ^3.10.7
 
@@ -46,8 +46,6 @@ dependencies:
   # Maps & Location
   google_maps_flutter: ^2.6.0
 
-  geocoding: ^3.0.0
-  
   # Permissions
   permission_handler: ^11.2.0
 

@@ -9,6 +9,7 @@ class DetailImageCarousel extends StatelessWidget {
   final PageController controller;
   final int currentIndex;
   final Widget overlayButtons;
+  final ValueChanged<int>? onPageChanged;
 
   const DetailImageCarousel({
     super.key,
@@ -16,6 +17,7 @@ class DetailImageCarousel extends StatelessWidget {
     required this.controller,
     required this.currentIndex,
     required this.overlayButtons,
+    this.onPageChanged,
   });
 
   @override
@@ -44,6 +46,7 @@ class DetailImageCarousel extends StatelessWidget {
               PageView.builder(
                 controller: controller,
                 itemCount: images.length,
+                onPageChanged: onPageChanged,
                 itemBuilder: (_, i) => CachedNetworkImage(
                   imageUrl: images[i].imageURL,
                   fit: BoxFit.cover,

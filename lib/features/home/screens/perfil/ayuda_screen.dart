@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -214,7 +215,9 @@ class AyudaScreen extends StatelessWidget {
         icon: Icons.star_rate_outlined,
         title: 'Calificar la app',
         onTap: () => _launchUrl(
-          'https://play.google.com/store/apps/details?id=com.poolandchill.app',
+          Platform.isIOS
+              ? 'https://apps.apple.com/mx/app/poolandchill/id6759678889'
+              : 'https://play.google.com/store/apps/details?id=com.poolandchill.app',
         ),
       ),
       _HelpOption(
