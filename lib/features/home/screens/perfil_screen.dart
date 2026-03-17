@@ -399,8 +399,8 @@ class PerfilScreen extends ConsumerWidget {
                         return;
                       }
 
-                      // Propiedad enviada pero aún no aprobada (guest + isHostOnboarded=0)
-                      if (!profile.isHost && profile.isHostOnboarded == 0 && profile.roles.contains('guest')) {
+                      // Propiedad enviada pero aún no aprobada (guest + isHostOnboarded=0 + hasPendingProperty) → Pantalla de aprobación pendiente
+                      if (!profile.isHost && profile.isHostOnboarded == 0 && profile.hasPendingProperty && profile.roles.contains('guest')) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(

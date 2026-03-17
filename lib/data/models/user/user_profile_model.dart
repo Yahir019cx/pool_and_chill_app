@@ -35,6 +35,7 @@ class UserProfileModel {
 
   final bool isHost;
   final bool isStaff;
+  final bool hasPendingProperty;
 
   UserProfileModel({
     required this.userId,
@@ -62,6 +63,7 @@ class UserProfileModel {
     required this.linkedProviders,
     required this.isHost,
     required this.isStaff,
+    required this.hasPendingProperty,
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
@@ -105,6 +107,7 @@ class UserProfileModel {
 
       isHost: json['isHost'] == true,
       isStaff: json['isStaff'] == true,
+      hasPendingProperty: json['hasPendingProperty'] == true,
     );
   }
 
@@ -135,6 +138,7 @@ class UserProfileModel {
     List<dynamic>? linkedProviders,
     bool? isHost,
     bool? isStaff,
+    bool? hasPendingProperty,
     bool clearProfileImageUrl = false,
   }) {
     return UserProfileModel(
@@ -163,6 +167,7 @@ class UserProfileModel {
       linkedProviders: linkedProviders ?? this.linkedProviders,
       isHost: isHost ?? this.isHost,
       isStaff: isStaff ?? this.isStaff,
+      hasPendingProperty: hasPendingProperty ?? this.hasPendingProperty,
     );
   }
 
