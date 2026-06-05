@@ -5,7 +5,7 @@ import 'package:pool_and_chill_app/data/models/property/index.dart';
 import 'package:pool_and_chill_app/data/providers/property_registration_provider.dart';
 
 /// Mapeo de amenidades a iconos
-IconData _getAmenityIcon(String name) {
+FaIconData _getAmenityIcon(String name) {
   final lower = name.toLowerCase();
   return switch (lower) {
     // Cabaña

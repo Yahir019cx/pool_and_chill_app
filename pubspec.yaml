@@ -28,7 +28,7 @@ dependencies:
 
   # UI / Design
   google_fonts: ^6.1.0
-  font_awesome_flutter: ^10.7.0
+  font_awesome_flutter: ^11.0.0
 
   # state management
   url_launcher: ^6.3.0

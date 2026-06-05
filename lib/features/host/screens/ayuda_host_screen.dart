@@ -296,7 +296,7 @@ class AyudaHostScreen extends StatelessWidget {
   }
 
   Widget _contactTile({
-    required IconData icon,
+    required Object icon,
     required Color color,
     required String label,
     required String subtitle,
@@ -314,7 +314,7 @@ class AyudaHostScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 22),
+            icon is FaIconData ? FaIcon(icon, color: color, size: 22) : Icon(icon as IconData, color: color, size: 22),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

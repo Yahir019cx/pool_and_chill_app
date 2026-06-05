@@ -6,7 +6,12 @@
       "Read(//c/Users/pyahi/flutter/packages/flutter_tools/gradle/**)",
       "Read(//c/Users/pyahi/flutter/**)",
       "Bash(flutter pub describe flutter)",
-      "Bash(ipconfig)"
+      "Bash(ipconfig)",
+      "Bash(flutter pub *)",
+      "Bash(findstr \"font_awesome\")",
+      "Bash(find /c/Users/pyahi/.pub-cache/hosted/pub.dev/ -maxdepth 1 -name \"font_awesome*\" 2>&1)",
+      "Read(//c/Users/pyahi/.pub-cache/hosted/**)",
+      "Bash(flutter analyze *)"
     ]
   }
 }

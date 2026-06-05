@@ -7,7 +7,7 @@ import 'host_edit_types.dart';
 
 // ─── Mapeo de nombre de amenidad → ícono ──────────────────────────
 
-IconData _amenityIcon(String name) {
+FaIconData _amenityIcon(String name) {
   return switch (name.toLowerCase()) {
     // Cabaña
     'wifi' => FontAwesomeIcons.wifi,

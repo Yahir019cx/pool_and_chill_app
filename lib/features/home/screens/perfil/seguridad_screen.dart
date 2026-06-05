@@ -442,7 +442,7 @@ class SeguridadScreen extends StatelessWidget {
   }
 
   Widget _contactTile({
-    required IconData icon,
+    required Object icon,
     required Color iconColor,
     required String title,
     required String subtitle,
@@ -460,7 +460,7 @@ class SeguridadScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: iconColor, size: 24),
+            icon is FaIconData ? FaIcon(icon, color: iconColor, size: 24) : Icon(icon as IconData, color: iconColor, size: 24),
             const SizedBox(width: 14),
             Expanded(
               child: Column(

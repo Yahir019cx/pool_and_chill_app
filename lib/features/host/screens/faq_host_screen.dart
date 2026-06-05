@@ -245,7 +245,7 @@ class _FAQCard extends StatelessWidget {
 }
 
 class _ContactoItem extends StatelessWidget {
-  final IconData icon;
+  final Object icon;
   final Color color;
   final String label;
   final VoidCallback onTap;
@@ -270,7 +270,7 @@ class _ContactoItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: color, size: 22),
+            icon is FaIconData ? FaIcon(icon as FaIconData, color: color, size: 22) : Icon(icon as IconData, color: color, size: 22),
             const SizedBox(width: 14),
             Text(
               label,

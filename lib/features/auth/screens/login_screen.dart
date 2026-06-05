@@ -414,7 +414,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _social(IconData icon, Color color, VoidCallback? onPressed) {
+  Widget _social(FaIconData icon, Color color, VoidCallback? onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
