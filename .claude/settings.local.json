@@ -5,7 +5,8 @@
       "Bash(flutter --version)",
       "Read(//c/Users/pyahi/flutter/packages/flutter_tools/gradle/**)",
       "Read(//c/Users/pyahi/flutter/**)",
-      "Bash(flutter pub describe flutter)"
+      "Bash(flutter pub describe flutter)",
+      "Bash(ipconfig)"
     ]
   }
 }

@@ -35,7 +35,7 @@ android {
         applicationId = "com.poolandchill.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion  // Didit SDK y google_sign_in requieren API 23+
+        minSdk = flutter.minSdkVersion  // Fijado para mantener compatibilidad con versiones anteriores en Google Play
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

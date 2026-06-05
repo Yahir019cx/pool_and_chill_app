@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pool_and_chill_app/features/host/screens/stripe_connect_screen.dart';
+import 'package:pool_and_chill_app/features/host/screens/stripe_fiscal_data_screen.dart';
 
 class WelcomeHostInfoScreen extends StatefulWidget {
   final VoidCallback? onContinue;
@@ -47,7 +47,7 @@ class _WelcomeHostInfoScreenState extends State<WelcomeHostInfoScreen>
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const StripeConnectScreen()),
+      MaterialPageRoute(builder: (_) => const StripeFiscalDataScreen()),
     );
   }
 

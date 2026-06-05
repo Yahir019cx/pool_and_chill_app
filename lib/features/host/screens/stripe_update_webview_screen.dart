@@ -32,6 +32,18 @@ class _StripeUpdateWebviewScreenState
     _initController();
   }
 
+  bool _handleStripeUrl(String url) {
+    if (url.startsWith(_returnUrl)) {
+      Navigator.of(context).pop(true);
+      return true;
+    }
+    if (url.startsWith(_refreshUrl)) {
+      Navigator.of(context).pop(false);
+      return true;
+    }
+    return false;
+  }
+
   void _initController() {
     final bool isIos = WebViewPlatform.instance is WebKitWebViewPlatform;
 
@@ -49,16 +61,19 @@ class _StripeUpdateWebviewScreenState
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (_) => setState(() => _isLoading = true),
+          onPageStarted: (url) {
+            // Respaldo: Android a veces no dispara onNavigationRequest
+            // para custom schemes, pero sí onPageStarted.
+            if (_handleStripeUrl(url)) return;
+            setState(() => _isLoading = true);
+          },
           onPageFinished: (_) => setState(() => _isLoading = false),
           onWebResourceError: (_) => setState(() => _isLoading = false),
           onNavigationRequest: (request) {
-            // Stripe redirigió a return: flujo completado con éxito.
             if (request.url.startsWith(_returnUrl)) {
               Navigator.of(context).pop(true);
               return NavigationDecision.prevent;
             }
-            // Stripe redirigió a refresh: el link expiró o ya fue usado.
             if (request.url.startsWith(_refreshUrl)) {
               Navigator.of(context).pop(false);
               return NavigationDecision.prevent;

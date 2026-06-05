@@ -15,6 +15,7 @@ import 'package:pool_and_chill_app/features/host/home_host.dart';
 enum _StripeState {
   idle,       // Inicial: muestra cards + botón flecha
   loading,    // Obteniendo onboardingUrl del backend
+  waiting,    // URL ya abierta (navegador externo), esperando deep link de Stripe
   verifying,  // Recibido deep link /return: consultando GET /stripe/account-status
   success,    // chargesEnabled && payoutsEnabled → navega a Home tras 2 s
   pending,    // Cuenta existe pero Stripe aún no la activó
@@ -22,7 +23,12 @@ enum _StripeState {
 }
 
 class StripeConnectScreen extends ConsumerStatefulWidget {
-  const StripeConnectScreen({super.key});
+  /// Cuando [waitingMode] es true la pantalla arranca directamente en el estado
+  /// "Esperando confirmación de Stripe…" (el formulario fiscal ya abrió el
+  /// navegador externo) y no muestra la UI de idle ni llama a _checkExistingAccount.
+  final bool waitingMode;
+
+  const StripeConnectScreen({super.key, this.waitingMode = false});
 
   @override
   ConsumerState<StripeConnectScreen> createState() =>
@@ -33,7 +39,7 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
     with SingleTickerProviderStateMixin {
   static const Color _primary = Color(0xFF2D9D91);
 
-  _StripeState _state = _StripeState.idle;
+  late _StripeState _state;
   bool _visible = false;
   late AnimationController _pulseController;
   StreamSubscription<Uri>? _linkSub;
@@ -46,6 +52,8 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
   void initState() {
     super.initState();
 
+    _state = widget.waitingMode ? _StripeState.waiting : _StripeState.idle;
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -56,7 +64,7 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
     });
 
     _initDeepLinks();
-    _checkExistingAccount();
+    if (!widget.waitingMode) _checkExistingAccount();
   }
 
   @override
@@ -262,6 +270,7 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
 
   Widget _buildBody() {
     return switch (_state) {
+      _StripeState.waiting   => _buildWaitingBody(),
       _StripeState.verifying => _buildVerifyingBody(),
       _StripeState.success   => _buildSuccessBody(),
       _StripeState.pending   => _buildPendingBody(),
@@ -324,6 +333,44 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
             title: 'Proceso rápido',
             description:
                 'Solo necesitas unos minutos para completar el registro y comenzar a cobrar.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Esperando deep link (navegador externo abierto) ──────────────────────
+
+  Widget _buildWaitingBody() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 64,
+            height: 64,
+            child: CircularProgressIndicator(strokeWidth: 4, color: _primary),
+          ),
+          const SizedBox(height: 32),
+          const Text(
+            'Completa el registro\nen Stripe',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Termina los pasos en el navegador y regresa aquí.\nTe avisaremos cuando tu cuenta esté lista.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.grey.shade600,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -572,6 +619,7 @@ class _StripeConnectScreenState extends ConsumerState<StripeConnectScreen>
           onTap: _startOnboarding,
           controller: _pulseController,
         );
+      case _StripeState.waiting:
       default:
         return const SizedBox.shrink();
     }

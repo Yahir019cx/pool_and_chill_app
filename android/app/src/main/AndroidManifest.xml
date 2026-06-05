@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <application
-        android:label="pool_and_chill_app"
+        android:label="Pool&amp;Chill"
         android:name=".MainApplication"
         android:icon="@mipmap/ic_launcher">
         <meta-data
