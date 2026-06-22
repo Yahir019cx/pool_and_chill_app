@@ -82,8 +82,6 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
           minPrice: values.minPrice,
           maxPrice: values.maxPrice,
           sortBy: values.sortBy,
-          checkInDate: values.checkInDate,
-          checkOutDate: values.checkOutDate,
         );
   }
 
@@ -136,8 +134,6 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
       sortBy: filters.sortBy,
-      checkInDate: filters.checkInDate,
-      checkOutDate: filters.checkOutDate,
     );
 
     return Column(

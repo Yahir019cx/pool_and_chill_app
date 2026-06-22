@@ -36,20 +36,13 @@ class SearchBarWidget extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Fechas, destino, huéspedes...',
+                    'Comenzar búsqueda...',
                     style: TextStyle(
                       fontSize: 15,
                       color: Colors.grey.shade500,
                     ),
                   ),
                 ),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: Colors.grey.shade200,
-                ),
-                const SizedBox(width: 12),
-                Icon(Icons.tune_rounded, color: Colors.grey.shade400, size: 20),
               ],
             ),
           ),
