@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider/provider.dart' as provider_pkg;
@@ -6,6 +5,8 @@ import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
 import 'package:pool_and_chill_app/data/providers/property_search_provider.dart';
 import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/providers/favorites_provider.dart';
+import 'package:pool_and_chill_app/features/search/screens/search_flow_screen.dart';
+import 'package:pool_and_chill_app/features/search/screens/results_screen.dart';
 import '../widgets/search_bar_widget.dart';
 import '../widgets/filter_chips_widget.dart';
 import '../widgets/advanced_filters_button.dart';
@@ -21,7 +22,6 @@ class InicioScreen extends ConsumerStatefulWidget {
 
 class _InicioScreenState extends ConsumerState<InicioScreen> {
   late final ScrollController _scrollController;
-  Timer? _debounce;
 
   @override
   void initState() {
@@ -44,7 +44,6 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
@@ -58,12 +57,16 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     }
   }
 
-  /// Debounce de búsqueda por texto (500 ms).
-  void _onSearchChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      ref.read(propertySearchProvider.notifier).setSearchQuery(value);
-    });
+  /// Muestra el bottom sheet de búsqueda (calendario inmediato, sin navegación).
+  void _onSearchBarTap() async {
+    final params = await SearchSheet.show(context);
+    if (params != null && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => ResultsScreen(params: params),
+        ),
+      );
+    }
   }
 
   /// Toggle de un chip de tipo.
@@ -141,7 +144,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SearchBarWidget(
-          onChanged: _onSearchChanged,
+          onTap: _onSearchBarTap,
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -11,7 +11,13 @@
       "Bash(findstr \"font_awesome\")",
       "Bash(find /c/Users/pyahi/.pub-cache/hosted/pub.dev/ -maxdepth 1 -name \"font_awesome*\" 2>&1)",
       "Read(//c/Users/pyahi/.pub-cache/hosted/**)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash(Get-ChildItem -Recurse -Directory \"c:\\\\Users\\\\pyahi\\\\pool_and_chill_app\\\\lib\" -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(dart analyze *)",
+      "Bash(adb uninstall *)",
+      "PowerShell(& \"$env:LOCALAPPDATA\\\\Android\\\\Sdk\\\\platform-tools\\\\adb.exe\" -s ZY227SVF39 uninstall com.poolandchill.app 2>&1)"
     ]
   }
 }

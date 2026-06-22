@@ -287,6 +287,9 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
 
   /// Actualiza filtros avanzados: ubicación, precio, orden y fechas (check-in/check-out).
   void applyAdvancedFilters({
+    bool? hasPool,
+    bool? hasCabin,
+    bool? hasCamping,
     int? stateId,
     int? cityId,
     double? minPrice,
@@ -297,9 +300,9 @@ class PropertySearchNotifier extends StateNotifier<PropertySearchState> {
   }) {
     final f = state.filters;
     final newFilters = PropertySearchFilters(
-      hasPool: f.hasPool,
-      hasCabin: f.hasCabin,
-      hasCamping: f.hasCamping,
+      hasPool: hasPool,
+      hasCabin: hasCabin,
+      hasCamping: hasCamping,
       popular: f.popular,
       stateId: stateId,
       cityId: cityId,

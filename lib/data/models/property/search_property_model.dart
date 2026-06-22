@@ -28,6 +28,8 @@ class SearchPropertyModel {
   final List<SearchPropertyImage> images;
   final String rating;
   final int reviewCount;
+  final double? latitude;
+  final double? longitude;
 
   SearchPropertyModel({
     required this.propertyId,
@@ -40,6 +42,8 @@ class SearchPropertyModel {
     this.images = const [],
     this.rating = 'Nuevo',
     this.reviewCount = 0,
+    this.latitude,
+    this.longitude,
   });
 
   factory SearchPropertyModel.fromJson(Map<String, dynamic> json) {
@@ -58,8 +62,19 @@ class SearchPropertyModel {
           [],
       rating: json['rating']?.toString() ?? 'Nuevo',
       reviewCount: json['reviewCount'] ?? 0,
+      // Coordenadas: pueden estar en top-level o anidadas bajo 'location'.
+      latitude: (json['latitude'] as num?)?.toDouble() ??
+          (json['location'] is Map<String, dynamic>
+              ? (json['location']['latitude'] as num?)?.toDouble()
+              : null),
+      longitude: (json['longitude'] as num?)?.toDouble() ??
+          (json['location'] is Map<String, dynamic>
+              ? (json['location']['longitude'] as num?)?.toDouble()
+              : null),
     );
   }
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 
   /// URL de la imagen principal (primera por DisplayOrder).
   String get coverImageUrl => images.isNotEmpty ? images.first.imageUrl : '';
