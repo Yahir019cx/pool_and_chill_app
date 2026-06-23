@@ -3,6 +3,9 @@
     <uses-permission android:name="android.permission.CAMERA"/>
     <!-- Micrófono requerido por Didit (liveness detection en WebView KYC) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Ubicación para calcular distancia a propiedades -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:label="Pool&amp;Chill"

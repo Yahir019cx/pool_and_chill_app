@@ -4,8 +4,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:pool_and_chill_app/core/widgets/top_chip.dart';
 import 'package:pool_and_chill_app/data/models/property/search_property_model.dart';
 import 'package:pool_and_chill_app/data/providers/auth_provider.dart';
@@ -69,6 +71,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   final Completer<GoogleMapController> _mapCompleter = Completer();
   final DraggableScrollableController _sheetController =
       DraggableScrollableController();
+  final ScrollController _listScrollController = ScrollController();
 
   String? _selectedPropertyId;
   Set<Marker> _markers = {};
@@ -82,17 +85,52 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
   // Contador de generación para cancelar cargas obsoletas.
   int _gen = 0;
 
+  Position? _userPosition;
+
   @override
   void initState() {
     super.initState();
     _params = widget.params;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _search());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _search();
+      _loadUserLocation();
+    });
   }
 
   @override
   void dispose() {
     _sheetController.dispose();
+    _listScrollController.dispose();
     super.dispose();
+  }
+
+  // ── Ubicación del usuario ─────────────────────────────────────────
+
+  Future<void> _loadUserLocation() async {
+    final status = await Permission.locationWhenInUse.request();
+    if (!status.isGranted) return;
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
+      );
+      if (mounted) setState(() => _userPosition = position);
+    } catch (_) {}
+  }
+
+  String? _distanceTo(String propertyId) {
+    if (_userPosition == null) return null;
+    final coord = _coords[propertyId];
+    if (coord == null) return null;
+    final meters = Geolocator.distanceBetween(
+      _userPosition!.latitude,
+      _userPosition!.longitude,
+      coord.latitude,
+      coord.longitude,
+    );
+    if (meters < 1000) return '${meters.round()} m';
+    return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
   // ── Búsqueda ──────────────────────────────────────────────────────
@@ -433,6 +471,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
         isSelected: true,
         isFavorite: favState.favoriteIds.contains(prop.propertyId),
         nights: _params.nights,
+        distance: _distanceTo(prop.propertyId),
         onTap: () => _onCardTap(prop),
         onSelect: () {},
         onFavoriteToggle: () => _onFavoriteToggle(prop.propertyId),
@@ -498,11 +537,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.tune_rounded,
-                      color: Color(0xFF1A1A2E)),
-                  onPressed: _editSearch,
-                ),
+                const SizedBox(width: 48),
               ],
             ),
           ),
@@ -533,10 +568,18 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
       elevation: 8,
       child: Column(
         children: [
-          // Handle y conteo fijos — no se mueven con el scroll
-          _buildHandle(),
-          _buildCount(state),
-          // Lista scrollable
+          // Attach the sheet's scrollController only to the header so that
+          // dragging the handle/count area expands or collapses the sheet.
+          SingleChildScrollView(
+            controller: scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _buildHandle(),
+                _buildCount(state),
+              ],
+            ),
+          ),
           Expanded(
             child: NotificationListener<ScrollNotification>(
               onNotification: (n) {
@@ -549,7 +592,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 return false;
               },
               child: CustomScrollView(
-                controller: scrollController,
+                controller: _listScrollController,
                 slivers: [
                   _buildContent(state, favState),
                   SliverToBoxAdapter(
@@ -671,6 +714,7 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
           isSelected: prop.propertyId == _selectedPropertyId,
           isFavorite: favState.favoriteIds.contains(prop.propertyId),
           nights: _params.nights,
+          distance: _distanceTo(prop.propertyId),
           onTap: () => _onCardTap(prop),
           onSelect: () => _onCardSelect(prop),
           onFavoriteToggle: () => _onFavoriteToggle(prop.propertyId),
@@ -723,6 +767,7 @@ class _ResultsPropertyCard extends StatefulWidget {
   final bool isSelected;
   final bool isFavorite;
   final int nights;
+  final String? distance;
   final VoidCallback onTap;
   final VoidCallback onSelect;
   final VoidCallback onFavoriteToggle;
@@ -733,6 +778,7 @@ class _ResultsPropertyCard extends StatefulWidget {
     required this.isSelected,
     required this.isFavorite,
     required this.nights,
+    this.distance,
     required this.onTap,
     required this.onSelect,
     required this.onFavoriteToggle,
@@ -917,10 +963,13 @@ class _ResultsPropertyCardState extends State<_ResultsPropertyCard> {
                       ],
                     ),
 
-                    if (property.location.isNotEmpty) ...[
+                    if (property.location.isNotEmpty || widget.distance != null) ...[
                       const SizedBox(height: 3),
                       Text(
-                        property.location,
+                        [
+                          if (property.location.isNotEmpty) property.location,
+                          if (widget.distance != null) widget.distance!,
+                        ].join(' · '),
                         style: TextStyle(
                             fontSize: 13, color: Colors.grey.shade500),
                         maxLines: 1,
@@ -966,5 +1015,5 @@ class _ResultsPropertyCardState extends State<_ResultsPropertyCard> {
       ),
     );
   }
-
 }
+

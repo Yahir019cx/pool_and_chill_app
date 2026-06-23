@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Ubicación para calcular distancia a propiedades cercanas -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Usamos tu ubicación para mostrarte qué tan lejos están las propiedades disponibles.</string>
+
 	<!-- Permisos para imagen de perfil -->
 	<key>NSCameraUsageDescription</key>
 	<string>Necesitamos acceso a tu cámara para tomar fotos de perfil y verificar tu identidad</string>

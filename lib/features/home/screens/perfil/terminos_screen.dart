@@ -22,6 +22,13 @@ class TerminosCondicionesScreen extends StatelessWidget {
         'icon': Icons.lock_outline,
         'url': LegalUrls.privacidad,
       },
+      {
+        'titulo': 'Uso de ubicación',
+        'descripcion':
+            'Solicitamos acceso a tu ubicación para calcular la distancia a cada propiedad. No almacenamos ni compartimos tu ubicación con terceros.',
+        'icon': Icons.location_on_outlined,
+        'url': LegalUrls.privacidad,
+      },
     ];
 
     return Scaffold(
